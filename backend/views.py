@@ -128,8 +128,14 @@ def portal_members(con, member_ids=None, only_active=True):
         if only_active and mid not in S:
             continue
         out.append(portal_record(con, m, features(con, mid), A.get(mid), S.get(mid, []), N.get(mid, []), X.get(mid, []), C.get(mid, [])))
-    order = {'RED': 0, 'AMBER': 1, 'YELLOW': 2, 'GREEN': 3}
-    out.sort(key=lambda r: (order.get((r['live']['risk'] or {}).get('alert'), 4), -r['risk']))
+    # rule_queue_order: safety or RED first, tier 4 → 1, campaign priority, most overdue against the contact SLA
+    prio = {c: p for c, p in con.execute('SELECT campaign_id, priority FROM campaign')}
+    def key(r):
+        k = r['live']['risk'] or {}
+        camp = min([prio.get(s['campaign'], 99) for s in r['live']['sig']] or [99])
+        due = min([a['due'] for a in r['live']['actions'] if a['status'] == 'open' and a['kind'] in ('call', 'retry', 'check_in', 'escalation')] or ['9999'])
+        return (0 if k.get('alert') == 'RED' or k.get('safety') else 1, -(k.get('tier') or 0), camp, due, -r['risk'])
+    out.sort(key=key)
     return out
 
 

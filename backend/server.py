@@ -8,7 +8,7 @@ from urllib.parse import urlparse, parse_qs
 from . import store, cohorts, engine, views
 from .reference import TRIGGERS, TIERS, CARE_TEAM, RUN_DATE, AS_OF, PORTAL_CODE
 
-DIST = os.path.join(store.ROOT, 'dist')
+DIST = os.environ.get('CCL_WEB', os.path.join(store.ROOT, 'dist'))
 ROUTES = []
 
 
@@ -36,7 +36,7 @@ def health(con, q, body):
 
 @route('GET', '/api/meta')
 def meta(con, q, body):
-    return {'triggers': store.rows(con, 'SELECT * FROM trigger_def ORDER BY sort_order'), 'portal_codes': PORTAL_CODE,
+    return {'triggers': store.rows(con, 'SELECT t.*, a.action_code, a.title AS action_title, a.owner_role, a.done_when FROM rule_trigger t JOIN rule_action a USING (trigger_code) ORDER BY t.sort_order'), 'portal_codes': PORTAL_CODE,
             'tiers': {k: {'label': v[0], 'cadence': v[1]} for k, v in TIERS.items()},
             'care_team': store.rows(con, 'SELECT * FROM care_team_user'), 'ingest_runs': store.rows(con, 'SELECT * FROM ingest_run ORDER BY loaded_at DESC')}
 
@@ -182,6 +182,20 @@ def member(con, q, body, mid):
             'record': (views.portal_members(con, [mid], only_active=False) or [None])[0]}
 
 
+# ───────────── rule database and tracking ─────────────
+@route('GET', '/api/rules')
+def rules_all(con, q, body):
+    from .rules import ORDER
+    return {t: store.rows(con, f'SELECT * FROM {t}') for t in ORDER}
+
+
+@route('GET', '/api/tracking')
+def tracking(con, q, body):
+    mid = (q.get('member') or [None])[0]
+    rows = store.rows(con, 'SELECT * FROM v_need_tracking' + (' WHERE member_id = ?' if mid else '') + ' ORDER BY member_id, class_order', (mid,) if mid else ())
+    return {'kpis': store.one(con, 'SELECT * FROM v_loop_kpis'), 'needs': rows}
+
+
 # ───────────── analytics, data quality, data lens ─────────────
 @route('GET', '/api/analytics')
 def analytics(con, q, body):
@@ -270,9 +284,13 @@ class Handler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data)
 
+    BLOCK = re.compile(r'(^/server(/|$)|^/(backend|data|tests|rules|\.git)(/|$)|\.(db|db-journal|py|pyc|tsv|env)$)', re.I)
+
     def do_GET(self):
         if self.path.startswith('/api/'):
             return self._api('GET')
+        if self.BLOCK.search(urlparse(self.path).path):   # never serve code, databases or member data as files
+            return self._send(404, {'error': 'not found'})
         return super().do_GET()
 
     def do_POST(self):
@@ -289,9 +307,13 @@ def make_server(port=8000, con=None):
 
 def bootstrap(con, extract=None):
     """First start: load the bundled sample extract and run the nightly once."""
+    path = extract or os.path.join(store.ROOT, 'data', 'raw', 'member_features_sample.tsv')
     if not con.execute('SELECT count(*) FROM ingest_run').fetchone()[0]:
+        if not os.path.exists(path):
+            print(f'No extract loaded and {path} not found: the apps will use their built-in demo data.')
+            return
         from . import ingest
-        ingest.load(extract or os.path.join(store.ROOT, 'data', 'raw', 'member_features_sample.tsv'), con=con)
+        ingest.load(path, con=con)
     if not con.execute('SELECT count(*) FROM assessment').fetchone()[0]:
         engine.run(con)
 

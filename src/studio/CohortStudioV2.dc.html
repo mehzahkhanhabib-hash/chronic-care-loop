@@ -770,7 +770,9 @@ class Component extends DCLogic {
     if (window.CCL_API) window.CCL_API.saveCampaign(c);
     const campaigns = st.campaigns.some(k => k.id === c.id) ? st.campaigns.map(k => k.id === c.id ? c : k) : st.campaigns.concat(c);
     this.setState({ campaigns, ce: null, tab: 'camp' });
-    if (this.props.onHandoff) this.props.onHandoff(c); else this.say(c.id + ' handed off · care intelligence scores these members tonight at 03:00');
+    if (this.props.onHandoff) this.props.onHandoff(c);
+    else if (window.CCL_API) { try { const r = window.CCL_API.nightly(); this.say(c.id + ' handed off · care intelligence ran now: ' + r.campaign_members + ' members, ' + r.signals + ' signals, ' + r.care_plans + ' care plans'); } catch (e) { this.say(c.id + ' saved · care intelligence runs tonight'); } }
+    else this.say(c.id + ' handed off · care intelligence scores these members tonight at 03:00');
   }
   path(a, W, H, pad) {
     const mn = Math.min(...a), mx = Math.max(...a), r = mx - mn || 1;

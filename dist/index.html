@@ -17,7 +17,7 @@ a{color:var(--acc)}
 .eyebrow{font:600 12px/1 'IBM Plex Mono',ui-monospace,monospace;letter-spacing:.14em;color:var(--teal)}
 h1{font-size:clamp(30px,4vw,44px);line-height:1.1;margin:12px 0 8px;letter-spacing:-.02em;font-weight:600}
 .top p{margin:0;color:#A9B6C2;max-width:70ch}
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px;margin:-24px auto 0;position:relative}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:16px;margin:-24px auto 0;position:relative}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:22px;display:flex;flex-direction:column;gap:10px;text-decoration:none;color:var(--ink);transition:box-shadow .15s,border-color .15s}
 .card:hover{border-color:var(--acc);box-shadow:0 8px 24px rgba(16,36,58,.12)}
 .num{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:13px;background:var(--accS);color:var(--acc)}
@@ -47,32 +47,38 @@ footer{color:var(--mut);font-size:13px;padding:24px 0 48px}
 <header class="top"><div class="wrap">
   <div class="eyebrow">CHRONIC CARE LOOP · DAMAN × HICC</div>
   <h1>Find who needs care, plan it, call them, learn from the outcome.</h1>
-  <p>Three connected prototypes. The briefing explains the loop. The studio builds cohorts and scores members. The portal is where nurses call members and keep their care plans moving. Outcomes flow back into the next nightly run.</p>
+  <p>Three products on one data model and one rulebook. The builder chooses who to reach. Care intelligence scores members and builds care plans. The portal is where nurses call members and keep care plans moving. Every outcome flows back into the next nightly run.</p>
 </div></header>
 
 <main class="wrap">
   <div class="cards">
-    <a class="card" href="Chronic-Care-Loop-Briefing.html">
-      <span class="num">1</span><h2>Executive briefing</h2>
-      <p>The case for the loop: what it does, what it saves and a simulation you can play.</p>
-      <span class="go">Open briefing →</span>
-    </a>
-    <a class="card" href="Chronic-Care-Studio.html">
-      <span class="num">2</span><h2>Cohort &amp; care studio</h2>
-      <p>Three screens in one flow.</p>
-      <ul><li>Cohorts: rules, or describe in words (catalogue first, then the graph)</li><li>Care intelligence: risk, triggers, care plan</li><li>Care portal, embedded with the call list passed in</li></ul>
-      <span class="go">Open studio →</span>
-    </a>
     <a class="card" href="Care-Coordinator-Portal.html">
-      <span class="num">3</span><h2>Care coordinator portal</h2>
-      <p>The nurse's workstation on its own: nudge queue, Member 360, care plans linked to actions, wearables and analytics.</p>
+      <span class="num">1</span><h2>Care coordinator portal</h2>
+      <p>The nurse's workstation: call queue, consent, Member 360, care plans linked one-to-one with actions, analytics.</p>
       <span class="go">Open portal →</span>
     </a>
+    <a class="card" href="Cohort-Campaign-Builder.html">
+      <span class="num">2</span><h2>Cohort &amp; campaign builder</h2>
+      <p>Choose members with rules over the raw extract, with a live count, then turn the cohort into a campaign and hand it off.</p>
+      <span class="go">Open builder →</span>
+    </a>
+    <a class="card" href="Chronic-Care-Studio.html">
+      <span class="num">3</span><h2>Care studio</h2>
+      <p>All three screens in one flow.</p>
+      <ul><li>① Cohort &amp; campaign builder</li><li>② Care intelligence: risk, triggers, care plan</li><li>③ Care portal, with the call list passed in</li></ul>
+      <span class="go">Open studio →</span>
+    </a>
+    <a class="card" href="database.html">
+      <span class="num">4</span><h2>Data model &amp; rules</h2>
+      <p>The 29 tables behind all three, including the rule database (raw data → trigger → care plan → action → write-back), with sample rows and every read and write.</p>
+      <span class="go">Open data model →</span>
+    </a>
   </div>
+  <p class="lede" style="margin-top:14px">Background: <a href="Chronic-Care-Loop-Briefing.html">executive briefing</a>.</p>
 
   <section id="data-model">
     <h3>Data model</h3>
-    <p class="lede">Ten entities, one loop. As a relational database these become 16 PostgreSQL tables: <a href="database.html">open the database model</a> (high-level view, sample rows and every read and write), or load <code>docs/schema.sql</code>.</p>
+    <p class="lede">Ten entities, one loop. As a relational database these become 29 tables, including the rule database: <a href="database.html">open the database model</a> (high-level view, sample rows and every read and write), or load the SQL schema and rule database in <code>4-data-model/</code>.</p>
     <div class="flow">
       <div class="ent"><b>Member</b><small>who: age, plan, language, conditions, consent</small><span class="who">SOURCE</span></div>
       <div class="arrow">→</div>
@@ -102,7 +108,7 @@ footer{color:var(--mut);font-size:13px;padding:24px 0 48px}
       <div class="rule"><b>Write events, not state</b>The portal records outcomes. It never edits scores or triggers directly.</div>
     </div>
   </section>
-  <footer>All member data in these prototypes is synthetic. Built from <code>src/</code> with <code>python3 tools/bundle.py</code>; see README.</footer>
+  <footer>Served by the backend, the apps show 24 masked members from the extract, with generated names. Opened as files, they use synthetic demo data. <code>src/</code> with <code>python3 tools/bundle.py</code>; see README.</footer>
 </main>
 </body>
 </html>

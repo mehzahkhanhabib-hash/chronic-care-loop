@@ -4,10 +4,19 @@ Three connected prototypes for the Daman × HICC chronic care programme, plus a 
 
 | # | Artefact | Built file | Source |
 |---|----------|------------|--------|
-| 1 | Executive briefing | `dist/Chronic-Care-Loop-Briefing.html` | `src/briefing/` |
-| 2 | Cohort & care studio: ① Cohort & campaign builder → ② Care intelligence → ③ Care portal | `dist/Chronic-Care-Studio.html` | `src/studio/` |
-| 3 | Care coordinator portal (standalone) | `dist/Care-Coordinator-Portal.html` | `src/portal/` |
-| – | Data model: tables, sample rows, every read and write | `dist/database.html` | `src/hub/database.html` |
+| 1 | Care coordinator portal | `dist/Care-Coordinator-Portal.html` | `src/portal/` |
+| 2 | Cohort & campaign builder | `dist/Cohort-Campaign-Builder.html` | `src/builder/` (shares the Studio's builder component) |
+| 3 | Care studio: ① builder → ② care intelligence → ③ portal | `dist/Chronic-Care-Studio.html` | `src/studio/` |
+| 4 | Data model and rules: tables, sample rows, every read and write | `dist/database.html` | `src/hub/database.html` |
+| – | Executive briefing | `dist/Chronic-Care-Loop-Briefing.html` | `src/briefing/` |
+
+**The rule database** (`rules/`) holds the CCC Rulebook as 14 tables: raw data → trigger → care-plan need → action → write-back, plus tracking. The engine reads every rule from it. See [`rules/README.md`](rules/README.md).
+
+**One folder to hand over.** Run `python3 tools/build_all.py && python3 tools/package.py`. This builds `release/Chronic-Care-Loop/` and its `.zip`: the four products in numbered folders, the server, `run.sh` / `run.bat`, a `Dockerfile`, and the guides. Each guide is in `docs/`:
+
+- [`HANDOFF.md`](docs/HANDOFF.md): for developers
+- [`HOSTING.md`](docs/HOSTING.md): hosting options
+- [`DEMO.md`](docs/DEMO.md): a 10-minute demo script
 
 ## Run with the backend (live data)
 
@@ -49,6 +58,7 @@ The file must be tab-separated with the 341 glossary columns as its header. Load
 | POST | `/api/portal/event` | portal write-back: `{member_id, kind: call\|need, need, result, reached, consent}` |
 | GET | `/api/actions`, `/api/care-plans`, `/api/members/{id}` | portal, Member 360 |
 | GET | `/api/analytics`, `/api/data-quality`, `/api/events` | analytics, data lens |
+| GET | `/api/rules`, `/api/tracking?member=` | rule database; need → action → outcome tracking |
 
 ### Tests
 
@@ -56,12 +66,15 @@ The file must be tab-separated with the 341 glossary columns as its header. Load
 python3 -m unittest discover tests
 ```
 
+23 tests: ingest, cohorts, nightly idempotency, write-back, the rule database and tracking.
+
 ## Backend layout
 
 | File | What it does |
 |------|--------------|
-| `backend/schema.sql` | 21 SQLite tables in five groups (PostgreSQL-compatible keys and types) |
-| `backend/reference.py` | Rulebook constants: triggers and actions, tiers and cadence, contact priority SLAs, care team |
+| `backend/schema.sql` | The SQLite schema: 20 operational tables, plus the 14 rule tables created by `backend/rules.py` (34 in all; the data-model page shows the 9 rule tables that link needs to actions). Includes the tracking views `v_need_tracking` and `v_loop_kpis`. |
+| `rules/*.csv`, `backend/rules.py` | The rule database and its evaluator. Conditions are OR-ed groups of AND-ed column tests. |
+| `backend/reference.py` | Constants derived from the rules, plus the care team and the portal signal codes |
 | `backend/ingest.py` | Extract + glossary → `src_member_row`, `member`, `feature`, `member_feature`, `data_issue` |
 | `backend/cohorts.py` | Builder rule JSON → SQL (`EXISTS` over `member_feature`), estimate, stable-hash holdout |
 | `backend/engine.py` | Nightly run: outcomes → cohorts → campaign members → assessment → signals → care plans → actions. Also `record()` for portal write-back |

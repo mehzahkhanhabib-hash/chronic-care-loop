@@ -75,6 +75,8 @@ def build(srcdir, out=None):
     html = shell
     for k, v in vals.items():
         html = html.replace('@@' + k + '@@', v, 1)
+    if cfg.get('title'):
+        html = html.replace('<title>Bundled Page</title>', '<title>' + cfg['title'] + '</title>', 1)
     if out:
         os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
         open(out, 'w', encoding='utf-8').write(html)

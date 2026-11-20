@@ -18,7 +18,7 @@
   }
   let health;
   try { health = api('GET', '/api/health'); } catch (e) { return; }
-  if (!health || !health.ok) return;
+  if (!health || !health.ok || !health.members) return;   // no extract loaded: stay on the demo data
 
   const strip = r => ({ id: r.id, f: r.f, op: r.op, v: r.v, v2: r.v2, vs: r.vs || [], l: r.l });
   const toRule = (Eng, r) => { const n = Eng.newRule(r.f); return Object.assign(n, { op: r.op || n.op, v: r.v != null ? r.v : n.v, v2: r.v2 != null ? r.v2 : n.v2, vs: r.vs && r.vs.length ? r.vs : (n.vs || []), l: r.l || n.l }); };

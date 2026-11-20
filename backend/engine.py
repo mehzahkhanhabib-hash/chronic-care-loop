@@ -5,9 +5,8 @@
 import json, sys
 from datetime import date, timedelta
 from . import store, cohorts
-from .reference import RUN_DATE, TRIGGERS, TRIG, CLASS_ORDER, CLASS_DUE_DAYS, TIERS, SLA_DAYS, NURSES
+from .reference import RUN_DATE, TRIGGERS, TRIG, CLASS_ORDER, CLASS_DUE_DAYS, TIERS, SLA_DAYS, NURSES, RULES
 
-HOLD_DAYS, MAX_ATTEMPTS = 90, 3
 
 
 def day(offset=0, base=RUN_DATE):
@@ -72,29 +71,45 @@ def seed(con):
 
 # ───────────── step 1: outcomes recorded in the portal since the last run ─────────────
 def process_outcomes(con):
+    """Apply unprocessed outcomes with the rule_writeback table (rulebook §5)."""
     done, touched = 0, set()
+    WB = RULES.writeback
     for o in store.rows(con, 'SELECT * FROM outcome WHERE processed_at IS NULL ORDER BY recorded_at'):
-        res, need, act = o['result'], o['need_id'], o['action_id']
-        if res == 'done':
-            if need: con.execute("UPDATE care_plan_need SET status='done', slot='CLOSED' WHERE need_id=?", (need,))
-            if act: con.execute("UPDATE action SET status='done', closed_at=? WHERE action_id=?", (o['recorded_at'], act))
-        elif res == 'declined':
-            if need: con.execute("UPDATE care_plan_need SET status='declined', slot='CLOSED', hold_until=? WHERE need_id=?", (day(HOLD_DAYS), need))
-            if act: con.execute("UPDATE action SET status='declined', closed_at=? WHERE action_id=?", (o['recorded_at'], act))
-        elif res == 'agreed' and act:
+        res, need, act, mid = o['result'], o['need_id'], o['action_id'], o['member_id']
+        rule = WB.get(res, {})
+        if need and rule:
+            sets, args = [], []
+            if rule['need_status']: sets.append('status=?'); args.append(rule['need_status'])
+            if rule['need_slot']: sets.append('slot=?'); args.append(rule['need_slot'])
+            if rule['gap_state']: sets.append('gap_state=?'); args.append(rule['gap_state'])
+            if rule['hold_days']: sets.append('hold_until=?'); args.append(day(int(rule['hold_days'])))
+            if sets:
+                con.execute(f"UPDATE care_plan_need SET {', '.join(sets)} WHERE need_id=?", (*args, need))
+            if not act:
+                r = con.execute("SELECT action_id FROM action WHERE need_id=? AND kind='care_plan'", (need,)).fetchone()
+                act = r and r[0]
+        if act and rule.get('action_status') and rule['action_status'] != 'open':
+            con.execute('UPDATE action SET status=?, closed_at=? WHERE action_id=?', (rule['action_status'], o['recorded_at'], act))
+        if res == 'agreed' and act:
             con.execute('UPDATE action SET agreed=1 WHERE action_id=?', (act,))
         elif res in ('consent_granted', 'consent_declined'):
-            con.execute('UPDATE member SET consent_status=? WHERE member_id=?', (res.split('_')[1], o['member_id']))
+            con.execute('UPDATE member SET consent_status=? WHERE member_id=?', (res.split('_')[1], mid))
         elif res == 'not_reached':
-            tries = con.execute("SELECT count(*) FROM outcome WHERE member_id=? AND result='not_reached'", (o['member_id'],)).fetchone()[0]
-            if tries < MAX_ATTEMPTS and not con.execute("SELECT 1 FROM action WHERE member_id=? AND kind='retry' AND status='open'", (o['member_id'],)).fetchone():
-                con.execute('INSERT INTO action VALUES (?,?,?,?,?,?,?,?,?,?,?,?)', (store.next_id(con, 'action', 'action_id', 'ACT-', 5), o['member_id'], None, 'retry',
-                            f'Retry call (attempt {tries + 1} of {MAX_ATTEMPTS})', 0, day(2), o['recorded_by'], 'open', None, 'call', store.now()))
+            cap, after = int(rule.get('max_attempts') or 3), int(rule.get('retry_after_days') or 1)
+            tries = con.execute("SELECT count(*) FROM outcome WHERE member_id=? AND result='not_reached'", (mid,)).fetchone()[0]
+            if tries < cap and not con.execute("SELECT 1 FROM action WHERE member_id=? AND kind='retry' AND status='open'", (mid,)).fetchone():
+                con.execute('INSERT INTO action VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)', (store.next_id(con, 'action', 'action_id', 'ACT-', 5), mid, None, 'retry',
+                            f'Retry call (attempt {tries + 1} of {cap})', 0, day(after), o['recorded_by'], 'open', None, 'call', store.now(), None))
+            elif tries >= cap:
+                p1 = con.execute("SELECT 1 FROM assessment WHERE member_id=? AND contact_priority='P1' ORDER BY run_id DESC LIMIT 1", (mid,)).fetchone()
+                if p1 and not con.execute("SELECT 1 FROM action WHERE member_id=? AND kind='escalation' AND status='open'", (mid,)).fetchone():
+                    con.execute('INSERT INTO action VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)', (store.next_id(con, 'action', 'action_id', 'ACT-', 5), mid, None, 'escalation',
+                                f'P1 member not reached after {cap} attempts: clinical lead to decide', 0, day(0), 'U-0310', 'open', None, 'call', store.now(), None))
         con.execute('UPDATE outcome SET processed_at=? WHERE outcome_id=?', (store.now(), o['outcome_id']))
-        if need and res in ('done', 'declined'):
+        if need and rule and int(rule.get('promote_next') or 0):
             touched.add(need)
         done += 1
-    for need in touched:   # promote the next need into CURRENT (rulebook §5)
+    for need in touched:   # promote the next need into CURRENT
         r = con.execute('SELECT n.care_plan_id, p.member_id FROM care_plan_need n JOIN care_plan p USING (care_plan_id) WHERE n.need_id=?', (need,)).fetchone()
         if r:
             reslot(con, r[0], r[1])
@@ -158,39 +173,47 @@ def features(con, member_id):
 
 
 # ───────────── step 4: assessment (rulebook §2) ─────────────
-def assess(v):
+def assess(v, fired_codes=()):
+    """Risk parts come from the extract's score columns; tier, alert colour and contact priority from the rule tables."""
     g = lambda c: int(v.get(c) or 0)
     parts = dict(clinical=g('Clinical_score'), comorbid=g('Comorbid_complication_score'), kidney=g('Kidney_score'),
                  utilisation=g('Utilization_score'), age_sex=g('Age_sex_score'))
     R = sum(parts.values())
-    tier = 4 if R >= 13 else 3 if R >= 8 else 2 if R >= 4 else 1
+    tier = RULES.tier(R)
     prov = int(v.get('Last_eGFR_Value') is None and v.get('Last_UACR_Value') is None)   # K from documented CKD stage only
     review = int(g('Priority_clinical_review') == 1 or g('flag_dka_l12m') == 1 or g('flag_dm_hypoglycaemia_l12m') == 1)
-    sbp, dbp = v.get('Last_SystolicPressure_Value'), v.get('Last_DiastolicPressure_Value')
-    bp_urgent = (sbp or 0) >= 180 or (dbp or 0) >= 110
-    acute = g('Trig4_post_discharge_care') == 1 or g('flag_EDorIP_with_hypoglycaemia_last90days') == 1
-    alert = 'RED' if review or bp_urgent or tier == 4 else 'AMBER' if tier == 3 or acute else 'YELLOW' if tier == 2 else 'GREEN'
+    alert = RULES.alert(v, list(fired_codes))
     return dict(parts, kidney_provisional=prov, r_total=R, tier=tier, tier_label=TIERS[tier][0], persona=v.get('Persona'),
                 allocation='PREVHEALTH' if tier >= 3 else 'PURECS', priority_review=review, excluded=g('Exclusion'),
-                alert=alert, contact_priority={'RED': 'P1', 'AMBER': 'P2', 'YELLOW': 'P3', 'GREEN': 'P4'}[alert])
+                alert=alert, contact_priority=RULES.contact_priority(alert, set(fired_codes)))
 
 
 # ───────────── step 5: signals (rulebook §3) ─────────────
 def fired(v):
-    """[(code, state, evidence)] for one member's features."""
+    """[(code, state, evidence)]: rule_condition rows evaluated against one member's extract values."""
     out = []
-    for t in TRIGGERS:
-        code, col = t[0], t[1]
-        if col and int(v.get(col) or 0) == 1:
-            out.append((code, 'fired', _evidence(code, v)))
-    sbp, dbp = v.get('Last_SystolicPressure_Value'), v.get('Last_DiastolicPressure_Value')
-    if (sbp or 0) >= 180 or (dbp or 0) >= 110:
-        out.append(('BPU', 'fired', f'BP {sbp:.0f}/{(dbp or 0):.0f} mmHg'))
-    if int(v.get('cohort_t2d_l12m') or 0) and v.get('Last_HbA1c_Value') is None and not any(c == 'Trig6' for c, _, _ in out):
-        out.append(('Trig6', 'cannot_tell', 'No usable HbA1c result in the extract'))
-    if int(v.get('cohort_htn_l12m') or 0) and sbp is None:
-        out.append(('Trig2', 'cannot_tell', 'No usable BP reading (missing or placeholder)')) if not any(c == 'Trig2' for c, _, _ in out) else None
+    for code, state, conds in RULES.fired(v):
+        if state == 'cannot_tell':
+            out.append((code, state, (conds[-1].get('note') if conds else None) or 'Value missing in the extract'))
+        elif code in EVIDENCE_FROM_FLAG and RULES.triggers and conds and conds[0]['column_name'].startswith('Trig'):
+            out.append((code, state, _evidence(code, v)))
+        else:
+            out.append((code, state, _explain(conds, v)))
     return out
+
+
+def _explain(conds, v):
+    parts = []
+    for c in conds or []:
+        x = v.get(c['column_name'])
+        if c['column_name'].startswith('cohort_'):
+            continue
+        shown = 'none on record' if x is None else (f'{x:g}' if isinstance(x, float) else str(x))
+        parts.append(f"{c['column_name']} = {shown} ({c['op']} {c['value'] or ''})".replace(' ()', ''))
+    return '; '.join(parts) or 'Rule matched'
+
+
+EVIDENCE_FROM_FLAG = {'Trig1', 'Trig2', 'Trig3', 'Trig4', 'Trig5', 'Trig6', 'Trig7', 'Trig8', 'Trig9', 'Trig10', 'Trig11', 'Trig12', 'Trig13'}
 
 
 def _evidence(code, v):
@@ -218,8 +241,9 @@ def reslot(con, cpid, mid, nurse=None):
     made = 0
     for n in store.rows(con, "SELECT * FROM care_plan_need WHERE care_plan_id=? AND slot='CURRENT' AND status='open'", (cpid,)):
         if not con.execute("SELECT 1 FROM action WHERE need_id=? AND kind='care_plan'", (n['need_id'],)).fetchone():
-            con.execute('INSERT INTO action VALUES (?,?,?,?,?,?,?,?,?,?,?,?)', (f'A-{n["need_id"][2:]}', mid, n['need_id'], 'care_plan', n['title'], 0,
-                        n['due_date'], nurse, 'open', None, 'care_plan', store.now()))
+            ra = RULES.actions.get(n['need_key'])
+            con.execute('INSERT INTO action VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)', (f'A-{n["need_id"][2:]}', mid, n['need_id'], 'care_plan', n['title'], 0,
+                        n['due_date'], nurse, 'open', None, 'care_plan', store.now(), ra and ra['action_code']))
             made += 1
         else:   # a re-opened need (hold expired) re-opens its action
             con.execute("UPDATE action SET status='open', closed_at=NULL, due_date=? WHERE need_id=? AND kind='care_plan' AND status<>'open'", (n['due_date'], n['need_id']))
@@ -252,7 +276,7 @@ def run(con=None, actor='scheduler'):
         feats = {}
         for (mid,) in con.execute('SELECT member_id FROM member').fetchall():
             feats[mid] = v = features(con, mid)
-            a = assess(v)
+            a = assess(v, [c for c, st, _ in fired(v) if st == 'fired'])
             con.execute('INSERT INTO assessment VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', (mid, run_id, a['clinical'], a['comorbid'], a['kidney'], a['utilisation'],
                         a['age_sex'], a['kidney_provisional'], a['r_total'], a['tier'], a['tier_label'], a['persona'], a['allocation'], a['priority_review'],
                         a['excluded'], a['alert'], a['contact_priority']))
@@ -287,17 +311,20 @@ def run(con=None, actor='scheduler'):
                 t = TRIG[code]
                 need = store.one(con, 'SELECT * FROM care_plan_need WHERE care_plan_id=? AND need_key=?', (cpid, code))
                 if not need:
-                    con.execute('INSERT INTO care_plan_need VALUES (?,?,?,?,?,?,?,?,?,?,?,?)', (f'N-{mid}-{code}', cpid, sid, code, t[9], 'FUTURE', t[6], t[7], t[8],
-                                day(CLASS_DUE_DAYS[t[9]]), 'open', None))
+                    con.execute('INSERT INTO care_plan_need VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)', (f'N-{mid}-{code}', cpid, sid, code, t[9], 'FUTURE', t[6], t[7], t[8],
+                                day(CLASS_DUE_DAYS[t[9]]), 'open', None, 'Potential'))
                     n_need += 1
                 elif need['status'] == 'declined' and (need['hold_until'] or '') <= RUN_DATE:
-                    con.execute("UPDATE care_plan_need SET status='open', hold_until=NULL, signal_id=?, due_date=? WHERE need_id=?", (sid, day(CLASS_DUE_DAYS[t[9]]), need['need_id']))
+                    con.execute("UPDATE care_plan_need SET status='open', hold_until=NULL, gap_state='Potential', signal_id=?, due_date=? WHERE need_id=?", (sid, day(CLASS_DUE_DAYS[t[9]]), need['need_id']))
                 elif need['status'] == 'open':
                     con.execute('UPDATE care_plan_need SET signal_id=? WHERE need_id=?', (sid, need['need_id']))
                 # done needs stay done (G9: verified completions are not reopened by the same extract)
             # open needs whose trigger no longer fires were closed in claims
-            con.execute(f"UPDATE care_plan_need SET status='done', slot='CLOSED' WHERE care_plan_id=? AND status='open' AND need_key NOT IN ({','.join('?' * len(fired_codes)) or "''"})",
-                        (cpid, *fired_codes))
+            gone = f"care_plan_id=? AND need_key NOT IN ({','.join('?' * len(fired_codes)) or "''"})"
+            con.execute(f"UPDATE care_plan_need SET status='done', slot='CLOSED', gap_state='Closed' WHERE status='open' AND {gone}", (cpid, *fired_codes))
+            con.execute(f"UPDATE care_plan_need SET gap_state='Closed' WHERE status='done' AND gap_state='Reported' AND {gone}", (cpid, *fired_codes))
+            con.execute(f"UPDATE action SET status='done', closed_at=? WHERE kind='care_plan' AND status='open' AND need_id IN (SELECT need_id FROM care_plan_need WHERE gap_state='Closed' AND {gone})",
+                        (store.now(), cpid, *fired_codes))
             nurse = min(NURSES, key=lambda u: load[u])
             made = reslot(con, cpid, mid, nurse)
             recent = con.execute("SELECT 1 FROM contact WHERE member_id=? AND reached=1 AND julianday('now') - julianday(started_at) < 14", (mid,)).fetchone()
@@ -305,8 +332,8 @@ def run(con=None, actor='scheduler'):
                 sla = SLA_DAYS[a['contact_priority']]
                 kind, title = ('check_in', 'Digital nudge (app / WhatsApp)') if sla is None else ('call', f'{a["contact_priority"]} outreach call')
                 n_prev = con.execute("SELECT count(*) FROM action WHERE member_id=? AND source='worklist'", (mid,)).fetchone()[0]
-                con.execute('INSERT INTO action VALUES (?,?,?,?,?,?,?,?,?,?,?,?)', (f'W-{mid}-{n_prev + 1}', mid, None, kind, title, 0, day(sla) if sla is not None else day(7),
-                            nurse, 'open', None, 'worklist', store.now()))
+                con.execute('INSERT INTO action VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)', (f'W-{mid}-{n_prev + 1}', mid, None, kind, title, 0, day(sla) if sla is not None else day(7),
+                            nurse, 'open', None, 'worklist', store.now(), None))
                 made += 1
             load[nurse] += made; n_act += made
         stats.update(signals=n_sig, new_needs=n_need, new_actions=n_act,

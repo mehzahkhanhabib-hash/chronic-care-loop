@@ -1,0 +1,95 @@
+# Rule database
+
+The CCC Rulebook (T2D and hypertension, 20 Nov 2026), written as data. The engine reads every threshold, trigger, action, slot, alert, priority and write-back from these tables. No rule is hard-coded.
+
+| File | What it is |
+|------|------------|
+| `rule_*.csv` | **The source of truth.** One file per table. Edit in Excel or any text editor. |
+| `rules.db` | The same tables as a SQLite database. Open it with any SQLite viewer. |
+| `rules.sql` | The same tables as SQL (PostgreSQL or SQLite): DDL plus every row. |
+
+Rebuild `rules.db` and `rules.sql` after editing a CSV:
+
+```bash
+python3 -m backend.rules
+```
+
+The server reloads the CSVs into its own database each time it starts. To apply a change, restart the server and run the nightly. The extract columns that rules read are described in `data/raw/glossary.tsv`.
+
+## The chain
+
+```
+raw extract column ──rule_condition──▶ rule_trigger ──class──▶ rule_need_class ──rank──▶ rule_slot (CURRENT / NEXT / FUTURE)
+                                            │                                                  │
+                                            └──1:1──▶ rule_action (owner, done when, evidence) ◀┘ one action per CURRENT need
+                                                              │
+                         outcome (done, declined, not reached …) ──rule_writeback──▶ need status · action status · rule_gap_state
+member values ──rule_condition (alert)──▶ rule_alert ──▶ rule_contact_priority (P1–P4, SLA) ──▶ rule_queue_order
+R = C+M+K+U+A (rule_risk_band) ──▶ rule_tier (cadence)
+```
+
+| # | Table | Rows | What it decides |
+|---|-------|------|-----------------|
+| 1 | `rule_condition` | 100 | Raw extract column → test → fires a trigger, a "cannot tell", or an alert colour. Groups (`group_no`) are OR-ed; rows inside a group are AND-ed. |
+| 2 | `rule_trigger` | 14 | The 13 rulebook triggers plus BP urgent: class, pathway, the extract flag, and `use_variant`. |
+| 3 | `rule_action` | 14 | One next best action per trigger: owner, channel, done-when (verified in claims), evidence, prerequisite. |
+| 4 | `rule_need_class` | 6 | Care-plan order (safety → acute → uncontrolled → barrier → gap → goal) and the due days for each class. |
+| 5 | `rule_slot` | 4 | CURRENT = ranks 1–3, NEXT = 4–6, FUTURE = the rest, CLOSED. |
+| 6 | `rule_risk_band` | 32 | The points in R = C + M + K + U + A, with the extract column that already holds each part. |
+| 7 | `rule_tier` | 4 | Tiers 1–4 from R, and the contact cadence for each. |
+| 8 | `rule_alert` | 4 | RED / AMBER / YELLOW / GREEN and the response each needs. The conditions are in `rule_condition`. |
+| 9 | `rule_contact_priority` | 5 | Alert (plus trigger) → P1–P4, the SLA in days and the channel. |
+| 10 | `rule_queue_order` | 4 | Worklist order: safety or RED, then tier, then campaign priority, then time past SLA. |
+| 11 | `rule_writeback` | 9 | What each outcome does: need status, slot, action status, gap state, hold days, attempts, promotion. |
+| 12 | `rule_gap_state` | 5 | Potential → Verified → Scheduled → Reported → Closed. Only claims close a gap. |
+| 13 | `rule_guardrail` | 12 | G0–G10 and where each is enforced in the code. |
+| 14 | `rule_decision_step` | 10 | The nurse's decision tree, A–J. |
+
+## Two condition sets per trigger: `use_variant`
+
+Each trigger has two condition sets in `rule_condition`:
+
+- **`extract`**: the extract already computes the trigger as a `Trig…` flag column. This is the default.
+- **`rulebook`**: the rulebook's own thresholds, written against raw columns.
+
+To change which set a trigger uses, set `rule_trigger.use_variant` to `extract` or `rulebook`. BP urgent has no extract flag, so it always uses `rulebook`.
+
+**Decision needed.** The extract flag for Trig1 fires at HbA1c ≥ 6.5%. The rulebook says ≥ the individual goal (about 8%). In the 24-row sample, 7 of the 17 members flagged are below 8%. To follow the rulebook, set `Trig1` to `rulebook`.
+
+Every trigger carries `status = Draft: needs clinical sign-off`, as rulebook §8 requires. Clear it as each rule is approved.
+
+## How to track it
+
+Care plans and actions are stitched by key:
+
+- `care_plan_need.need_key` = `rule_trigger.trigger_code`
+- `action.action_code` = `rule_action.action_code`
+- `action.need_id` = `care_plan_need.need_id` (a unique index allows one care-plan action per need)
+
+Two views in the main database show progress:
+
+- **`v_need_tracking`**: one row per need. It shows:
+  - the trigger and its class
+  - the slot and the need's status
+  - the gap state
+  - the action: owner, done-when, assignee and status
+  - the last outcome
+  - two flags, `overdue` and `missing_action`
+- **`v_loop_kpis`**: totals for the whole loop:
+  - open needs and CURRENT needs
+  - CURRENT needs with no action (should always be 0)
+  - overdue needs
+  - needs "Reported" by a nurse but not yet seen in claims
+  - needs closed in claims
+  - needs declined and on hold
+  - calls, members reached, and members who consented
+
+The same data is available from the API:
+
+```
+GET /api/tracking            # KPIs and every need
+GET /api/tracking?member=m133
+GET /api/rules               # every rule table
+```
+
+Read gap states this way: a nurse's "done" moves a gap to **Reported**. It becomes **Closed** only when the next extract no longer fires the trigger, meaning the lab, visit or refill appeared in claims. A run with many Reported needs and few Closed ones is not yet evidence of impact (rulebook §7).

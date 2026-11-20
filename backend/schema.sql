@@ -29,19 +29,7 @@ CREATE TABLE IF NOT EXISTS data_issue (
   rule         TEXT NOT NULL,
   severity     TEXT NOT NULL            -- info | warn | error
 );
--- Rulebook §3: raw data → trigger → action.
-CREATE TABLE IF NOT EXISTS trigger_def (
-  trigger_code  TEXT PRIMARY KEY,       -- Trig1 … Trig13, BPU
-  name          TEXT NOT NULL,
-  pathway       TEXT NOT NULL,
-  raw_columns   TEXT NOT NULL,          -- extract columns the trigger reads
-  fires_when    TEXT NOT NULL,
-  action_title  TEXT NOT NULL,          -- next best action
-  owner_role    TEXT NOT NULL,
-  done_when     TEXT NOT NULL,          -- verified in claims
-  class         TEXT NOT NULL,          -- safety | acute | unctl | barrier | gap | goal
-  sort_order    INTEGER NOT NULL
-);
+-- The rule tables (rule_trigger, rule_action, rule_writeback …) are created by backend/rules.py from rules/*.csv.
 
 -- ───────────── Population ─────────────
 CREATE TABLE IF NOT EXISTS member (
@@ -159,7 +147,7 @@ CREATE TABLE IF NOT EXISTS signal (
   member_id     TEXT NOT NULL REFERENCES member(member_id),
   campaign_id   TEXT NOT NULL REFERENCES campaign(campaign_id),
   run_id        TEXT NOT NULL REFERENCES ingest_run(run_id),
-  trigger_code  TEXT NOT NULL REFERENCES trigger_def(trigger_code),
+  trigger_code  TEXT NOT NULL REFERENCES rule_trigger(trigger_code),
   state         TEXT NOT NULL,          -- fired | cannot_tell
   evidence      TEXT,
   status        TEXT NOT NULL           -- open | closed
@@ -178,7 +166,7 @@ CREATE TABLE IF NOT EXISTS care_plan_need (
   need_id       TEXT PRIMARY KEY,
   care_plan_id  TEXT NOT NULL REFERENCES care_plan(care_plan_id),
   signal_id     TEXT REFERENCES signal(signal_id),
-  need_key      TEXT NOT NULL REFERENCES trigger_def(trigger_code),
+  need_key      TEXT NOT NULL REFERENCES rule_trigger(trigger_code),
   class         TEXT NOT NULL,
   slot          TEXT NOT NULL,          -- CURRENT | NEXT | FUTURE | CLOSED
   title         TEXT NOT NULL,
@@ -187,6 +175,7 @@ CREATE TABLE IF NOT EXISTS care_plan_need (
   due_date      TEXT,
   status        TEXT NOT NULL,          -- open | done | declined
   hold_until    TEXT,                   -- declined: not re-offered for 90 days (G4)
+  gap_state     TEXT NOT NULL DEFAULT 'Potential' REFERENCES rule_gap_state(state),  -- Potential → Verified → Scheduled → Reported → Closed
   UNIQUE (care_plan_id, need_key)
 );
 
@@ -210,7 +199,8 @@ CREATE TABLE IF NOT EXISTS action (
   status      TEXT NOT NULL,            -- open | done | declined
   closed_at   TEXT,
   source      TEXT NOT NULL,            -- worklist | care_intelligence | call | care_plan | portal
-  created_at  TEXT NOT NULL
+  created_at  TEXT NOT NULL,
+  action_code TEXT REFERENCES rule_action(action_code)    -- which rulebook action this is (NULL for calls and retries)
 );
 CREATE UNIQUE INDEX IF NOT EXISTS action_one_per_need ON action (need_id) WHERE kind = 'care_plan';
 CREATE TABLE IF NOT EXISTS contact (
@@ -247,3 +237,36 @@ CREATE TABLE IF NOT EXISTS event_log (
   table_name  TEXT NOT NULL,
   detail      TEXT
 );
+
+-- ───────────── Tracking: care plan ⇄ action ⇄ outcome, one row per need ─────────────
+DROP VIEW IF EXISTS v_need_tracking;
+CREATE VIEW v_need_tracking AS
+SELECT p.member_id, n.need_id, n.need_key AS trigger_code, t.name AS trigger_name, n.class, c.sort_order AS class_order,
+       n.slot, n.status AS need_status, n.gap_state, n.due_date, n.hold_until,
+       ra.action_code, ra.owner_role, ra.done_when, ra.evidence,
+       a.action_id, a.assignee, a.status AS action_status, a.closed_at,
+       (SELECT o.result FROM outcome o WHERE o.need_id = n.need_id ORDER BY o.recorded_at DESC LIMIT 1) AS last_outcome,
+       (SELECT o.recorded_at FROM outcome o WHERE o.need_id = n.need_id ORDER BY o.recorded_at DESC LIMIT 1) AS last_outcome_at,
+       CASE WHEN n.status = 'open' AND n.due_date < date('now') THEN 1 ELSE 0 END AS overdue,
+       CASE WHEN n.status = 'open' AND n.slot = 'CURRENT' AND a.action_id IS NULL THEN 1 ELSE 0 END AS missing_action
+FROM care_plan_need n
+JOIN care_plan p USING (care_plan_id)
+JOIN rule_trigger t ON t.trigger_code = n.need_key
+JOIN rule_need_class c ON c.class = n.class
+LEFT JOIN rule_action ra ON ra.trigger_code = n.need_key
+LEFT JOIN action a ON a.need_id = n.need_id AND a.kind = 'care_plan';
+
+DROP VIEW IF EXISTS v_loop_kpis;
+CREATE VIEW v_loop_kpis AS
+SELECT
+  (SELECT count(*) FROM care_plan)                                                   AS care_plans,
+  (SELECT count(*) FROM care_plan_need WHERE status = 'open')                        AS open_needs,
+  (SELECT count(*) FROM care_plan_need WHERE status = 'open' AND slot = 'CURRENT')   AS current_needs,
+  (SELECT count(*) FROM v_need_tracking WHERE missing_action = 1)                    AS current_needs_without_action,
+  (SELECT count(*) FROM v_need_tracking WHERE overdue = 1)                           AS overdue_needs,
+  (SELECT count(*) FROM care_plan_need WHERE gap_state = 'Reported')                 AS reported_not_yet_in_claims,
+  (SELECT count(*) FROM care_plan_need WHERE gap_state = 'Closed')                   AS closed_in_claims,
+  (SELECT count(*) FROM care_plan_need WHERE status = 'declined')                    AS declined_on_hold,
+  (SELECT count(*) FROM contact)                                                     AS calls,
+  (SELECT count(*) FROM contact WHERE reached = 1)                                   AS reached,
+  (SELECT count(*) FROM member WHERE consent_status = 'granted')                     AS consented;

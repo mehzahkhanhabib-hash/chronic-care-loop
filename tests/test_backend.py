@@ -100,3 +100,54 @@ class Backend(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class RuleDatabase(unittest.TestCase):
+    def setUp(self):
+        from backend.rules import Rules
+        self.R = Rules()
+
+    def test_every_trigger_has_one_action_and_a_condition(self):
+        for t in self.R.triggers:
+            self.assertIn(t['trigger_code'], self.R.actions)
+            self.assertTrue(self.R.conditions.get(('trigger', t['trigger_code'], t['use_variant'])), t['trigger_code'])
+
+    def test_rulebook_bp_urgent(self):
+        self.assertIn('BPU', [c for c, s, _ in self.R.fired({'Last_SystolicPressure_Value': 182.0, 'Last_DiastolicPressure_Value': 90.0})])
+        self.assertNotIn('BPU', [c for c, s, _ in self.R.fired({'Last_SystolicPressure_Value': 150.0})])
+
+    def test_missing_date_counts_as_overdue(self):
+        c = {'column_name': 'last_hba1c_date2', 'op': 'missing_or_gt', 'value': '180'}
+        self.assertTrue(self.R.test(c, {}))
+        self.assertFalse(self.R.test(c, {'last_hba1c_date2': 30.0}))
+
+    def test_alert_colours(self):
+        self.assertEqual(self.R.alert({'Last_eGFR_Value': 12.0}, []), 'RED')
+        self.assertEqual(self.R.alert({'Last_HbA1c_Value': 9.4}, ['Trig1']), 'AMBER')
+        self.assertEqual(self.R.alert({'Last_HbA1c_Value': 7.4}, ['Trig6']), 'YELLOW')
+        self.assertEqual(self.R.alert({}, []), 'GREEN')
+
+    def test_post_discharge_amber_is_p1(self):
+        self.assertEqual(self.R.contact_priority('AMBER', {'Trig4'}), 'P1')
+        self.assertEqual(self.R.contact_priority('AMBER', {'Trig1'}), 'P2')
+
+    def test_tier_cutoffs(self):
+        self.assertEqual([self.R.tier(r) for r in (0, 3, 4, 7, 8, 12, 13, 23)], [1, 1, 2, 2, 3, 3, 4, 4])
+
+
+class Tracking(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.con = store.connect(os.path.join(tempfile.mkdtemp(), 'tracking.db'))
+        ingest.load(SAMPLE, con=cls.con)
+        engine.run(cls.con)
+
+    def q(self, sql, *a):
+        return self.con.execute(sql, a).fetchone()[0]
+
+    def test_gap_state_reported_then_tracked(self):
+        n = self.con.execute("SELECT p.member_id, n.need_key, n.need_id FROM care_plan_need n JOIN care_plan p USING (care_plan_id) WHERE n.status='open' AND n.slot='CURRENT' ORDER BY n.need_id LIMIT 1").fetchone()
+        engine.record(self.con, {'member_id': n[0], 'kind': 'need', 'need': n[1], 'result': 'done'})
+        row = dict(self.con.execute('SELECT * FROM v_need_tracking WHERE need_id=?', (n[2],)).fetchone())
+        self.assertEqual((row['need_status'], row['gap_state'], row['action_status'], row['last_outcome']), ('done', 'Reported', 'done', 'done'))
+        self.assertEqual(self.q('SELECT current_needs_without_action FROM v_loop_kpis'), 0)

@@ -96,9 +96,6 @@ def load(path, glossary_path=None, con=None):
         cur.execute('INSERT INTO ingest_run VALUES (?,?,?,?,?,?)', (run_id, os.path.basename(path), AS_OF, len(data), len(header), store.now()))
         for u in CARE_TEAM:
             cur.execute('INSERT OR IGNORE INTO care_team_user VALUES (?,?,?,?,?)', u)
-        for t in TRIGGERS:
-            cur.execute('INSERT OR REPLACE INTO trigger_def VALUES (?,?,?,?,?,?,?,?,?,?)',
-                        (t[0], t[2], t[3], t[4], t[5], t[6], t[7], t[8], t[9], TRIGGERS.index(t)))
         # feature catalogue: one row per extract column + derived fields
         for c in header:
             g = gl.get(c, {})

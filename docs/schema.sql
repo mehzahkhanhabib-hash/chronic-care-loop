@@ -44,19 +44,119 @@ CREATE TABLE data_issue (
   FOREIGN KEY (run_id) REFERENCES ingest_run (run_id)
 );
 
--- Rulebook §3: each trigger, the raw columns it reads, the next best action, owner and proof of completion.
-CREATE TABLE trigger_def (
+-- Care-plan order (safety → goal) and how many days a need of each class has.
+CREATE TABLE rule_need_class (
+  class            TEXT NOT NULL,
+  sort_order       INT NOT NULL,
+  label            TEXT NOT NULL,
+  due_days         INT NOT NULL,
+  meaning          TEXT,
+  PRIMARY KEY (class)
+);
+
+-- Rulebook §3: each trigger, its class, the extract flag and which condition set is in use (extract or rulebook).
+CREATE TABLE rule_trigger (
   trigger_code     TEXT NOT NULL,
   name             TEXT NOT NULL,
   pathway          TEXT NOT NULL,
-  raw_columns      TEXT NOT NULL,
-  fires_when       TEXT NOT NULL,
-  action_title     TEXT NOT NULL,
-  owner_role       TEXT NOT NULL,
-  done_when        TEXT NOT NULL,
   class            TEXT NOT NULL,
   sort_order       INT NOT NULL,
-  PRIMARY KEY (trigger_code)
+  raw_data_rulebook TEXT,
+  fires_when_rulebook TEXT,
+  extract_flag     TEXT,
+  use_variant      TEXT NOT NULL,
+  status           TEXT,
+  PRIMARY KEY (trigger_code),
+  FOREIGN KEY (class) REFERENCES rule_need_class (class)
+);
+
+-- Raw extract column → test → trigger, cannot-tell or alert colour. Groups are OR-ed, rows in a group AND-ed.
+CREATE TABLE rule_condition (
+  rule_id          TEXT NOT NULL,
+  rule_type        TEXT NOT NULL,
+  target           TEXT NOT NULL,
+  variant          TEXT NOT NULL,
+  group_no         INT NOT NULL,
+  column_name      TEXT NOT NULL,
+  op               TEXT NOT NULL,
+  value            TEXT,
+  note             TEXT,
+  PRIMARY KEY (rule_id, group_no, column_name, op)
+);
+
+-- One next best action per trigger: owner, channel, done-when and the claim that proves it.
+CREATE TABLE rule_action (
+  action_code      TEXT NOT NULL,
+  trigger_code     TEXT NOT NULL,
+  title            TEXT NOT NULL,
+  owner_role       TEXT NOT NULL,
+  channel          TEXT NOT NULL,
+  done_when        TEXT NOT NULL,
+  evidence         TEXT,
+  prerequisite     TEXT,
+  escalate_to      TEXT,
+  PRIMARY KEY (action_code),
+  FOREIGN KEY (trigger_code) REFERENCES rule_trigger (trigger_code),
+  FOREIGN KEY (prerequisite) REFERENCES rule_trigger (trigger_code)
+);
+
+-- Risk tiers 1–4 from R, with the contact cadence.
+CREATE TABLE rule_tier (
+  tier             INT NOT NULL,
+  label            TEXT NOT NULL,
+  r_min            INT NOT NULL,
+  r_max            INT NOT NULL,
+  campaign_does    TEXT,
+  cadence          TEXT NOT NULL,
+  cadence_days     TEXT NOT NULL,
+  PRIMARY KEY (tier)
+);
+
+-- Alert colours RED / AMBER / YELLOW / GREEN and the response each needs.
+CREATE TABLE rule_alert (
+  colour           TEXT NOT NULL,
+  sort_order       INT NOT NULL,
+  criteria         TEXT NOT NULL,
+  response         TEXT NOT NULL,
+  PRIMARY KEY (colour)
+);
+
+-- Alert (plus trigger) → P1–P4 and the contact SLA.
+CREATE TABLE rule_contact_priority (
+  priority         TEXT NOT NULL,
+  alert            TEXT NOT NULL,
+  also_requires_trigger TEXT NOT NULL,
+  sla_days         INT,
+  channel          TEXT NOT NULL,
+  meaning          TEXT,
+  PRIMARY KEY (priority, alert, also_requires_trigger),
+  FOREIGN KEY (alert) REFERENCES rule_alert (colour)
+);
+
+-- Care-gap states: Potential → Verified → Scheduled → Reported → Closed (only claims close a gap).
+CREATE TABLE rule_gap_state (
+  state            TEXT NOT NULL,
+  sort_order       INT NOT NULL,
+  moved_by         TEXT NOT NULL,
+  evidence         TEXT,
+  PRIMARY KEY (state)
+);
+
+-- What each outcome does to the need, its action and the care gap; holds, retries and promotion.
+CREATE TABLE rule_writeback (
+  outcome          TEXT NOT NULL,
+  need_status      TEXT,
+  need_slot        TEXT,
+  action_status    TEXT,
+  gap_state        TEXT,
+  hold_days        INT,
+  max_attempts     INT,
+  retry_after_days INT,
+  promote_next     INT NOT NULL,
+  new_calendar_item TEXT,
+  guardrail        TEXT,
+  PRIMARY KEY (outcome),
+  FOREIGN KEY (gap_state) REFERENCES rule_gap_state (state)
 );
 
 -- One row per masked member (mask_id). Consent is the only column the loop writes.
@@ -215,7 +315,7 @@ CREATE TABLE signal (
   FOREIGN KEY (member_id) REFERENCES member (member_id),
   FOREIGN KEY (campaign_id) REFERENCES campaign (campaign_id),
   FOREIGN KEY (run_id) REFERENCES ingest_run (run_id),
-  FOREIGN KEY (trigger_code) REFERENCES trigger_def (trigger_code)
+  FOREIGN KEY (trigger_code) REFERENCES rule_trigger (trigger_code)
 );
 
 -- One plan per member: pathway, tier and the cadence that follows from it.
@@ -246,10 +346,12 @@ CREATE TABLE care_plan_need (
   due_date         TEXT,
   status           TEXT NOT NULL,
   hold_until       TEXT,
+  gap_state        TEXT NOT NULL,
   PRIMARY KEY (need_id),
   FOREIGN KEY (care_plan_id) REFERENCES care_plan (care_plan_id),
   FOREIGN KEY (signal_id) REFERENCES signal (signal_id),
-  FOREIGN KEY (need_key) REFERENCES trigger_def (trigger_code)
+  FOREIGN KEY (need_key) REFERENCES rule_trigger (trigger_code),
+  FOREIGN KEY (gap_state) REFERENCES rule_gap_state (state)
 );
 
 -- Work for the team: one care-plan action per CURRENT need, plus worklist calls and retries.
@@ -266,10 +368,12 @@ CREATE TABLE action (
   closed_at        TEXT,
   source           TEXT NOT NULL,
   created_at       TEXT NOT NULL,
+  action_code      TEXT,
   PRIMARY KEY (action_id),
   FOREIGN KEY (member_id) REFERENCES member (member_id),
   FOREIGN KEY (need_id) REFERENCES care_plan_need (need_id),
-  FOREIGN KEY (assignee) REFERENCES care_team_user (user_id)
+  FOREIGN KEY (assignee) REFERENCES care_team_user (user_id),
+  FOREIGN KEY (action_code) REFERENCES rule_action (action_code)
 );
 
 -- A call attempt: who, when, reached or not, consent and response.
@@ -335,37 +439,114 @@ INSERT INTO care_team_user (user_id, name, role, languages, daily_capacity) VALU
   ('U-0310', 'Dr. Rana K.', 'Clinical lead', 'Arabic, English', NULL);
 
 INSERT INTO ingest_run (run_id, source_file, as_of_date, row_count, column_count, loaded_at) VALUES
-  ('RUN-20261120-172318', 'member_features_sample.tsv', '2026-10-31', 24, 341, '2026-11-20 17:23:18');
+  ('RUN-20261120-180802', 'member_features_sample.tsv', '2026-10-31', 24, 341, '2026-11-20 18:08:02');
 
 INSERT INTO src_member_row (run_id, member_id, raw_json) VALUES
-  ('RUN-20261120-172318', 'm26', '{"mask_id": "m26", "rank_PURECS_per_payable": "", "GENDER": "M", "AGE": "65", "NATIONALITY": "JORDANIAN", "plan_name": "Core Silver", … 335 more}'),
-  ('RUN-20261120-172318', 'm44', '{"mask_id": "m44", "rank_PURECS_per_payable": "", "GENDER": "F", "AGE": "66", "NATIONALITY": "PALESTINIAN", "plan_name": "Enhanced Bronze", … 335 more}'),
-  ('RUN-20261120-172318', 'm133', '{"mask_id": "m133", "rank_PURECS_per_payable": "", "GENDER": "M", "AGE": "72", "NATIONALITY": "LEBANESE", "plan_name": "Enhanced Bronze", … 335 more}');
+  ('RUN-20261120-180802', 'm26', '{"mask_id": "m26", "rank_PURECS_per_payable": "", "GENDER": "M", "AGE": "65", "NATIONALITY": "JORDANIAN", "plan_name": "Core Silver", … 335 more}'),
+  ('RUN-20261120-180802', 'm44', '{"mask_id": "m44", "rank_PURECS_per_payable": "", "GENDER": "F", "AGE": "66", "NATIONALITY": "PALESTINIAN", "plan_name": "Enhanced Bronze", … 335 more}'),
+  ('RUN-20261120-180802', 'm133', '{"mask_id": "m133", "rank_PURECS_per_payable": "", "GENDER": "M", "AGE": "72", "NATIONALITY": "LEBANESE", "plan_name": "Enhanced Bronze", … 335 more}');
 
 INSERT INTO data_issue (issue_id, run_id, member_id, column_name, raw_value, rule, severity) VALUES
-  (8, 'RUN-20261120-172318', 'm44', 'Last_SystolicPressure_Value', '999', '999 placeholder', 'error'),
-  (9, 'RUN-20261120-172318', 'm44', 'Last_DiastolicPressure_Value', '999', '999 placeholder', 'error'),
-  (10, 'RUN-20261120-172318', 'm44', 'Last_MeasuredBMI_Value', '999', '999 placeholder', 'error'),
-  (23, 'RUN-20261120-172318', NULL, 'rank_PURECS_per_payable', '', 'Empty for every row', 'warn'),
-  (24, 'RUN-20261120-172318', NULL, 'Risk_tier', '1. Very High … 4. Low', 'Reverse numbering vs rulebook (1 Low … 4 Very high); backend stores rulebook numbering', 'info'),
-  (25, 'RUN-20261120-172318', NULL, 'Cohort_allocation', 'PREVHEALTH', 'Glossary spells it ''PREVHEATH''', 'info'),
-  (26, 'RUN-20261120-172318', NULL, 'l12m_payable_DiaborHTNrelated, payable_last24months_DiaborHTNrelated, payable_since2024_DiaborHTNrelated', ' 7,268.55 ', '3 money columns use spreadsheet formatting (spaces, thousands separators, "-" for zero)', 'info');
+  (8, 'RUN-20261120-180802', 'm44', 'Last_SystolicPressure_Value', '999', '999 placeholder', 'error'),
+  (9, 'RUN-20261120-180802', 'm44', 'Last_DiastolicPressure_Value', '999', '999 placeholder', 'error'),
+  (10, 'RUN-20261120-180802', 'm44', 'Last_MeasuredBMI_Value', '999', '999 placeholder', 'error'),
+  (23, 'RUN-20261120-180802', NULL, 'rank_PURECS_per_payable', '', 'Empty for every row', 'warn'),
+  (24, 'RUN-20261120-180802', NULL, 'Risk_tier', '1. Very High … 4. Low', 'Reverse numbering vs rulebook (1 Low … 4 Very high); backend stores rulebook numbering', 'info'),
+  (25, 'RUN-20261120-180802', NULL, 'Cohort_allocation', 'PREVHEALTH', 'Glossary spells it ''PREVHEATH''', 'info'),
+  (26, 'RUN-20261120-180802', NULL, 'l12m_payable_DiaborHTNrelated, payable_last24months_DiaborHTNrelated, payable_since2024_DiaborHTNrelated', ' 7,268.55 ', '3 money columns use spreadsheet formatting (spaces, thousands separators, "-" for zero)', 'info');
 
-INSERT INTO trigger_def (trigger_code, name, pathway, raw_columns, fires_when, action_title, owner_role, done_when, class, sort_order) VALUES
-  ('Trig3', 'Hypoglycaemia', 'T2D', 'flag_dm_hypoglycaemia_last90days, flag_no_glucagon_last12months, flag_active_insulin', 'Hypoglycaemia event in the last 90 days, or on insulin / sulfonylurea without rescue glucagon', 'Same-day clinician review, hypo plan, glucagon check', 'Doctor', 'Review note and medicine change logged', 'safety', 0),
-  ('BPU', 'BP urgent', 'HTN', 'Last_SystolicPressure_Value, Last_DiastolicPressure_Value', 'Latest BP ≥ 180/110', 'Stop the script and escalate the same day', 'Nurse → doctor', 'Escalation closed', 'safety', 1),
-  ('Trig4', 'Post-discharge care', 'T2D · HTN', 'last_ip_discharge_date, flag_no_visit_after_discharge, flag_missing_*refill_post_last_discharge', 'Discharged with no clinic visit since, or a medicine not refilled within 30 days of discharge', 'GP follow-up within 72 h; medicine reconciliation', 'Coordinator', 'GP outpatient claim within 7 days', 'acute', 2),
-  ('Trig1', 'HbA1c above target', 'T2D', 'Last_HbA1c_Value, Last_HbA1c_Date', 'Latest HbA1c ≥ 6.5% (extract); rulebook: ≥ individual goal (around 8%)', 'Glycaemic treatment review', 'Doctor', 'Goal, decision and next test date recorded', 'unctl', 3),
-  ('Trig2', 'BP treatment review', 'HTN', 'flag_active_ACEinhibitor, flag_active_ARBinhibitor, flag_overlap_ACE_ARB_more_than_30days', 'DM + HTN with kidney disease or CAD and no ACEi/ARB, or ACEi + ARB overlapping', 'Home BP recheck and clinician review', 'Nurse', 'Readings reviewed, next BP date set', 'unctl', 4),
-  ('Trig5', 'Kidney check', 'T2D · HTN', 'Last_eGFR_Value, Last_UACR_Value, last_egfr_test_date, last_urine_albumin_date, last_nephrology_visit', 'eGFR or UACR missing / older than 12 months (90 days with CKD), or eGFR < 30 with no nephrology visit', 'Book eGFR and UACR; nephrology if eGFR < 30', 'Coordinator', 'Lab claim with a result', 'unctl', 5),
-  ('Trig9', 'Medication adherence', 'T2D · HTN', 'pdc_any_t2d_noninsulin, pdc_any_htn, days_since_*_supply_ran_out', 'PDC < 80%, or supply ran out more than 30 days ago', 'Refill and barrier check; pharmacist if 3 or more classes', 'Coordinator', 'Next fill dispensed within 14 days', 'barrier', 6),
-  ('Trig6', 'HbA1c test due', 'T2D', 'last_hba1c_date2, Last_HbA1c_Value', 'No HbA1c in 180 days (90 days if off target or after a glycaemic event)', 'Book HbA1c at an in-network lab', 'Coordinator', 'Lab claim', 'gap', 7),
-  ('Trig12', 'Eye exam due', 'T2D', 'last_retinal_screen_date, last_ophthalmology_visit, flag_dm_eye', 'No retinal screen or eye-doctor visit in 365 / 730 days', 'Confirm the last exam or refer', 'Nurse', 'Report or referral claim', 'gap', 8),
-  ('Trig13', 'High-risk foot', 'T2D', 'flag_dm_foot, flag_dm_neuropathy, flag_amputation, last_podiatry_visit', 'Diabetic foot, neuropathy, amputation or dialysis, and no podiatry visit in 180 days', 'Foot exam; podiatry if high risk', 'Nurse', 'Exam claim', 'gap', 9),
-  ('Trig7', 'Potassium due', 'HTN', 'last_potassium_date, first_ACE_ARB_MRA_thiazide_fill_date', 'On ACEi / ARB / MRA / thiazide with no potassium test since starting or in 365 days', 'Add K+ to the next lab order', 'Coordinator', 'Lab claim', 'gap', 10),
-  ('Trig11', 'Annual labs', 'T2D · HTN', 'last_lipid_panel_date, last_urine_albumin_date, last_liver_function_date, last_cbc_date, last_vitb12_date', 'An annual lab missing or older than 365 days', 'One bundled lab visit', 'Coordinator', 'Lab claims', 'gap', 11),
-  ('Trig10', 'New diagnosis', 'T2D · HTN', 'first_e11_date, first_htn_date, glucose and HbA1c values', 'First diabetes / hypertension claim in the last 180 days, or diagnostic-range glucose', 'Baseline assessment and DSMES referral', 'Nurse', 'Assessment documented', 'goal', 12),
-  ('Trig8', 'Nutrition and education', 'T2D', 'last_dietitian_visit, last_diabeducator_visit', 'No dietitian or diabetes-educator visit in 365 days', 'Self-management goal, dietitian', 'Nurse', 'Goal set and reviewed', 'goal', 13);
+INSERT INTO rule_need_class (class, sort_order, label, due_days, meaning) VALUES
+  ('safety', 1, 'Safety', 0, 'Same day; event pathway, not the cadence'),
+  ('acute', 2, 'Acute event', 3, 'Due in 3 days'),
+  ('unctl', 3, 'Uncontrolled', 7, 'Due in 7 days'),
+  ('barrier', 4, 'Barrier', 7, 'Due in 7 days'),
+  ('gap', 5, 'Verified gap', 30, 'Due in 30 days'),
+  ('goal', 6, 'Patient goal', 14, 'Due in 14 days (not set in the rulebook; working default)');
+
+INSERT INTO rule_trigger (trigger_code, name, pathway, class, sort_order, raw_data_rulebook, fires_when_rulebook, extract_flag, use_variant, status) VALUES
+  ('Trig3', 'Hypoglycaemia', 'T2D', 'safety', 1, 'ICD E16.0–E16.2, E11.64; CGM < 3.9 mmol/L', 'Any event in 12 months', 'Trig3_hypoglycemia_tx', 'extract', 'Draft: needs clinical sign-off (rulebook §8)'),
+  ('BPU', 'BP urgent', 'HTN', 'safety', 2, 'Home or claim BP', 'BP ≥ 180/110', NULL, 'rulebook', 'Draft: needs clinical sign-off (rulebook §8)'),
+  ('Trig4', 'Post-discharge care', 'T2D · HTN', 'acute', 3, 'IP or ED encounter, discharge date', 'Discharge in the last 14 days, or 2 or more ED visits in 90 days', 'Trig4_post_discharge_care', 'extract', 'Draft: needs clinical sign-off (rulebook §8)'),
+  ('Trig1', 'HbA1c above target', 'T2D', 'unctl', 4, 'LOINC 4548-4', 'Last value ≥ individual goal (around 8%)', 'Trig1_HbA1c_above_target', 'extract', 'Draft: needs clinical sign-off (rulebook §8). Extract flag fires at 6.5%: decide which variant to use'),
+  ('Trig2', 'BP treatment review', 'HTN', 'unctl', 5, 'SBP/DBP observations', '≥ 130/80 (DM or CKD) or ≥ 140/90', 'Trig2_HTN_tx_review', 'extract', 'Draft: needs clinical sign-off (rulebook §8)'),
+  ('Trig5', 'Kidney check', 'T2D · HTN', 'unctl', 6, 'eGFR 69405-9, UACR 9318-7', 'eGFR < 60, or no eGFR/UACR in 12 months', 'Trig5_Kidney_check', 'extract', 'Draft: needs clinical sign-off (rulebook §8)'),
+  ('Trig9', 'Medication adherence', 'T2D · HTN', 'barrier', 7, 'Pharmacy fills, days supply', 'PDC < 80% over 180 days, or a gap of more than 30 days', 'Trig9_medication_adherence', 'extract', 'Draft: needs clinical sign-off (rulebook §8)'),
+  ('Trig6', 'HbA1c test due', 'T2D', 'gap', 8, 'Last HbA1c date', '> 6 months (or > 3 months if off target)', 'Trig6_HbA1c_due', 'extract', 'Draft: needs clinical sign-off (rulebook §8)'),
+  ('Trig12', 'Eye exam due', 'T2D', 'gap', 9, 'Retinal CPT 92250/92227', 'None in 24 months', 'Trig12_eyeexam_due', 'extract', 'Draft: needs clinical sign-off (rulebook §8)'),
+  ('Trig13', 'High-risk foot', 'T2D', 'gap', 10, 'Foot CPT 2028F/G0245; ulcer, neuropathy, PAD', 'No exam in 12 months, or a high-risk code', 'Trig13_highriskfoot_monitor', 'extract', 'Draft: needs clinical sign-off (rulebook §8)'),
+  ('Trig7', 'Potassium due', 'HTN', 'gap', 11, 'K+ result, ACE/ARB/diuretic fills', 'On an RAAS inhibitor or diuretic with no K+ in 12 months', 'Trig7_Renal_Potassium_due', 'extract', 'Draft: needs clinical sign-off (rulebook §8)'),
+  ('Trig11', 'Annual labs', 'T2D · HTN', 'gap', 12, 'Lipids, creatinine', 'None in 12 months', 'Trig11_annual_labs_due', 'extract', 'Draft: needs clinical sign-off (rulebook §8)'),
+  ('Trig10', 'New diagnosis', 'T2D · HTN', 'goal', 13, 'First E11 / I10 claim', 'First code in the last 90 days', 'Trig10_new_diagnosis', 'extract', 'Draft: needs clinical sign-off (rulebook §8)'),
+  ('Trig8', 'Nutrition and education', 'T2D', 'goal', 14, 'No dietitian or DSMES claim', 'None in 12 months', 'Trig8_nutrition_due', 'extract', 'Draft: needs clinical sign-off (rulebook §8)');
+
+INSERT INTO rule_condition (rule_id, rule_type, target, variant, group_no, column_name, op, value, note) VALUES
+  ('trigger:BPU:rulebook', 'trigger', 'BPU', 'rulebook', 1, 'Last_SystolicPressure_Value', '>=', '180', NULL),
+  ('trigger:BPU:rulebook', 'trigger', 'BPU', 'rulebook', 2, 'Last_DiastolicPressure_Value', '>=', '110', NULL),
+  ('trigger:Trig1:extract', 'trigger', 'Trig1', 'extract', 1, 'Trig1_HbA1c_above_target', '=', '1', 'Flag computed in the extract (see glossary)'),
+  ('trigger:Trig1:rulebook', 'trigger', 'Trig1', 'rulebook', 1, 'cohort_t2d_l12m', '=', '1', 'Individual goal defaults to 8%'),
+  ('trigger:Trig1:rulebook', 'trigger', 'Trig1', 'rulebook', 1, 'Last_HbA1c_Value', '>=', '8', 'Individual goal defaults to 8%'),
+  ('trigger:Trig3:extract', 'trigger', 'Trig3', 'extract', 1, 'Trig3_hypoglycemia_tx', '=', '1', 'Flag computed in the extract (see glossary)'),
+  ('trigger:Trig3:rulebook', 'trigger', 'Trig3', 'rulebook', 1, 'cohort_t2d_l12m', '=', '1', NULL),
+  ('trigger:Trig3:rulebook', 'trigger', 'Trig3', 'rulebook', 1, 'flag_dm_hypoglycaemia_l12m', '=', '1', NULL),
+  ('alert:RED:any', 'alert', 'RED', 'any', 1, 'Priority_clinical_review', '=', '1', 'Red-flag symptoms are captured on the call, not from data'),
+  ('alert:RED:any', 'alert', 'RED', 'any', 2, 'flag_dka_l12m', '=', '1', 'Red-flag symptoms are captured on the call, not from data'),
+  ('alert:RED:any', 'alert', 'RED', 'any', 3, 'flag_dm_hypoglycaemia_l12m', '=', '1', 'Red-flag symptoms are captured on the call, not from data'),
+  ('alert:RED:any', 'alert', 'RED', 'any', 4, 'Last_SystolicPressure_Value', '>=', '180', 'Red-flag symptoms are captured on the call, not from data'),
+  ('alert:RED:any', 'alert', 'RED', 'any', 5, 'Last_DiastolicPressure_Value', '>=', '110', 'Red-flag symptoms are captured on the call, not from data'),
+  ('alert:RED:any', 'alert', 'RED', 'any', 6, 'Last_eGFR_Value', '<', '15', 'Red-flag symptoms are captured on the call, not from data');
+
+INSERT INTO rule_action (action_code, trigger_code, title, owner_role, channel, done_when, evidence, prerequisite, escalate_to) VALUES
+  ('ACT-HYPO', 'Trig3', 'Same-day clinician review, hypo plan, glucagon check', 'Doctor', 'Call', 'Review note and medicine change logged', 'Clinician note; glucagon fill', NULL, 'Clinical lead'),
+  ('ACT-BPU', 'BPU', 'Stop the script and escalate the same day', 'Nurse → doctor', 'Call', 'Escalation closed', 'Escalation outcome', NULL, 'Clinical lead'),
+  ('ACT-POSTDC', 'Trig4', 'GP follow-up within 72 h; medicine reconciliation', 'Coordinator', 'Call', 'GP outpatient claim within 7 days', 'GP outpatient claim', NULL, NULL),
+  ('ACT-A1C-REV', 'Trig1', 'Glycaemic treatment review', 'Doctor', 'Call', 'Goal, decision and next test date recorded', 'Outpatient claim + recorded goal', NULL, NULL),
+  ('ACT-BP-REV', 'Trig2', 'Home BP recheck and clinician review', 'Nurse', 'Call', 'Readings reviewed, next BP date set', 'BP observation', NULL, NULL),
+  ('ACT-KIDNEY', 'Trig5', 'Book eGFR and UACR; nephrology if eGFR < 30', 'Coordinator', 'Call', 'Lab claim with a result', 'eGFR / UACR lab claim', NULL, NULL),
+  ('ACT-ADH', 'Trig9', 'Refill and barrier check; pharmacist if 3 or more classes', 'Coordinator / pharmacist', 'Call', 'Next fill dispensed within 14 days', 'Pharmacy fill', NULL, NULL),
+  ('ACT-A1C-LAB', 'Trig6', 'Book HbA1c at an in-network lab', 'Coordinator', 'Call or WhatsApp', 'Lab claim', 'HbA1c lab claim', NULL, NULL),
+  ('ACT-EYE', 'Trig12', 'Confirm the last exam or refer', 'Nurse', 'Call', 'Report or referral claim', 'Retinal CPT 92250/92227 or referral', NULL, NULL),
+  ('ACT-FOOT', 'Trig13', 'Foot exam; podiatry if high risk', 'Nurse', 'Call', 'Exam claim', 'Foot CPT 2028F/G0245', NULL, NULL),
+  ('ACT-K', 'Trig7', 'Add K+ to the next lab order', 'Coordinator', 'Call or WhatsApp', 'Lab claim', 'Potassium lab claim', NULL, NULL),
+  ('ACT-LABS', 'Trig11', 'One bundled lab visit', 'Coordinator', 'Call or WhatsApp', 'Lab claims', 'Lipid and creatinine lab claims', NULL, NULL),
+  ('ACT-NEWDX', 'Trig10', 'Baseline assessment and DSMES referral', 'Nurse', 'Call', 'Assessment documented', 'Assessment note; DSMES referral', NULL, NULL),
+  ('ACT-DSMES', 'Trig8', 'Self-management goal, dietitian', 'Nurse', 'Call', 'Goal set and reviewed', 'Dietitian / DSMES claim', 'Trig1', NULL);
+
+INSERT INTO rule_tier (tier, label, r_min, r_max, campaign_does, cadence, cadence_days) VALUES
+  (1, 'Low', 0, 3, 'Routine monitoring, mostly digital nudges', 'Baseline, M3, M6, M12', '0,90,180,365'),
+  (2, 'Moderate', 4, 7, 'Scheduled outreach and risk-factor management', 'Baseline, W6, M3, M5, M7, M9, M12', '0,42,90,150,210,270,365'),
+  (3, 'High', 8, 12, 'Active case management and clinical coordination', 'Baseline, W2, M1, M2, M3, M4, M6, M9, M12', '0,14,30,60,90,120,180,270,365'),
+  (4, 'Very high', 13, 23, 'Intensive follow-up and priority clinical coordination', 'Weekly, then every 2–4 weeks', '0,7,14,21,28,56,84,112,180');
+
+INSERT INTO rule_alert (colour, sort_order, criteria, response) VALUES
+  ('RED', 1, 'Safety flag, BP ≥ 180/110, eGFR < 15, a hypoglycaemia event, or red-flag symptoms on the call', 'Same-day clinician; the script stops'),
+  ('AMBER', 2, 'Post-discharge, HbA1c ≥ 9, BP ≥ 160/100, eGFR falling, PDC < 50%', 'Clinician review within 72 h'),
+  ('YELLOW', 3, 'Off target but below AMBER; an overdue test or screening', 'Next touchpoint'),
+  ('GREEN', 4, 'At target, nothing open', 'Routine cadence');
+
+INSERT INTO rule_contact_priority (priority, alert, also_requires_trigger, sla_days, channel, meaning) VALUES
+  ('P1', 'RED', '', 0, 'Call', 'Same day'),
+  ('P1', 'AMBER', 'Trig4', 0, 'Call', 'Same day: post-discharge (rulebook scenario 6.2)'),
+  ('P2', 'AMBER', '', 1, 'Call', 'Next working day'),
+  ('P3', 'YELLOW', '', 3, 'Call', 'Within 3 working days'),
+  ('P4', 'GREEN', '', NULL, 'Digital nudge', 'No call; a digital nudge only');
+
+INSERT INTO rule_gap_state (state, sort_order, moved_by, evidence) VALUES
+  ('Potential', 1, 'Nightly run', 'Trigger fired'),
+  ('Verified', 2, 'Nurse', 'Confirmed with the member on the call (member assertion)'),
+  ('Scheduled', 3, 'Nurse', 'Action agreed or booked'),
+  ('Reported', 4, 'Nurse', 'Nurse marked it done; not yet seen in claims'),
+  ('Closed', 5, 'Nightly run', 'Success criterion appears in claims (the trigger stops firing)');
+
+INSERT INTO rule_writeback (outcome, need_status, need_slot, action_status, gap_state, hold_days, max_attempts, retry_after_days, promote_next, new_calendar_item, guardrail) VALUES
+  ('done', 'done', 'CLOSED', 'done', 'Reported', NULL, NULL, NULL, 1, 'Next need, due by its class', 'G7'),
+  ('declined', 'declined', 'CLOSED', 'declined', NULL, 90, NULL, NULL, 1, 'Re-offer at day 90', 'G4'),
+  ('not_reached', NULL, NULL, NULL, NULL, NULL, 3, 1, 0, 'Retry the next working day; P1 escalates to the lead after 3 attempts', 'G3'),
+  ('carried', 'open', 'CURRENT', 'open', NULL, NULL, NULL, NULL, 0, 'None: stays CURRENT with its due date', 'G9'),
+  ('agreed', 'open', NULL, 'open', 'Scheduled', NULL, NULL, NULL, 0, 'None: the action is agreed with the member', NULL),
+  ('member_assertion', NULL, NULL, NULL, 'Verified', NULL, NULL, NULL, 0, 'Matched again tonight; depends on whether the trigger still fires', 'G8'),
+  ('consent_granted', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 'Member 360 and the care plan unlock', 'G2'),
+  ('consent_declined', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 'Suppression written; no further contact', 'G2'),
+  ('claim_evidence', 'done', 'CLOSED', 'done', 'Closed', NULL, NULL, NULL, 1, 'Trigger no longer fires on the next extract', 'G1');
 
 INSERT INTO member (member_id, gender, age, nationality, plan_name, policy_group, policy_type, gwp, risk_premium, language, consent_status) VALUES
   ('m133', 'M', 72, 'LEBANESE', 'Enhanced Bronze', 'SEHA', 'Group', 38176.37, 36744.75, NULL, 'granted'),
@@ -373,20 +554,20 @@ INSERT INTO member (member_id, gender, age, nationality, plan_name, policy_group
   ('m44', 'F', 66, 'PALESTINIAN', 'Enhanced Bronze', 'ME SERVICES LLC _ TOP UP', 'Group', 46675.21, 43361.27, NULL, 'granted');
 
 INSERT INTO feature (feature_key, label, category, description, source, value_type, unit, cohort_selectable, definition, created_by, created_at) VALUES
-  ('d:chronic_count', 'Chronic conditions', 'Derived', 'Count of T2D, HTN, dyslipidaemia, obesity, CKD, IHD, heart failure, stroke flags', 'derived', 'num', NULL, 1, 'Count of T2D, HTN, dyslipidaemia, obesity, CKD, IHD, heart failure, stroke flags', 'U-0201', '2026-11-20 17:23:18'),
-  ('d:pdc_min_pct', 'Lowest adherence (PDC %)', 'Derived', 'min(pdc_any_t2d_noninsulin, pdc_any_htn) × 100', 'derived', 'num', NULL, 1, 'min(pdc_any_t2d_noninsulin, pdc_any_htn) × 100', 'U-0201', '2026-11-20 17:23:18'),
-  ('x:Exclusion', 'Exclusion', 'Exclusions', '1 = left out of outreach. Any of: cancer claim in the last 24 months (flag_oncology_l24m); outside the PHG network with 75%+ of outpatient encounters at one provider and more than one outpatient encounter (loyal out-of-network member); palliative / hospice / long-term care; dialysis or an AV-access procedure in the last 12 months; transplant; advanced neurological or major congenital condition; psychiatric inpatient stay, active substance use or advanced dementia; ventilator / TPN / 24-hour home nursing; pregnant or post-partum; more than 60% of cost since 2024 in one episode; specialty medicines more than 60% of cost since 2024. Each part is its own column further right.', 'extract', 'flag', NULL, 1, NULL, 'U-0201', '2026-11-20 17:23:18'),
-  ('x:Last_HbA1c_Value', 'Last HbA1c Value', 'Clinical results', 'Latest HbA1c (3-month average blood sugar), in %. Readings above 20 are treated as mmol/mol and converted to %.', 'extract', 'num', NULL, 1, NULL, 'U-0201', '2026-11-20 17:23:18'),
-  ('x:Last_SystolicPressure_Value', 'Last SystolicPressure Value', 'Clinical results', 'Latest top blood-pressure number, mmHg.', 'extract', 'num', NULL, 1, NULL, 'U-0201', '2026-11-20 17:23:18'),
-  ('x:Persona', 'Persona', 'Persona', 'One persona per member, the first that applies: 1. Complications (P1), 2. Recurrent ED/IP (P2), 3. Drifting from care (P3_slipping or P3_offradar), 4. Uncontrolled (P4), 5. Newly Diagnosed (P5), 6. Others / Stable.', 'extract', 'text', NULL, 0, NULL, 'U-0201', '2026-11-20 17:23:18'),
-  ('x:Total_risk_Score', 'Total risk Score', 'Risk score', 'Total risk score R = Clinical + Comorbidity + Kidney + Utilisation + Age/sex (0-23).', 'extract', 'num', NULL, 0, NULL, 'U-0201', '2026-11-20 17:23:18'),
-  ('x:Trig1_HbA1c_above_target', 'Trig1 HbA1c above target', 'Trigger', '1 if the member has diabetes and the latest HbA1c is 6.5% or more (values between 3 and 20 only).', 'extract', 'flag', NULL, 0, NULL, 'U-0201', '2026-11-20 17:23:18'),
-  ('x:Trig3_hypoglycemia_tx', 'Trig3 hypoglycemia tx', 'Trigger', '1 if Trig3a or Trig3b is 1.', 'extract', 'flag', NULL, 0, NULL, 'U-0201', '2026-11-20 17:23:18'),
-  ('x:cohort_htn_l12m', 'cohort htn 12 m', 'Cohort and identification', '1 if the member had a claim billed for hypertension (I10) as a chronic condition in the last 12 months (Nov 2025 to Oct 2026).', 'extract', 'flag', NULL, 1, NULL, 'U-0201', '2026-11-20 17:23:18'),
-  ('x:cohort_t2d_l12m', 'cohort t2d 12 m', 'Cohort and identification', '1 if the member had a claim billed for type 2 diabetes (E11) as a chronic condition in the last 12 months (Nov 2025 to Oct 2026).', 'extract', 'flag', NULL, 1, NULL, 'U-0201', '2026-11-20 17:23:18'),
-  ('x:ip_admissions_l12m', 'ip admissions 12 m', 'Hospital and emergency use', 'Hospital admissions in the last 12 months (Nov 2025 to Oct 2026).', 'extract', 'num', NULL, 1, NULL, 'U-0201', '2026-11-20 17:23:18'),
-  ('x:last_hba1c_date2', 'last hba1c date2', 'Test dates', 'Latest HbA1c test billed (date). Can differ from Last_HbA1c_Date when the result was not sent with the claim. (last_hba1c_date in the query)', 'extract', 'date', 'days before as-of', 1, NULL, 'U-0201', '2026-11-20 17:23:18'),
-  ('x:pdc_any_t2d_noninsulin', 'pdc any t2d noninsulin', 'Medicine adherence', 'Adherence to any non-insulin diabetes medicine (covered if any of them is at home): share of days, from the first fill in the last 365 days to the as-of date, with supply at home (0-1; 0.80+ is the usual target). Needs at least two fills.', 'extract', 'share', NULL, 1, NULL, 'U-0201', '2026-11-20 17:23:18');
+  ('d:chronic_count', 'Chronic conditions', 'Derived', 'Count of T2D, HTN, dyslipidaemia, obesity, CKD, IHD, heart failure, stroke flags', 'derived', 'num', NULL, 1, 'Count of T2D, HTN, dyslipidaemia, obesity, CKD, IHD, heart failure, stroke flags', 'U-0201', '2026-11-20 18:08:02'),
+  ('d:pdc_min_pct', 'Lowest adherence (PDC %)', 'Derived', 'min(pdc_any_t2d_noninsulin, pdc_any_htn) × 100', 'derived', 'num', NULL, 1, 'min(pdc_any_t2d_noninsulin, pdc_any_htn) × 100', 'U-0201', '2026-11-20 18:08:02'),
+  ('x:Exclusion', 'Exclusion', 'Exclusions', '1 = left out of outreach. Any of: cancer claim in the last 24 months (flag_oncology_l24m); outside the PHG network with 75%+ of outpatient encounters at one provider and more than one outpatient encounter (loyal out-of-network member); palliative / hospice / long-term care; dialysis or an AV-access procedure in the last 12 months; transplant; advanced neurological or major congenital condition; psychiatric inpatient stay, active substance use or advanced dementia; ventilator / TPN / 24-hour home nursing; pregnant or post-partum; more than 60% of cost since 2024 in one episode; specialty medicines more than 60% of cost since 2024. Each part is its own column further right.', 'extract', 'flag', NULL, 1, NULL, 'U-0201', '2026-11-20 18:08:02'),
+  ('x:Last_HbA1c_Value', 'Last HbA1c Value', 'Clinical results', 'Latest HbA1c (3-month average blood sugar), in %. Readings above 20 are treated as mmol/mol and converted to %.', 'extract', 'num', NULL, 1, NULL, 'U-0201', '2026-11-20 18:08:02'),
+  ('x:Last_SystolicPressure_Value', 'Last SystolicPressure Value', 'Clinical results', 'Latest top blood-pressure number, mmHg.', 'extract', 'num', NULL, 1, NULL, 'U-0201', '2026-11-20 18:08:02'),
+  ('x:Persona', 'Persona', 'Persona', 'One persona per member, the first that applies: 1. Complications (P1), 2. Recurrent ED/IP (P2), 3. Drifting from care (P3_slipping or P3_offradar), 4. Uncontrolled (P4), 5. Newly Diagnosed (P5), 6. Others / Stable.', 'extract', 'text', NULL, 0, NULL, 'U-0201', '2026-11-20 18:08:02'),
+  ('x:Total_risk_Score', 'Total risk Score', 'Risk score', 'Total risk score R = Clinical + Comorbidity + Kidney + Utilisation + Age/sex (0-23).', 'extract', 'num', NULL, 0, NULL, 'U-0201', '2026-11-20 18:08:02'),
+  ('x:Trig1_HbA1c_above_target', 'Trig1 HbA1c above target', 'Trigger', '1 if the member has diabetes and the latest HbA1c is 6.5% or more (values between 3 and 20 only).', 'extract', 'flag', NULL, 0, NULL, 'U-0201', '2026-11-20 18:08:02'),
+  ('x:Trig3_hypoglycemia_tx', 'Trig3 hypoglycemia tx', 'Trigger', '1 if Trig3a or Trig3b is 1.', 'extract', 'flag', NULL, 0, NULL, 'U-0201', '2026-11-20 18:08:02'),
+  ('x:cohort_htn_l12m', 'cohort htn 12 m', 'Cohort and identification', '1 if the member had a claim billed for hypertension (I10) as a chronic condition in the last 12 months (Nov 2025 to Oct 2026).', 'extract', 'flag', NULL, 1, NULL, 'U-0201', '2026-11-20 18:08:02'),
+  ('x:cohort_t2d_l12m', 'cohort t2d 12 m', 'Cohort and identification', '1 if the member had a claim billed for type 2 diabetes (E11) as a chronic condition in the last 12 months (Nov 2025 to Oct 2026).', 'extract', 'flag', NULL, 1, NULL, 'U-0201', '2026-11-20 18:08:02'),
+  ('x:ip_admissions_l12m', 'ip admissions 12 m', 'Hospital and emergency use', 'Hospital admissions in the last 12 months (Nov 2025 to Oct 2026).', 'extract', 'num', NULL, 1, NULL, 'U-0201', '2026-11-20 18:08:02'),
+  ('x:last_hba1c_date2', 'last hba1c date2', 'Test dates', 'Latest HbA1c test billed (date). Can differ from Last_HbA1c_Date when the result was not sent with the claim. (last_hba1c_date in the query)', 'extract', 'date', 'days before as-of', 1, NULL, 'U-0201', '2026-11-20 18:08:02'),
+  ('x:pdc_any_t2d_noninsulin', 'pdc any t2d noninsulin', 'Medicine adherence', 'Adherence to any non-insulin diabetes medicine (covered if any of them is at home): share of days, from the first fill in the last 365 days to the as-of date, with supply at home (0-1; 0.80+ is the usual target). Needs at least two fills.', 'extract', 'share', NULL, 1, NULL, 'U-0201', '2026-11-20 18:08:02');
 
 INSERT INTO member_feature (member_id, feature_key, value_num, value_text, as_of) VALUES
   ('m133', 'd:chronic_count', 4, NULL, '2026-10-31'),
@@ -407,12 +588,12 @@ INSERT INTO member_feature (member_id, feature_key, value_num, value_text, as_of
   ('m26', 'x:cohort_t2d_l12m', 1, NULL, '2026-10-31');
 
 INSERT INTO cohort (cohort_id, version, name, base, logic, refresh, definition_type, row_count, owner, created_at) VALUES
-  ('COH-0101', 1, 'Diabetes · above goal', 'daman', 'all', 'Nightly', 'builder', 9, 'U-0201', '2026-11-20 17:23:18'),
-  ('COH-0102', 1, 'Hypertension · drifting from care', 'daman', 'all', 'Nightly', 'builder', 2, 'U-0201', '2026-11-20 17:23:18'),
-  ('COH-0103', 1, 'Post-discharge chronic', 'daman', 'all', 'Nightly', 'builder', 13, 'U-0201', '2026-11-20 17:23:18'),
-  ('COH-0104', 1, 'Diabetes · eye and foot gaps', 'daman', 'all', 'Nightly', 'builder', 4, 'U-0201', '2026-11-20 17:23:18'),
-  ('COH-0105', 1, 'Chronic care loop · T2D or hypertension', 'daman', 'all', 'Nightly', 'builder', 24, 'U-0201', '2026-11-20 17:23:18'),
-  ('COH-0106', 1, 'T2D · HbA1c 9 % or more', 'daman', 'all', 'Nightly', 'builder', 6, 'U-0201', '2026-11-20 17:23:18');
+  ('COH-0101', 1, 'Diabetes · above goal', 'daman', 'all', 'Nightly', 'builder', 9, 'U-0201', '2026-11-20 18:08:02'),
+  ('COH-0102', 1, 'Hypertension · drifting from care', 'daman', 'all', 'Nightly', 'builder', 2, 'U-0201', '2026-11-20 18:08:02'),
+  ('COH-0103', 1, 'Post-discharge chronic', 'daman', 'all', 'Nightly', 'builder', 13, 'U-0201', '2026-11-20 18:08:02'),
+  ('COH-0104', 1, 'Diabetes · eye and foot gaps', 'daman', 'all', 'Nightly', 'builder', 4, 'U-0201', '2026-11-20 18:08:02'),
+  ('COH-0105', 1, 'Chronic care loop · T2D or hypertension', 'daman', 'all', 'Nightly', 'builder', 24, 'U-0201', '2026-11-20 18:08:02'),
+  ('COH-0106', 1, 'T2D · HbA1c 9 % or more', 'daman', 'all', 'Nightly', 'builder', 6, 'U-0201', '2026-11-20 18:08:02');
 
 INSERT INTO cohort_rule (rule_id, cohort_id, version, field, operator, value, value2, codes, lab, is_exclusion) VALUES
   ('COH-0101-v1-R1', 'COH-0101', 1, 'dx', NULL, NULL, NULL, '["E11"]', NULL, 0),
@@ -435,22 +616,22 @@ INSERT INTO cohort_rule (rule_id, cohort_id, version, field, operator, value, va
   ('COH-0106-v1-R3', 'COH-0106', 1, 'optout', NULL, NULL, NULL, '[]', NULL, 1);
 
 INSERT INTO cohort_member (cohort_id, member_id, version, holdout, run_at) VALUES
-  ('COH-0101', 'm133', 1, 0, '2026-11-20 17:23:18'),
-  ('COH-0101', 'm26', 1, 0, '2026-11-20 17:23:18'),
-  ('COH-0103', 'm133', 1, 0, '2026-11-20 17:23:18'),
-  ('COH-0103', 'm26', 1, 0, '2026-11-20 17:23:18'),
-  ('COH-0103', 'm44', 1, 1, '2026-11-20 17:23:18'),
-  ('COH-0104', 'm44', 1, 0, '2026-11-20 17:23:18'),
-  ('COH-0105', 'm133', 1, 0, '2026-11-20 17:23:18'),
-  ('COH-0105', 'm26', 1, 0, '2026-11-20 17:23:18'),
-  ('COH-0105', 'm44', 1, 0, '2026-11-20 17:23:18'),
-  ('COH-0106', 'm26', 1, 0, '2026-11-20 17:23:18');
+  ('COH-0101', 'm133', 1, 0, '2026-11-20 18:08:02'),
+  ('COH-0101', 'm26', 1, 0, '2026-11-20 18:08:02'),
+  ('COH-0103', 'm133', 1, 0, '2026-11-20 18:08:02'),
+  ('COH-0103', 'm26', 1, 0, '2026-11-20 18:08:02'),
+  ('COH-0103', 'm44', 1, 1, '2026-11-20 18:08:02'),
+  ('COH-0104', 'm44', 1, 0, '2026-11-20 18:08:02'),
+  ('COH-0105', 'm133', 1, 0, '2026-11-20 18:08:02'),
+  ('COH-0105', 'm26', 1, 0, '2026-11-20 18:08:02'),
+  ('COH-0105', 'm44', 1, 0, '2026-11-20 18:08:02'),
+  ('COH-0106', 'm26', 1, 0, '2026-11-20 18:08:02');
 
 INSERT INTO campaign (campaign_id, name, goal, trigger_mode, triggers_json, channels, nurses, calls_per_day, holdout_pct, start_date, weeks, priority, status, created_at) VALUES
-  ('CMP-0101', 'Diabetes control', 'Bring HbA1c to goal', 'automated', NULL, 'Voice', 8, 25, 10, '2026-11-16', 8, 1, 'Live', '2026-11-20 17:23:18'),
-  ('CMP-0102', 'Back into care', 'Re-engage members without follow-up', 'business', '["Trig9", "Trig4"]', 'Voice, WhatsApp', 6, 25, 10, '2026-12-01', 6, 2, 'Scheduled', '2026-11-20 17:23:18'),
-  ('CMP-0103', 'Eye and foot catch-up', 'Close annual screening gaps', 'business', '["Trig12", "Trig13"]', 'WhatsApp, SMS', 3, 30, 10, '2027-01-04', 6, 3, 'Draft', '2026-11-20 17:23:18'),
-  ('CMP-0104', 'Chronic care loop', 'Every rulebook trigger for T2D and hypertension members', 'automated', NULL, 'Voice, WhatsApp', 6, 25, 10, '2026-11-16', 12, 4, 'Live', '2026-11-20 17:23:18');
+  ('CMP-0101', 'Diabetes control', 'Bring HbA1c to goal', 'automated', NULL, 'Voice', 8, 25, 10, '2026-11-16', 8, 1, 'Live', '2026-11-20 18:08:02'),
+  ('CMP-0102', 'Back into care', 'Re-engage members without follow-up', 'business', '["Trig9", "Trig4"]', 'Voice, WhatsApp', 6, 25, 10, '2026-12-01', 6, 2, 'Scheduled', '2026-11-20 18:08:02'),
+  ('CMP-0103', 'Eye and foot catch-up', 'Close annual screening gaps', 'business', '["Trig12", "Trig13"]', 'WhatsApp, SMS', 3, 30, 10, '2027-01-04', 6, 3, 'Draft', '2026-11-20 18:08:02'),
+  ('CMP-0104', 'Chronic care loop', 'Every rulebook trigger for T2D and hypertension members', 'automated', NULL, 'Voice, WhatsApp', 6, 25, 10, '2026-11-16', 12, 4, 'Live', '2026-11-20 18:08:02');
 
 INSERT INTO campaign_cohort (campaign_id, cohort_id, role) VALUES
   ('CMP-0101', 'COH-0101', 'include'),
@@ -461,98 +642,98 @@ INSERT INTO campaign_cohort (campaign_id, cohort_id, role) VALUES
   ('CMP-0104', 'COH-0105', 'include');
 
 INSERT INTO assessment (member_id, run_id, clinical, comorbid, kidney, utilisation, age_sex, kidney_provisional, r_total, tier, tier_label, persona, allocation, priority_review, excluded, alert, contact_priority) VALUES
-  ('m133', 'RUN-20261120-172318', 4, 6, 2, 4, 2, 0, 18, 4, 'Very high', '1. Complications', 'PREVHEALTH', 0, 0, 'RED', 'P1'),
-  ('m26', 'RUN-20261120-172318', 5, 6, 0, 0, 2, 1, 13, 4, 'Very high', '1. Complications', 'PREVHEALTH', 0, 0, 'RED', 'P1'),
-  ('m44', 'RUN-20261120-172318', 2, 5, 0, 0, 1, 1, 8, 3, 'High', '1. Complications', 'PREVHEALTH', 0, 0, 'AMBER', 'P2');
+  ('m133', 'RUN-20261120-180802', 4, 6, 2, 4, 2, 0, 18, 4, 'Very high', '1. Complications', 'PREVHEALTH', 0, 0, 'AMBER', 'P1'),
+  ('m26', 'RUN-20261120-180802', 5, 6, 0, 0, 2, 1, 13, 4, 'Very high', '1. Complications', 'PREVHEALTH', 0, 0, 'AMBER', 'P1'),
+  ('m44', 'RUN-20261120-180802', 2, 5, 0, 0, 1, 1, 8, 3, 'High', '1. Complications', 'PREVHEALTH', 0, 0, 'YELLOW', 'P3');
 
 INSERT INTO signal (signal_id, member_id, campaign_id, run_id, trigger_code, state, evidence, status) VALUES
-  ('SIG-m133-Trig1', 'm133', 'CMP-0101', 'RUN-20261120-172318', 'Trig1', 'fired', 'HbA1c 8.3%', 'open'),
-  ('SIG-m133-Trig2', 'm133', 'CMP-0101', 'RUN-20261120-172318', 'Trig2', 'cannot_tell', 'No usable BP reading (missing or placeholder)', 'open'),
-  ('SIG-m133-Trig3', 'm133', 'CMP-0101', 'RUN-20261120-172318', 'Trig3', 'fired', 'Insulin / SU without rescue glucagon', 'open'),
-  ('SIG-m133-Trig4', 'm133', 'CMP-0101', 'RUN-20261120-172318', 'Trig4', 'fired', 'Discharged 33 days ago', 'open'),
-  ('SIG-m133-Trig8', 'm133', 'CMP-0101', 'RUN-20261120-172318', 'Trig8', 'fired', 'Last dietitian visit: none on record', 'open'),
-  ('SIG-m26-Trig1', 'm26', 'CMP-0101', 'RUN-20261120-172318', 'Trig1', 'fired', 'HbA1c 11.0%', 'open'),
-  ('SIG-m26-Trig11', 'm26', 'CMP-0101', 'RUN-20261120-172318', 'Trig11', 'fired', 'Last lipid panel: 89 days ago', 'open'),
-  ('SIG-m26-Trig13', 'm26', 'CMP-0101', 'RUN-20261120-172318', 'Trig13', 'fired', 'Last podiatry visit: none on record', 'open'),
-  ('SIG-m26-Trig2', 'm26', 'CMP-0101', 'RUN-20261120-172318', 'Trig2', 'fired', 'BP 116/81; ACEi/ARB gap', 'open'),
-  ('SIG-m26-Trig3', 'm26', 'CMP-0101', 'RUN-20261120-172318', 'Trig3', 'fired', 'Insulin / SU without rescue glucagon', 'open'),
-  ('SIG-m26-Trig4', 'm26', 'CMP-0101', 'RUN-20261120-172318', 'Trig4', 'fired', 'Discharged 196 days ago', 'open'),
-  ('SIG-m26-Trig5', 'm26', 'CMP-0101', 'RUN-20261120-172318', 'Trig5', 'fired', 'eGFR —, UACR —; last eGFR test: 89 days ago', 'open'),
-  ('SIG-m26-Trig6', 'm26', 'CMP-0101', 'RUN-20261120-172318', 'Trig6', 'fired', 'Last HbA1c test: 89 days ago', 'open'),
-  ('SIG-m26-Trig8', 'm26', 'CMP-0101', 'RUN-20261120-172318', 'Trig8', 'fired', 'Last dietitian visit: none on record', 'open'),
-  ('SIG-m26-Trig9', 'm26', 'CMP-0101', 'RUN-20261120-172318', 'Trig9', 'fired', 'PDC 0.84 (DM) / — (BP)', 'open'),
-  ('SIG-m44-Trig10', 'm44', 'CMP-0104', 'RUN-20261120-172318', 'Trig10', 'fired', 'First claim in the last 180 days', 'open'),
-  ('SIG-m44-Trig11', 'm44', 'CMP-0104', 'RUN-20261120-172318', 'Trig11', 'fired', 'Last lipid panel: 116 days ago', 'open'),
-  ('SIG-m44-Trig12', 'm44', 'CMP-0104', 'RUN-20261120-172318', 'Trig12', 'fired', 'Last retinal screen: none on record', 'open'),
-  ('SIG-m44-Trig2', 'm44', 'CMP-0104', 'RUN-20261120-172318', 'Trig2', 'cannot_tell', 'No usable BP reading (missing or placeholder)', 'open'),
-  ('SIG-m44-Trig5', 'm44', 'CMP-0104', 'RUN-20261120-172318', 'Trig5', 'fired', 'eGFR —, UACR —; last eGFR test: 89 days ago', 'open'),
-  ('SIG-m44-Trig8', 'm44', 'CMP-0104', 'RUN-20261120-172318', 'Trig8', 'fired', 'Last dietitian visit: none on record', 'open'),
-  ('SIG-m44-Trig9', 'm44', 'CMP-0104', 'RUN-20261120-172318', 'Trig9', 'fired', 'PDC 0.73 (DM) / 0.88 (BP)', 'open');
+  ('SIG-m133-Trig1', 'm133', 'CMP-0101', 'RUN-20261120-180802', 'Trig1', 'fired', 'HbA1c 8.3%', 'open'),
+  ('SIG-m133-Trig2', 'm133', 'CMP-0101', 'RUN-20261120-180802', 'Trig2', 'cannot_tell', 'No usable BP reading (missing or a placeholder)', 'open'),
+  ('SIG-m133-Trig3', 'm133', 'CMP-0101', 'RUN-20261120-180802', 'Trig3', 'fired', 'Insulin / SU without rescue glucagon', 'open'),
+  ('SIG-m133-Trig4', 'm133', 'CMP-0101', 'RUN-20261120-180802', 'Trig4', 'fired', 'Discharged 33 days ago', 'open'),
+  ('SIG-m133-Trig8', 'm133', 'CMP-0101', 'RUN-20261120-180802', 'Trig8', 'fired', 'Last dietitian visit: none on record', 'open'),
+  ('SIG-m26-Trig1', 'm26', 'CMP-0101', 'RUN-20261120-180802', 'Trig1', 'fired', 'HbA1c 11.0%', 'open'),
+  ('SIG-m26-Trig11', 'm26', 'CMP-0101', 'RUN-20261120-180802', 'Trig11', 'fired', 'Last lipid panel: 89 days ago', 'open'),
+  ('SIG-m26-Trig13', 'm26', 'CMP-0101', 'RUN-20261120-180802', 'Trig13', 'fired', 'Last podiatry visit: none on record', 'open'),
+  ('SIG-m26-Trig2', 'm26', 'CMP-0101', 'RUN-20261120-180802', 'Trig2', 'fired', 'BP 116/81; ACEi/ARB gap', 'open'),
+  ('SIG-m26-Trig3', 'm26', 'CMP-0101', 'RUN-20261120-180802', 'Trig3', 'fired', 'Insulin / SU without rescue glucagon', 'open'),
+  ('SIG-m26-Trig4', 'm26', 'CMP-0101', 'RUN-20261120-180802', 'Trig4', 'fired', 'Discharged 196 days ago', 'open'),
+  ('SIG-m26-Trig5', 'm26', 'CMP-0101', 'RUN-20261120-180802', 'Trig5', 'fired', 'eGFR —, UACR —; last eGFR test: 89 days ago', 'open'),
+  ('SIG-m26-Trig6', 'm26', 'CMP-0101', 'RUN-20261120-180802', 'Trig6', 'fired', 'Last HbA1c test: 89 days ago', 'open'),
+  ('SIG-m26-Trig8', 'm26', 'CMP-0101', 'RUN-20261120-180802', 'Trig8', 'fired', 'Last dietitian visit: none on record', 'open'),
+  ('SIG-m26-Trig9', 'm26', 'CMP-0101', 'RUN-20261120-180802', 'Trig9', 'fired', 'PDC 0.84 (DM) / — (BP)', 'open'),
+  ('SIG-m44-Trig10', 'm44', 'CMP-0104', 'RUN-20261120-180802', 'Trig10', 'fired', 'First claim in the last 180 days', 'open'),
+  ('SIG-m44-Trig11', 'm44', 'CMP-0104', 'RUN-20261120-180802', 'Trig11', 'fired', 'Last lipid panel: 116 days ago', 'open'),
+  ('SIG-m44-Trig12', 'm44', 'CMP-0104', 'RUN-20261120-180802', 'Trig12', 'fired', 'Last retinal screen: none on record', 'open'),
+  ('SIG-m44-Trig2', 'm44', 'CMP-0104', 'RUN-20261120-180802', 'Trig2', 'cannot_tell', 'No usable BP reading (missing or a placeholder)', 'open'),
+  ('SIG-m44-Trig5', 'm44', 'CMP-0104', 'RUN-20261120-180802', 'Trig5', 'fired', 'eGFR —, UACR —; last eGFR test: 89 days ago', 'open'),
+  ('SIG-m44-Trig8', 'm44', 'CMP-0104', 'RUN-20261120-180802', 'Trig8', 'fired', 'Last dietitian visit: none on record', 'open'),
+  ('SIG-m44-Trig9', 'm44', 'CMP-0104', 'RUN-20261120-180802', 'Trig9', 'fired', 'PDC 0.73 (DM) / 0.88 (BP)', 'open');
 
 INSERT INTO care_plan (care_plan_id, member_id, pathway, tier, cadence, status, opened_at, updated_at) VALUES
-  ('CP-m133', 'm133', 'DM + HTN', 4, 'Weekly, then every 2–4 weeks', 'active', '2026-11-20 17:23:18', '2026-11-20 17:23:18'),
-  ('CP-m26', 'm26', 'DM + HTN', 4, 'Weekly, then every 2–4 weeks', 'active', '2026-11-20 17:23:18', '2026-11-20 17:23:18'),
-  ('CP-m44', 'm44', 'DM + HTN', 3, 'Baseline, W2, M1, M2, M3, M4, M6, M9, M12', 'active', '2026-11-20 17:23:18', '2026-11-20 17:23:18');
+  ('CP-m133', 'm133', 'DM + HTN', 4, 'Weekly, then every 2–4 weeks', 'active', '2026-11-20 18:08:02', '2026-11-20 18:08:02'),
+  ('CP-m26', 'm26', 'DM + HTN', 4, 'Weekly, then every 2–4 weeks', 'active', '2026-11-20 18:08:02', '2026-11-20 18:08:02'),
+  ('CP-m44', 'm44', 'DM + HTN', 3, 'Baseline, W2, M1, M2, M3, M4, M6, M9, M12', 'active', '2026-11-20 18:08:02', '2026-11-20 18:08:02');
 
-INSERT INTO care_plan_need (need_id, care_plan_id, signal_id, need_key, class, slot, title, owner_role, done_when, due_date, status, hold_until) VALUES
-  ('N-m133-Trig3', 'CP-m133', 'SIG-m133-Trig3', 'Trig3', 'safety', 'CLOSED', 'Same-day clinician review, hypo plan, glucagon check', 'Doctor', 'Review note and medicine change logged', '2026-11-20', 'done', NULL),
-  ('N-m133-Trig1', 'CP-m133', 'SIG-m133-Trig1', 'Trig1', 'unctl', 'CURRENT', 'Glycaemic treatment review', 'Doctor', 'Goal, decision and next test date recorded', '2026-11-27', 'open', NULL),
-  ('N-m133-Trig4', 'CP-m133', 'SIG-m133-Trig4', 'Trig4', 'acute', 'CURRENT', 'GP follow-up within 72 h; medicine reconciliation', 'Coordinator', 'GP outpatient claim within 7 days', '2026-11-23', 'open', NULL),
-  ('N-m133-Trig8', 'CP-m133', 'SIG-m133-Trig8', 'Trig8', 'goal', 'CURRENT', 'Self-management goal, dietitian', 'Nurse', 'Goal set and reviewed', '2026-12-04', 'open', NULL),
-  ('N-m26-Trig1', 'CP-m26', 'SIG-m26-Trig1', 'Trig1', 'unctl', 'CURRENT', 'Glycaemic treatment review', 'Doctor', 'Goal, decision and next test date recorded', '2026-11-27', 'open', NULL),
-  ('N-m26-Trig3', 'CP-m26', 'SIG-m26-Trig3', 'Trig3', 'safety', 'CURRENT', 'Same-day clinician review, hypo plan, glucagon check', 'Doctor', 'Review note and medicine change logged', '2026-11-20', 'open', NULL),
-  ('N-m26-Trig4', 'CP-m26', 'SIG-m26-Trig4', 'Trig4', 'acute', 'CURRENT', 'GP follow-up within 72 h; medicine reconciliation', 'Coordinator', 'GP outpatient claim within 7 days', '2026-11-23', 'open', NULL),
-  ('N-m26-Trig11', 'CP-m26', 'SIG-m26-Trig11', 'Trig11', 'gap', 'FUTURE', 'One bundled lab visit', 'Coordinator', 'Lab claims', '2026-12-20', 'open', NULL),
-  ('N-m26-Trig13', 'CP-m26', 'SIG-m26-Trig13', 'Trig13', 'gap', 'FUTURE', 'Foot exam; podiatry if high risk', 'Nurse', 'Exam claim', '2026-12-20', 'open', NULL),
-  ('N-m26-Trig6', 'CP-m26', 'SIG-m26-Trig6', 'Trig6', 'gap', 'FUTURE', 'Book HbA1c at an in-network lab', 'Coordinator', 'Lab claim', '2026-12-20', 'open', NULL),
-  ('N-m26-Trig8', 'CP-m26', 'SIG-m26-Trig8', 'Trig8', 'goal', 'FUTURE', 'Self-management goal, dietitian', 'Nurse', 'Goal set and reviewed', '2026-12-04', 'open', NULL),
-  ('N-m26-Trig2', 'CP-m26', 'SIG-m26-Trig2', 'Trig2', 'unctl', 'NEXT', 'Home BP recheck and clinician review', 'Nurse', 'Readings reviewed, next BP date set', '2026-11-27', 'open', NULL),
-  ('N-m26-Trig5', 'CP-m26', 'SIG-m26-Trig5', 'Trig5', 'unctl', 'NEXT', 'Book eGFR and UACR; nephrology if eGFR < 30', 'Coordinator', 'Lab claim with a result', '2026-11-27', 'open', NULL),
-  ('N-m26-Trig9', 'CP-m26', 'SIG-m26-Trig9', 'Trig9', 'barrier', 'NEXT', 'Refill and barrier check; pharmacist if 3 or more classes', 'Coordinator', 'Next fill dispensed within 14 days', '2026-11-27', 'open', NULL),
-  ('N-m44-Trig12', 'CP-m44', 'SIG-m44-Trig12', 'Trig12', 'gap', 'CURRENT', 'Confirm the last exam or refer', 'Nurse', 'Report or referral claim', '2026-12-20', 'open', NULL),
-  ('N-m44-Trig5', 'CP-m44', 'SIG-m44-Trig5', 'Trig5', 'unctl', 'CURRENT', 'Book eGFR and UACR; nephrology if eGFR < 30', 'Coordinator', 'Lab claim with a result', '2026-11-27', 'open', NULL),
-  ('N-m44-Trig9', 'CP-m44', 'SIG-m44-Trig9', 'Trig9', 'barrier', 'CURRENT', 'Refill and barrier check; pharmacist if 3 or more classes', 'Coordinator', 'Next fill dispensed within 14 days', '2026-11-27', 'open', NULL),
-  ('N-m44-Trig10', 'CP-m44', 'SIG-m44-Trig10', 'Trig10', 'goal', 'NEXT', 'Baseline assessment and DSMES referral', 'Nurse', 'Assessment documented', '2026-12-04', 'open', NULL),
-  ('N-m44-Trig11', 'CP-m44', 'SIG-m44-Trig11', 'Trig11', 'gap', 'NEXT', 'One bundled lab visit', 'Coordinator', 'Lab claims', '2026-12-20', 'open', NULL),
-  ('N-m44-Trig8', 'CP-m44', 'SIG-m44-Trig8', 'Trig8', 'goal', 'NEXT', 'Self-management goal, dietitian', 'Nurse', 'Goal set and reviewed', '2026-12-04', 'open', NULL);
+INSERT INTO care_plan_need (need_id, care_plan_id, signal_id, need_key, class, slot, title, owner_role, done_when, due_date, status, hold_until, gap_state) VALUES
+  ('N-m133-Trig3', 'CP-m133', 'SIG-m133-Trig3', 'Trig3', 'safety', 'CLOSED', 'Same-day clinician review, hypo plan, glucagon check', 'Doctor', 'Review note and medicine change logged', '2026-11-20', 'done', NULL, 'Reported'),
+  ('N-m133-Trig1', 'CP-m133', 'SIG-m133-Trig1', 'Trig1', 'unctl', 'CURRENT', 'Glycaemic treatment review', 'Doctor', 'Goal, decision and next test date recorded', '2026-11-27', 'open', NULL, 'Potential'),
+  ('N-m133-Trig4', 'CP-m133', 'SIG-m133-Trig4', 'Trig4', 'acute', 'CURRENT', 'GP follow-up within 72 h; medicine reconciliation', 'Coordinator', 'GP outpatient claim within 7 days', '2026-11-23', 'open', NULL, 'Potential'),
+  ('N-m133-Trig8', 'CP-m133', 'SIG-m133-Trig8', 'Trig8', 'goal', 'CURRENT', 'Self-management goal, dietitian', 'Nurse', 'Goal set and reviewed', '2026-12-04', 'open', NULL, 'Potential'),
+  ('N-m26-Trig1', 'CP-m26', 'SIG-m26-Trig1', 'Trig1', 'unctl', 'CURRENT', 'Glycaemic treatment review', 'Doctor', 'Goal, decision and next test date recorded', '2026-11-27', 'open', NULL, 'Potential'),
+  ('N-m26-Trig3', 'CP-m26', 'SIG-m26-Trig3', 'Trig3', 'safety', 'CURRENT', 'Same-day clinician review, hypo plan, glucagon check', 'Doctor', 'Review note and medicine change logged', '2026-11-20', 'open', NULL, 'Potential'),
+  ('N-m26-Trig4', 'CP-m26', 'SIG-m26-Trig4', 'Trig4', 'acute', 'CURRENT', 'GP follow-up within 72 h; medicine reconciliation', 'Coordinator', 'GP outpatient claim within 7 days', '2026-11-23', 'open', NULL, 'Potential'),
+  ('N-m26-Trig11', 'CP-m26', 'SIG-m26-Trig11', 'Trig11', 'gap', 'FUTURE', 'One bundled lab visit', 'Coordinator', 'Lab claims', '2026-12-20', 'open', NULL, 'Potential'),
+  ('N-m26-Trig13', 'CP-m26', 'SIG-m26-Trig13', 'Trig13', 'gap', 'FUTURE', 'Foot exam; podiatry if high risk', 'Nurse', 'Exam claim', '2026-12-20', 'open', NULL, 'Potential'),
+  ('N-m26-Trig6', 'CP-m26', 'SIG-m26-Trig6', 'Trig6', 'gap', 'FUTURE', 'Book HbA1c at an in-network lab', 'Coordinator', 'Lab claim', '2026-12-20', 'open', NULL, 'Potential'),
+  ('N-m26-Trig8', 'CP-m26', 'SIG-m26-Trig8', 'Trig8', 'goal', 'FUTURE', 'Self-management goal, dietitian', 'Nurse', 'Goal set and reviewed', '2026-12-04', 'open', NULL, 'Potential'),
+  ('N-m26-Trig2', 'CP-m26', 'SIG-m26-Trig2', 'Trig2', 'unctl', 'NEXT', 'Home BP recheck and clinician review', 'Nurse', 'Readings reviewed, next BP date set', '2026-11-27', 'open', NULL, 'Potential'),
+  ('N-m26-Trig5', 'CP-m26', 'SIG-m26-Trig5', 'Trig5', 'unctl', 'NEXT', 'Book eGFR and UACR; nephrology if eGFR < 30', 'Coordinator', 'Lab claim with a result', '2026-11-27', 'open', NULL, 'Potential'),
+  ('N-m26-Trig9', 'CP-m26', 'SIG-m26-Trig9', 'Trig9', 'barrier', 'NEXT', 'Refill and barrier check; pharmacist if 3 or more classes', 'Coordinator / pharmacist', 'Next fill dispensed within 14 days', '2026-11-27', 'open', NULL, 'Potential'),
+  ('N-m44-Trig12', 'CP-m44', 'SIG-m44-Trig12', 'Trig12', 'gap', 'CURRENT', 'Confirm the last exam or refer', 'Nurse', 'Report or referral claim', '2026-12-20', 'open', NULL, 'Potential'),
+  ('N-m44-Trig5', 'CP-m44', 'SIG-m44-Trig5', 'Trig5', 'unctl', 'CURRENT', 'Book eGFR and UACR; nephrology if eGFR < 30', 'Coordinator', 'Lab claim with a result', '2026-11-27', 'open', NULL, 'Potential'),
+  ('N-m44-Trig9', 'CP-m44', 'SIG-m44-Trig9', 'Trig9', 'barrier', 'CURRENT', 'Refill and barrier check; pharmacist if 3 or more classes', 'Coordinator / pharmacist', 'Next fill dispensed within 14 days', '2026-11-27', 'open', NULL, 'Potential'),
+  ('N-m44-Trig10', 'CP-m44', 'SIG-m44-Trig10', 'Trig10', 'goal', 'NEXT', 'Baseline assessment and DSMES referral', 'Nurse', 'Assessment documented', '2026-12-04', 'open', NULL, 'Potential'),
+  ('N-m44-Trig11', 'CP-m44', 'SIG-m44-Trig11', 'Trig11', 'gap', 'NEXT', 'One bundled lab visit', 'Coordinator', 'Lab claims', '2026-12-20', 'open', NULL, 'Potential'),
+  ('N-m44-Trig8', 'CP-m44', 'SIG-m44-Trig8', 'Trig8', 'goal', 'NEXT', 'Self-management goal, dietitian', 'Nurse', 'Goal set and reviewed', '2026-12-04', 'open', NULL, 'Potential');
 
-INSERT INTO action (action_id, member_id, need_id, kind, title, agreed, due_date, assignee, status, closed_at, source, created_at) VALUES
-  ('A-m133-Trig1', 'm133', 'N-m133-Trig1', 'care_plan', 'Glycaemic treatment review', 0, '2026-11-27', 'U-0150', 'open', NULL, 'care_plan', '2026-11-20 17:23:18'),
-  ('A-m133-Trig3', 'm133', 'N-m133-Trig3', 'care_plan', 'Same-day clinician review, hypo plan, glucagon check', 0, '2026-11-20', 'U-0150', 'done', '2026-11-20 17:23:18', 'care_plan', '2026-11-20 17:23:18'),
-  ('A-m133-Trig4', 'm133', 'N-m133-Trig4', 'care_plan', 'GP follow-up within 72 h; medicine reconciliation', 0, '2026-11-23', 'U-0150', 'open', NULL, 'care_plan', '2026-11-20 17:23:18'),
-  ('A-m133-Trig8', 'm133', 'N-m133-Trig8', 'care_plan', 'Self-management goal, dietitian', 0, '2026-12-04', 'U-0150', 'open', NULL, 'care_plan', '2026-11-20 17:23:18'),
-  ('W-m133-1', 'm133', NULL, 'call', 'P1 outreach call', 0, '2026-11-20', 'U-0150', 'done', '2026-11-20 17:23:18', 'worklist', '2026-11-20 17:23:18'),
-  ('A-m26-Trig1', 'm26', 'N-m26-Trig1', 'care_plan', 'Glycaemic treatment review', 0, '2026-11-27', 'U-0161', 'open', NULL, 'care_plan', '2026-11-20 17:23:18'),
-  ('A-m26-Trig3', 'm26', 'N-m26-Trig3', 'care_plan', 'Same-day clinician review, hypo plan, glucagon check', 0, '2026-11-20', 'U-0161', 'open', NULL, 'care_plan', '2026-11-20 17:23:18'),
-  ('A-m26-Trig4', 'm26', 'N-m26-Trig4', 'care_plan', 'GP follow-up within 72 h; medicine reconciliation', 0, '2026-11-23', 'U-0161', 'open', NULL, 'care_plan', '2026-11-20 17:23:18'),
-  ('ACT-00001', 'm26', NULL, 'retry', 'Retry call (attempt 2 of 3)', 0, '2026-11-22', 'U-0142', 'open', NULL, 'call', '2026-11-20 17:23:18'),
-  ('W-m26-1', 'm26', NULL, 'call', 'P1 outreach call', 0, '2026-11-20', 'U-0161', 'open', NULL, 'worklist', '2026-11-20 17:23:18'),
-  ('A-m44-Trig12', 'm44', 'N-m44-Trig12', 'care_plan', 'Confirm the last exam or refer', 0, '2026-12-20', 'U-0150', 'open', NULL, 'care_plan', '2026-11-20 17:23:18'),
-  ('A-m44-Trig5', 'm44', 'N-m44-Trig5', 'care_plan', 'Book eGFR and UACR; nephrology if eGFR < 30', 0, '2026-11-27', 'U-0150', 'open', NULL, 'care_plan', '2026-11-20 17:23:18'),
-  ('A-m44-Trig9', 'm44', 'N-m44-Trig9', 'care_plan', 'Refill and barrier check; pharmacist if 3 or more classes', 0, '2026-11-27', 'U-0150', 'open', NULL, 'care_plan', '2026-11-20 17:23:18'),
-  ('W-m44-1', 'm44', NULL, 'call', 'P2 outreach call', 0, '2026-11-21', 'U-0150', 'open', NULL, 'worklist', '2026-11-20 17:23:18');
+INSERT INTO action (action_id, member_id, need_id, kind, title, agreed, due_date, assignee, status, closed_at, source, created_at, action_code) VALUES
+  ('A-m133-Trig1', 'm133', 'N-m133-Trig1', 'care_plan', 'Glycaemic treatment review', 0, '2026-11-27', 'U-0150', 'open', NULL, 'care_plan', '2026-11-20 18:08:02', 'ACT-A1C-REV'),
+  ('A-m133-Trig3', 'm133', 'N-m133-Trig3', 'care_plan', 'Same-day clinician review, hypo plan, glucagon check', 0, '2026-11-20', 'U-0150', 'done', '2026-11-20 18:08:02', 'care_plan', '2026-11-20 18:08:02', 'ACT-HYPO'),
+  ('A-m133-Trig4', 'm133', 'N-m133-Trig4', 'care_plan', 'GP follow-up within 72 h; medicine reconciliation', 0, '2026-11-23', 'U-0150', 'open', NULL, 'care_plan', '2026-11-20 18:08:02', 'ACT-POSTDC'),
+  ('A-m133-Trig8', 'm133', 'N-m133-Trig8', 'care_plan', 'Self-management goal, dietitian', 0, '2026-12-04', 'U-0150', 'open', NULL, 'care_plan', '2026-11-20 18:08:02', 'ACT-DSMES'),
+  ('W-m133-1', 'm133', NULL, 'call', 'P1 outreach call', 0, '2026-11-20', 'U-0150', 'done', '2026-11-20 18:08:02', 'worklist', '2026-11-20 18:08:02', NULL),
+  ('A-m26-Trig1', 'm26', 'N-m26-Trig1', 'care_plan', 'Glycaemic treatment review', 0, '2026-11-27', 'U-0161', 'open', NULL, 'care_plan', '2026-11-20 18:08:02', 'ACT-A1C-REV'),
+  ('A-m26-Trig3', 'm26', 'N-m26-Trig3', 'care_plan', 'Same-day clinician review, hypo plan, glucagon check', 0, '2026-11-20', 'U-0161', 'open', NULL, 'care_plan', '2026-11-20 18:08:02', 'ACT-HYPO'),
+  ('A-m26-Trig4', 'm26', 'N-m26-Trig4', 'care_plan', 'GP follow-up within 72 h; medicine reconciliation', 0, '2026-11-23', 'U-0161', 'open', NULL, 'care_plan', '2026-11-20 18:08:02', 'ACT-POSTDC'),
+  ('ACT-00001', 'm26', NULL, 'retry', 'Retry call (attempt 2 of 3)', 0, '2026-11-21', 'U-0142', 'open', NULL, 'call', '2026-11-20 18:08:02', NULL),
+  ('W-m26-1', 'm26', NULL, 'call', 'P1 outreach call', 0, '2026-11-20', 'U-0161', 'open', NULL, 'worklist', '2026-11-20 18:08:02', NULL),
+  ('A-m44-Trig12', 'm44', 'N-m44-Trig12', 'care_plan', 'Confirm the last exam or refer', 0, '2026-12-20', 'U-0150', 'open', NULL, 'care_plan', '2026-11-20 18:08:02', 'ACT-EYE'),
+  ('A-m44-Trig5', 'm44', 'N-m44-Trig5', 'care_plan', 'Book eGFR and UACR; nephrology if eGFR < 30', 0, '2026-11-27', 'U-0150', 'open', NULL, 'care_plan', '2026-11-20 18:08:02', 'ACT-KIDNEY'),
+  ('A-m44-Trig9', 'm44', 'N-m44-Trig9', 'care_plan', 'Refill and barrier check; pharmacist if 3 or more classes', 0, '2026-11-27', 'U-0150', 'open', NULL, 'care_plan', '2026-11-20 18:08:02', 'ACT-ADH'),
+  ('W-m44-1', 'm44', NULL, 'call', 'P3 outreach call', 0, '2026-11-23', 'U-0150', 'open', NULL, 'worklist', '2026-11-20 18:08:02', NULL);
 
 INSERT INTO contact (contact_id, member_id, campaign_id, user_id, started_at, ended_at, reached, consent, response, notes) VALUES
-  ('C-00001', 'm133', 'CMP-0101', 'U-0142', '2026-11-20 17:23:18', '2026-11-20 17:23:18', 1, 'granted', 'Engaged', NULL),
-  ('C-00002', 'm26', 'CMP-0101', 'U-0142', '2026-11-20 17:23:18', '2026-11-20 17:23:18', 0, NULL, NULL, NULL);
+  ('C-00001', 'm133', 'CMP-0101', 'U-0142', '2026-11-20 18:08:02', '2026-11-20 18:08:02', 1, 'granted', 'Engaged', NULL),
+  ('C-00002', 'm26', 'CMP-0101', 'U-0142', '2026-11-20 18:08:02', '2026-11-20 18:08:02', 0, NULL, NULL, NULL);
 
 INSERT INTO outcome (outcome_id, contact_id, member_id, need_id, action_id, result, recorded_by, recorded_at, processed_at) VALUES
-  ('O-000001', 'C-00001', 'm133', NULL, NULL, 'consent_granted', 'U-0142', '2026-11-20 17:23:18', '2026-11-20 17:23:18'),
-  ('O-000002', 'C-00001', 'm133', NULL, 'W-m133-1', 'done', 'U-0142', '2026-11-20 17:23:18', '2026-11-20 17:23:18'),
-  ('O-000003', NULL, 'm133', 'N-m133-Trig3', 'A-m133-Trig3', 'done', 'U-0142', '2026-11-20 17:23:18', '2026-11-20 17:23:18'),
-  ('O-000004', 'C-00002', 'm26', NULL, NULL, 'not_reached', 'U-0142', '2026-11-20 17:23:18', '2026-11-20 17:23:18');
+  ('O-000001', 'C-00001', 'm133', NULL, NULL, 'consent_granted', 'U-0142', '2026-11-20 18:08:02', '2026-11-20 18:08:02'),
+  ('O-000002', 'C-00001', 'm133', NULL, 'W-m133-1', 'done', 'U-0142', '2026-11-20 18:08:02', '2026-11-20 18:08:02'),
+  ('O-000003', NULL, 'm133', 'N-m133-Trig3', 'A-m133-Trig3', 'done', 'U-0142', '2026-11-20 18:08:02', '2026-11-20 18:08:02'),
+  ('O-000004', 'C-00002', 'm26', NULL, NULL, 'not_reached', 'U-0142', '2026-11-20 18:08:02', '2026-11-20 18:08:02');
 
 INSERT INTO event_log (event_id, at, actor, endpoint, op, table_name, detail) VALUES
-  (29, '2026-11-20 17:23:18', 'U-0142', '/api/portal/event', 'WRITE', 'outcome', 'm133: done'),
-  (30, '2026-11-20 17:23:18', 'U-0142', '/api/portal/event', 'WRITE', 'outcome', 'm26: not_reached'),
-  (31, '2026-11-20 17:23:18', 'builder', '/api/cohorts/estimate', 'READ', 'member_feature', 'estimate: 2 rules, 1 exclusions → 9 of 24'),
-  (32, '2026-11-20 17:23:18', 'builder', '/api/cohorts/estimate', 'READ', 'member_feature', 'estimate: 2 rules, 1 exclusions → 2 of 24'),
-  (33, '2026-11-20 17:23:18', 'builder', '/api/cohorts/estimate', 'READ', 'member_feature', 'estimate: 2 rules, 1 exclusions → 13 of 24'),
-  (34, '2026-11-20 17:23:18', 'builder', '/api/cohorts/estimate', 'READ', 'member_feature', 'estimate: 3 rules, 1 exclusions → 4 of 24'),
-  (35, '2026-11-20 17:23:18', 'builder', '/api/cohorts/estimate', 'READ', 'member_feature', 'estimate: 1 rules, 1 exclusions → 24 of 24'),
-  (36, '2026-11-20 17:23:18', 'builder', '/api/cohorts/estimate', 'READ', 'member_feature', 'estimate: 2 rules, 1 exclusions → 6 of 24'),
-  (37, '2026-11-20 17:23:18', 'scheduler', '/api/runs/nightly', 'WRITE', 'assessment', '24 members assessed'),
-  (38, '2026-11-20 17:23:18', 'scheduler', '/api/runs/nightly', 'WRITE', 'signal', '152 open signals'),
-  (39, '2026-11-20 17:23:18', 'scheduler', '/api/runs/nightly', 'WRITE', 'care_plan_need', '0 new needs'),
-  (40, '2026-11-20 17:23:18', 'scheduler', '/api/runs/nightly', 'WRITE', 'action', '0 new actions');
+  (29, '2026-11-20 18:08:02', 'U-0142', '/api/portal/event', 'WRITE', 'outcome', 'm133: done'),
+  (30, '2026-11-20 18:08:02', 'U-0142', '/api/portal/event', 'WRITE', 'outcome', 'm26: not_reached'),
+  (31, '2026-11-20 18:08:02', 'builder', '/api/cohorts/estimate', 'READ', 'member_feature', 'estimate: 2 rules, 1 exclusions → 9 of 24'),
+  (32, '2026-11-20 18:08:02', 'builder', '/api/cohorts/estimate', 'READ', 'member_feature', 'estimate: 2 rules, 1 exclusions → 2 of 24'),
+  (33, '2026-11-20 18:08:02', 'builder', '/api/cohorts/estimate', 'READ', 'member_feature', 'estimate: 2 rules, 1 exclusions → 13 of 24'),
+  (34, '2026-11-20 18:08:02', 'builder', '/api/cohorts/estimate', 'READ', 'member_feature', 'estimate: 3 rules, 1 exclusions → 4 of 24'),
+  (35, '2026-11-20 18:08:02', 'builder', '/api/cohorts/estimate', 'READ', 'member_feature', 'estimate: 1 rules, 1 exclusions → 24 of 24'),
+  (36, '2026-11-20 18:08:02', 'builder', '/api/cohorts/estimate', 'READ', 'member_feature', 'estimate: 2 rules, 1 exclusions → 6 of 24'),
+  (37, '2026-11-20 18:08:02', 'scheduler', '/api/runs/nightly', 'WRITE', 'assessment', '24 members assessed'),
+  (38, '2026-11-20 18:08:02', 'scheduler', '/api/runs/nightly', 'WRITE', 'signal', '152 open signals'),
+  (39, '2026-11-20 18:08:02', 'scheduler', '/api/runs/nightly', 'WRITE', 'care_plan_need', '0 new needs'),
+  (40, '2026-11-20 18:08:02', 'scheduler', '/api/runs/nightly', 'WRITE', 'action', '0 new actions');
 
