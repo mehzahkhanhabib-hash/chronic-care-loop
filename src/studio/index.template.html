@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="3a12f2f1-a5e5-40f3-abf0-94dc85fe377a"></script>
+
+
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<style>/* cyrillic-ext */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("b22d3b08-228d-4b88-bf97-ebfafee90519") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("aca5c239-9198-4529-83b0-d4cad83c8fd2") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* symbols2 */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("7704d28f-93cf-4982-ac92-d14b00b33a36") format('woff2');
+  unicode-range: U+2000-2001, U+2004-2008, U+200A, U+23B8-23BD, U+2500-259F;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("2ce81ebb-618c-4df0-9ed0-6edeb893d1c0") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("1cc39ce0-7f74-4151-8e53-b9b78977b9f0") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("9aafeceb-029c-4290-8659-2cd9e2c84e57") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("c4454cd6-c65a-4a93-93ae-aa7355296b02") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("242392e0-dec3-4e58-9703-3d814b44ee71") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* symbols2 */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("89416d2b-01bd-49c7-bd8e-2c3c558b89ee") format('woff2');
+  unicode-range: U+2000-2001, U+2004-2008, U+200A, U+23B8-23BD, U+2500-259F;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("0bc87790-4c6d-4e73-9c43-fb7fa00ceab0") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("a8a110e2-1759-4773-a56b-b0e36d598355") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("e03ea3d5-825f-441c-98fb-3eda9440a8da") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("98fd1984-8ad8-4cd0-9515-2268f50dff32") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("0622147f-2107-4b25-b4ff-24d431f7e16f") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* symbols2 */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("867f61ab-e383-4a82-b064-10f443d743a0") format('woff2');
+  unicode-range: U+2000-2001, U+2004-2008, U+200A, U+23B8-23BD, U+2500-259F;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("6df2522e-42e1-4754-a3e0-8b22ba242b12") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("9a69256e-82ae-46d1-bb79-b120266d9ae5") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("3140484e-a778-4929-92dd-4846e81eca6a") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("46ee6870-b01f-4cb3-8c49-117a301b95ac") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("e95aed80-4b5f-4149-974e-9ddba3cf5188") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("0ec33149-0275-4252-ab6b-d2336f7a1b52") format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("f4b1db64-41b5-4cdb-81b0-22b074156526") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("2e922656-fbce-462e-aa45-0e85118a7591") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("5a18291e-1030-4ede-859e-7b04e570372c") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("46ee6870-b01f-4cb3-8c49-117a301b95ac") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("e95aed80-4b5f-4149-974e-9ddba3cf5188") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("0ec33149-0275-4252-ab6b-d2336f7a1b52") format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("f4b1db64-41b5-4cdb-81b0-22b074156526") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("2e922656-fbce-462e-aa45-0e85118a7591") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("5a18291e-1030-4ede-859e-7b04e570372c") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("46ee6870-b01f-4cb3-8c49-117a301b95ac") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("e95aed80-4b5f-4149-974e-9ddba3cf5188") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("0ec33149-0275-4252-ab6b-d2336f7a1b52") format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("f4b1db64-41b5-4cdb-81b0-22b074156526") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("2e922656-fbce-462e-aa45-0e85118a7591") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("5a18291e-1030-4ede-859e-7b04e570372c") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("46ee6870-b01f-4cb3-8c49-117a301b95ac") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("e95aed80-4b5f-4149-974e-9ddba3cf5188") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("0ec33149-0275-4252-ab6b-d2336f7a1b52") format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("f4b1db64-41b5-4cdb-81b0-22b074156526") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("2e922656-fbce-462e-aa45-0e85118a7591") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("5a18291e-1030-4ede-859e-7b04e570372c") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+</style>
+<style>*{box-sizing:border-box}body{margin:0;background:#F5F7FA;color:#1D2939;font-family:'IBM Plex Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}a{color:#3F6C9F}a:hover{color:#345C8A}button,input,select,textarea{font-family:inherit}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #A9C3E0;outline-offset:2px}</style>
+<script src="46ff781b-0d57-4608-a506-6b83e6f56417"></script>
+<script src="31e011af-cbf9-4031-8b87-96711ea22125"></script>
+<script src="d38f6341-72f8-404e-a4f3-a839a4489bd2"></script>
+<script src="22e28d42-4366-4ff8-a294-565e1d63009e"></script>
+</helmet>
+<div style="min-height:100vh;font-variant-numeric:tabular-nums;display:flex;flex-direction:column">
+
+<nav aria-label="Chronic Care Loop artefacts" style="display:flex;gap:4px 18px;flex-wrap:wrap;align-items:center;padding:7px 24px;background:#0B1B2A;color:#A9B6C2;font-size:12.5px;font-family:inherit"><b style="color:#5EC4B6;letter-spacing:.04em">CHRONIC CARE LOOP</b><a href="index.html" style="color:#A9B6C2;text-decoration:none;font-weight:500">Overview</a><a href="Chronic-Care-Loop-Briefing.html" style="color:#A9B6C2;text-decoration:none;font-weight:500">Executive briefing</a><a href="Chronic-Care-Studio.html" aria-current="page" style="color:#FFFFFF;text-decoration:none;font-weight:700">Cohort &amp; care studio</a><a href="Care-Coordinator-Portal.html" style="color:#A9B6C2;text-decoration:none;font-weight:500">Care coordinator portal</a><a href="index.html#data-model" style="color:#A9B6C2;text-decoration:none;font-weight:500">Data model</a></nav>
+<header style="position:sticky;top:0;z-index:30;background:#FFFFFF;border-bottom:1px solid #E1E7EF">
+  <div style="display:flex;align-items:center;gap:12px 24px;padding:10px 24px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:10px;flex:none">
+      <svg sc-camel-view-box="0 0 32 32" width="32" height="32" aria-hidden="true"><circle cx="16" cy="16" r="11" fill="none" stroke="#3F6C9F" stroke-width="3" stroke-dasharray="52 17" stroke-linecap="round"></circle><circle cx="27" cy="16" r="3.2" fill="#3F6C9F"></circle></svg>
+      <div><div style="font-weight:700;font-size:16px;letter-spacing:-.01em;white-space:nowrap">Chronic Care Loop</div><div style="font-size:13px;color:#66758A;white-space:nowrap">Daman · HICC care team</div></div>
+    </div>
+    <nav style="order:3;flex:1 0 100%;display:flex;align-items:center;gap:6px;justify-content:center;flex-wrap:wrap;padding-top:8px;border-top:1px solid #ECF0F5" aria-label="Workspaces">
+      <button sc-camel-on-click="{{ go1 }}" style="display:flex;align-items:center;gap:10px;border:0;border-radius:6px;padding:6px 16px 6px 6px;background:{{ t1.bg }};color:{{ t1.fg }};cursor:pointer;font-size:14px;font-weight:700;transition:background .2s;flex:none;white-space:nowrap">
+        <span style="width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;background:{{ t1.nb }};color:{{ t1.nf }}">1</span>Cohorts<span style="font-size:12px;font-weight:600;opacity:.7">{{ t1.c }}</span>
+      </button>
+      <span style="color:#98A4B5;font-weight:700">→</span>
+      <button sc-camel-on-click="{{ go2 }}" style="display:flex;align-items:center;gap:10px;border:0;border-radius:6px;padding:6px 16px 6px 6px;background:{{ t2.bg }};color:{{ t2.fg }};cursor:pointer;font-size:14px;font-weight:700;transition:background .2s;flex:none;white-space:nowrap">
+        <span style="width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;background:{{ t2.nb }};color:{{ t2.nf }}">2</span>Care intelligence<span style="font-size:12px;font-weight:600;opacity:.7">{{ t2.c }}</span>
+      </button>
+      <span style="color:#98A4B5;font-weight:700">→</span>
+      <button sc-camel-on-click="{{ go3 }}" style="display:flex;align-items:center;gap:10px;border:0;border-radius:6px;padding:6px 16px 6px 6px;background:{{ t3.bg }};color:{{ t3.fg }};cursor:pointer;font-size:14px;font-weight:700;transition:background .2s;flex:none;white-space:nowrap">
+        <span style="width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;background:{{ t3.nb }};color:{{ t3.nf }}">3</span>Care portal<span style="font-size:12px;font-weight:600;opacity:.7">{{ t3.c }}</span>
+      </button>
+      <span style="flex:none;display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:6px;background:#EAF1F9;color:#3F6C9F;font-size:13px;font-weight:700;white-space:nowrap">↩ {{ wbTxt }}</span>
+    </nav>
+    <div style="display:flex;align-items:center;gap:10px;flex:none;margin-left:auto">
+      <div style="text-align:right;white-space:nowrap"><div style="font-size:14px;font-weight:700">{{ role.name }}</div><div style="font-size:13px;color:#66758A">{{ role.team }}</div></div>
+      <span style="width:36px;height:36px;border-radius:50%;background:#1D2939;color:#FFFFFF;display:grid;place-items:center;font-weight:700;font-size:13px">{{ role.ini }}</span>
+    </div>
+  </div>
+</header>
+
+<main style="flex:1;width:100%;max-width:none;margin:0 auto;padding:24px 24px 48px">
+
+<sc-if value="{{ is.w1 }}" hint-placeholder-val="{{ true }}">
+  <dc-import name="CohortStudioV2" embedded="{{ true }}" show-technical="{{ tech }}" on-handoff="{{ onHandoff }}" on-counts="{{ onCounts }}" hint-size="100%,1100px"></dc-import>
+</sc-if>
+
+<sc-if value="{{ is.w2 }}" hint-placeholder-val="{{ false }}">
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px">
+    <div>
+      <div style="font-size:13px;font-weight:700;color:#3F6C9F">Step 2 · Ran tonight at 03:00</div>
+      <h1 style="margin:4px 0 0;font-size:24px;line-height:1.2;font-weight:600;letter-spacing:-.015em">Who needs us most, and what for</h1>
+      <p style="margin:6px 0 0;font-size:15px;color:#46546A;max-width:72ch">{{ intelSub }}</p>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <sc-for list="{{ filters }}" as="f" hint-placeholder-count="4"><button sc-camel-on-click="{{ f.on }}" style="border:1px solid {{ f.bd }};background:{{ f.bg }};color:{{ f.fg }};border-radius:6px;padding:8px 14px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap">{{ f.label }} · {{ f.n }}</button></sc-for>
+    </div>
+  </div>
+  <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap">
+    <section style="flex:0 1 380px;min-width:300px;background:#FFFFFF;border-radius:12px;padding:8px;display:flex;flex-direction:column;gap:4px">
+      <sc-for list="{{ intelList }}" as="m" hint-placeholder-count="6">
+        <button sc-camel-on-click="{{ m.on }}" style="display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:12px;align-items:center;text-align:left;border:0;border-radius:8px;padding:12px;cursor:pointer;background:{{ m.bg }};color:#1D2939;box-shadow:{{ m.sh }}" style-hover="background:#F7F9FC">
+          <span style="width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:14px;background:{{ m.avBg }};color:{{ m.avFg }}">{{ m.ini }}</span>
+          <span style="min-width:0">
+            <span style="display:flex;align-items:center;gap:6px;font-size:15px;font-weight:700;white-space:nowrap;min-width:0">{{ m.name }}<span style="font-size:11px;font-weight:700;color:#3F6C9F">{{ m.wb }}</span></span>
+            <span style="display:block;font-size:13px;color:#66758A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ m.reason }}</span>
+            <span style="display:inline-block;margin-top:5px;font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px;background:{{ m.alBg }};color:{{ m.alFg }};white-space:nowrap">{{ m.al }}</span>
+          </span>
+          <span style="text-align:right"><span style="display:block;font-size:22px;font-weight:700;line-height:1">{{ m.R }}</span><span style="font-size:13px;color:#66758A">{{ m.tier }}</span></span>
+        </button>
+      </sc-for>
+    </section>
+
+    <section style="flex:1 1 560px;min-width:0;display:flex;flex-direction:column;gap:16px">
+      <div style="background:#FFFFFF;border-radius:12px;padding:22px 24px;display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+        <span style="width:60px;height:60px;border-radius:50%;background:#1D2939;color:#FFFFFF;display:grid;place-items:center;font-weight:700;font-size:20px">{{ im.ini }}</span>
+        <div style="flex:1;min-width:220px">
+          <div style="font-size:26px;font-weight:700;letter-spacing:-.01em">{{ im.name }}</div>
+          <div style="font-size:14px;color:#46546A;margin-top:2px">{{ im.desc }}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <span style="font-size:13px;font-weight:700;padding:5px 12px;border-radius:6px;background:{{ im.tierBg }};color:{{ im.tierFg }};white-space:nowrap">{{ im.tier }} risk</span>
+          <span style="font-size:13px;font-weight:700;padding:5px 12px;border-radius:6px;background:{{ im.alBg }};color:{{ im.alFg }};white-space:nowrap">{{ im.al }}</span>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px">
+        <div style="background:#FFFFFF;border-radius:12px;padding:20px 22px">
+          <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:15px;font-weight:700">Risk score</span><span><b style="font-size:32px;font-weight:700">{{ im.R }}</b><span style="color:#66758A;font-size:14px"> / 23</span></span></div>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">
+            <sc-for list="{{ im.parts }}" as="p" hint-placeholder-count="5">
+              <div style="display:grid;grid-template-columns:104px minmax(0,1fr) 28px;gap:10px;align-items:center;font-size:14px">
+                <span style="color:#46546A">{{ p.label }}</span>
+                <span style="height:10px;border-radius:6px;background:#ECF0F5;display:block;overflow:hidden"><span style="display:block;height:100%;width:{{ p.w }};background:#3F6C9F;border-radius:6px;transition:width .4s ease"></span></span>
+                <b style="text-align:right">{{ p.v }}</b>
+              </div>
+            </sc-for>
+          </div>
+          <div style="font-size:13px;color:#66758A;margin-top:12px">{{ im.prov }}</div>
+        </div>
+        <div style="background:#FFFFFF;border-radius:12px;padding:20px 22px;display:flex;flex-direction:column;gap:10px">
+          <span style="font-size:15px;font-weight:700">Why now</span>
+          <div style="background:#FBF1F2;border-radius:8px;padding:14px 16px">
+            <div style="font-size:16px;font-weight:700;color:#B5545E">{{ im.reason }}</div>
+            <div style="font-size:14px;color:#46546A;margin-top:4px">{{ im.detail }}</div>
+          </div>
+          <div style="background:#F7F9FC;border-radius:8px;padding:14px 16px">
+            <div style="display:flex;justify-content:space-between;gap:10px;align-items:baseline"><span style="font-size:13px;font-weight:700;color:#46546A">Wearable early warning</span><span style="font-size:13px;font-weight:700;color:{{ im.detC }}">{{ im.detBand }} · {{ im.detScore }}</span></div>
+            <div style="font-size:14px;margin-top:4px">{{ im.detPred }} · {{ im.detWin }}</div>
+            <div style="font-size:13px;color:#66758A;margin-top:4px">{{ im.detDrivers }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="background:#FFFFFF;border-radius:12px;padding:20px 22px">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+          <span style="font-size:15px;font-weight:700">Care plan, in order · safety first</span>
+          <span style="font-size:13px;color:#66758A">Top 3 go to the nurse · rest wait their turn</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <sc-for list="{{ im.plan }}" as="n" hint-placeholder-count="4">
+            <div style="display:grid;grid-template-columns:28px auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 14px;border-radius:8px;background:{{ n.bg }};opacity:{{ n.op }}">
+              <span style="width:28px;height:28px;border-radius:50%;background:#FFFFFF;border:1px solid #E1E7EF;display:grid;place-items:center;font-size:13px;font-weight:700">{{ n.i }}</span>
+              <span style="font-size:12px;font-weight:700;padding:3px 10px;border-radius:6px;background:{{ n.cBg }};color:{{ n.cFg }};white-space:nowrap">{{ n.cls }}</span>
+              <span style="min-width:0"><span style="display:block;font-size:15px;font-weight:700">{{ n.title }}</span><span style="display:block;font-size:13.5px;color:#46546A;line-height:1.5">{{ n.why }} · {{ n.ref }}</span></span>
+              <span style="font-size:12px;font-weight:700;color:{{ n.stC }};white-space:nowrap">{{ n.st }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="background:#1D2939;color:#FFFFFF;border-radius:12px;padding:20px 22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <span style="width:44px;height:44px;border-radius:50%;background:#F1F6FB;color:#3F6C9F;display:grid;place-items:center;font-weight:700;font-size:14px">NR</span>
+        <div style="flex:1;min-width:220px">
+          <div style="font-size:13px;color:#CDD6E2">Next best action</div>
+          <div style="font-size:17px;font-weight:700;margin-top:2px">{{ im.nba }}</div>
+          <div style="font-size:13.5px;color:#CDD6E2;margin-top:2px">Nadia R. · speaks {{ im.lang }} · call {{ im.slot }}, {{ im.pref }}</div>
+        </div>
+        <button sc-camel-on-click="{{ im.onQueue }}" style="border:0;border-radius:6px;padding:12px 20px;background:#A9C3E0;color:#1D2939;font-size:14.5px;font-weight:700;cursor:pointer;white-space:nowrap" style-hover="background:#A9C3E0">{{ im.qLabel }}</button>
+      </div>
+    </section>
+  </div>
+</sc-if>
+
+<!-- Care portal stays mounted (hidden on other screens) so its state survives and the Studio can talk to it -->
+  <div style="display:{{ p3Disp }};margin:-24px -24px -48px;border-top:1px solid #E1E7EF;background:#F5F7FA">
+    <iframe src="about:blank#4a1ed206-4015-4b2d-9728-63f9a364d71d" title="Care Coordinator Portal" style="display:block;width:100%;height:calc(100vh - 112px);min-height:760px;border:0;background:#F5F7FA"></iframe>
+  </div>
+</main>
+
+<sc-if value="{{ toastOn }}" hint-placeholder-val="{{ false }}">
+  <div role="status" style="position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:60;background:#1D2939;color:#FFFFFF;border-radius:6px;padding:12px 22px;font-size:14.5px;font-weight:600;box-shadow:0 12px 30px rgba(16,36,58,.3);display:flex;gap:10px;align-items:center;max-width:calc(100% - 40px)"><span style="color:#A9C3E0">●</span>{{ toast }}</div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;startWorkspace&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;cohort&quot;,&quot;intel&quot;,&quot;portal&quot;],&quot;default&quot;:&quot;cohort&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Prototype&quot;},&quot;showTechnical&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Prototype&quot;}}">
+class Component extends DCLogic {
+  state = { ready: false, ws: 'cohort', sub: 'build', cq: '', cb: null, cohorts: [], campaigns: [], ce: null, members: [], intelSel: null, filter: 'all', queued: {}, portalSel: null, ps: {}, toast: null, active: 'CMP-0101', wb: {}, counts: null, focusId: null };
+  K = { ink: '#1D2939', mut: '#66758A', line: '#E1E7EF', teal: '#3F6C9F', tealS: '#F1F6FB' };
+  componentDidMount() {
+    const go = () => {
+      if (!window.CCC || !window.CCC_MEMBERS) { this.w = setTimeout(go, 40); return; }
+      const C = window.CCC, M = C.members();
+      const cb = this.blank(); const p = C.parse(C.EXAMPLES[0]); cb.inc = p.inc; cb.exc = p.exc; cb.name = 'Diabetes · above 9 and missing refills';
+      const queued = {}; ['x57', 'x108', 'x84', 'x106', 'x35'].forEach(id => queued[id] = true);
+      const ws = ['cohort', 'intel', 'portal'].includes(this.props.startWorkspace) ? this.props.startWorkspace : 'cohort';
+      this.setState({ ready: true, ws, cb, cohorts: C.COHORTS.slice(), campaigns: C.CAMPAIGNS.slice(), members: M, intelSel: M[0].id, queued, portalSel: 'x57' });
+    };
+    go();
+    /* Bridge to the Care portal (screen 3): queued members and focus go down, saved outcomes come back. */
+    this.onMsg = e => { const f = this.portalFrame(); if (!f || e.source !== f.contentWindow) return; const d = e.data || {};
+      if (d.type === 'ccl:ready') { this._sent = null; this.syncPortal(true); }
+      if (d.type === 'ccl:writeback' && d.id) { this.setState(s => ({ wb: Object.assign({}, s.wb, { [d.id]: d }), queued: Object.assign({}, s.queued, { [d.id]: false }) })); this.say('Outcome for ' + d.name + ' written back · care intelligence re-scores tonight'); } };
+    window.addEventListener('message', this.onMsg);
+    this.tick = setInterval(() => {
+      const ps = this.state.ps; const live = Object.keys(ps).filter(k => ps[k].call === 'live');
+      if (live.length) { const n = Object.assign({}, ps); live.forEach(k => n[k] = Object.assign({}, n[k], { secs: n[k].secs + 1 })); this.setState({ ps: n }); }
+    }, 1000);
+  }
+  portalFrame() { return document.querySelector('iframe[title="Care Coordinator Portal"]'); }
+  syncPortal(force) {
+    const st = this.state, f = this.portalFrame(); if (!st.ready || !f || !f.contentWindow) return;
+    const queued = Object.keys(st.queued).filter(k => st.queued[k]), focus = st.focusId ? st.focusId.split('|')[0] : null;
+    const key = queued.join(',') + '|' + st.focusId; if (!force && key === this._sent) return; this._sent = key;
+    f.contentWindow.postMessage({ type: 'ccl:sync', queued, focus, campaign: st.active }, '*');
+  }
+  componentDidUpdate() {
+    this.syncPortal();
+    if (this._target == null) return;
+    if (this._animTo !== this._target) {
+      const from = this._disp ?? this._target, to = this._target, t0 = performance.now(); this._animTo = to;
+      cancelAnimationFrame(this._raf);
+      const f = t => { const k = Math.min(1, (t - t0) / 450), e = 1 - Math.pow(1 - k, 3); this._disp = from + (to - from) * e; this.forceUpdate(); if (k < 1) this._raf = requestAnimationFrame(f); };
+      this._raf = requestAnimationFrame(f);
+    }
+  }
+  componentWillUnmount() { window.removeEventListener('message', this.onMsg); clearTimeout(this.w); clearInterval(this.tick); clearTimeout(this.tt); cancelAnimationFrame(this._raf); }
+  blank() { return { base: 'daman', logic: 'all', inc: [], exc: [], name: '', refresh: 'Nightly', mode: 'build', text: '', q: null, qc: null }; }
+  say(t) { clearTimeout(this.tt); this.setState({ toast: t }); this.tt = setTimeout(() => this.setState({ toast: null }), 3400); }
+  setCb(patch) { this.setState(s => ({ cb: Object.assign({}, s.cb, patch) })); }
+  updRule(id, patch) { const f = L => L.map(r => r.id === id ? Object.assign({}, r, patch) : r); this.setState(s => ({ cb: Object.assign({}, s.cb, { inc: f(s.cb.inc), exc: f(s.cb.exc), q: null, qc: null }) })); }
+  addRule(k, ex) { const r = window.CCC.newRule(k); this.setState(s => ({ cb: Object.assign({}, s.cb, ex ? { exc: s.cb.exc.concat(r) } : { inc: s.cb.inc.concat(r), mode: 'build' }, { q: null, qc: null }) })); }
+  delRule(id) { this.setState(s => ({ cb: Object.assign({}, s.cb, { inc: s.cb.inc.filter(r => r.id !== id), exc: s.cb.exc.filter(r => r.id !== id), q: null, qc: null }) })); }
+  saveCohort(thenCamp) {
+    const C = window.CCC, cb = this.state.cb, e = C.estimate(cb);
+    const id = 'COH-01' + String(this.state.cohorts.length + 1).padStart(2, '0');
+    const coh = { id, name: cb.name || 'Untitled cohort', base: cb.base, n: Math.round(e.n), refresh: cb.refresh, owner: 'Population health', ver: 1, def: cb.inc.filter(C.ruleOn).map(C.ruleText).join(' · ') || 'Custom', src: cb.mode === 'ngql' ? 'nGQL' : 'Builder', fresh: true };
+    this.setState(s => ({ cohorts: [coh].concat(s.cohorts) }));
+    if (thenCamp) this.openCamp(id); else { this.setState({ sub: 'lib' }); this.say(id + ' saved · the Cohort Engine runs it ' + cb.refresh.toLowerCase()); }
+  }
+  openCamp(cohId) {
+    const id = 'CMP-01' + String(this.state.campaigns.length + 1).padStart(2, '0');
+    const coh = this.state.cohorts.find(c => c.id === cohId);
+    this.setState({ ce: { id, name: coh && coh.fresh ? coh.name.split(' · ')[0] + ' outreach' : '', goal: '', inc: cohId ? [cohId] : [], mode: 'automated', trig: [], ch: ['Voice'], nurses: 6, calls: 25, hold: 10 } });
+  }
+  setCe(p) { this.setState(s => ({ ce: Object.assign({}, s.ce, p) })); }
+  togIn(arr, v) { return arr.includes(v) ? arr.filter(x => x !== v) : arr.concat(v); }
+  campN(c) { const t = c.inc.reduce((s, id) => s + ((this.state.cohorts.find(x => x.id === id) || { n: 0 }).n), 0); return t * (c.inc.length > 1 ? 0.88 : 1); }
+  handoff(k) {
+    const c = Object.assign({}, k, { status: 'Live' });
+    this.setState(s => ({ campaigns: s.campaigns.filter(x => x.id !== c.id).concat(c), active: c.id, ws: 'intel' }));
+    this.say((c.id || 'Campaign') + ' handed off · care intelligence scores these members tonight at 03:00');
+  }
+  sendCamp() {
+    const ce = this.state.ce; const k = Object.assign({}, ce, { status: 'Live', start: '23 Nov', weeks: 8 });
+    this.setState(s => ({ campaigns: s.campaigns.concat(k), ce: null, active: k.id, ws: 'intel' }));
+    this.say(k.id + ' handed off · care intelligence scores these members tonight at 03:00');
+  }
+  P(id) { const m = this.state.members.find(x => x.id === id); return this.state.ps[id] || { consent: m ? m.consent : 'pending', call: 'idle', secs: 0, out: {}, saved: false, note: '' }; }
+  setP(id, p) { this.setState(s => ({ ps: Object.assign({}, s.ps, { [id]: Object.assign({}, this.P(id), p) }) })); }
+  spark(series, W, H) { const mn = Math.min(...series), mx = Math.max(...series), r = mx - mn || 1; return series.map((v, i) => (i ? 'L' : 'M') + (4 + i * (W - 8) / Math.max(1, series.length - 1)).toFixed(1) + ' ' + (H - 4 - (v - mn) / r * (H - 8)).toFixed(1)).join(' '); }
+
+  renderVals() {
+    const st = this.state, C = window.CCC;
+    const on = (a, b) => a === b;
+    const pill = (active) => active ? { bg: '#1D2939', fg: '#FFFFFF' } : { bg: 'transparent', fg: '#46546A' };
+    const chip = (active) => active ? { bg: '#F1F6FB', fg: '#3F6C9F', bd: '#3F6C9F' } : { bg: '#FFFFFF', fg: '#46546A', bd: '#E1E7EF' };
+    const roles = { cohort: { ini: 'LM', name: 'Layla M.', team: 'Population health' }, intel: { ini: 'DR', name: 'Dr. Rana K.', team: 'Clinical lead · DoH rules' }, portal: { ini: 'NR', name: 'Nadia R.', team: 'Nurse · English, Hindi' } };
+    const base = { tech: this.props.showTechnical !== false, onHandoff: k => this.handoff(k), onCounts: c => { const o = this.state.counts; if (!o || o.cohorts !== c.cohorts || o.campaigns !== c.campaigns) this.setState({ counts: c }); }, onWriteBack: o => this.setState(s => ({ wb: Object.assign({}, s.wb, { [o.id]: o }) })), queuedIds: Object.keys(st.queued).filter(k => st.queued[k]), focusId: st.focusId, go1: () => this.setState({ ws: 'cohort' }), go2: () => this.setState({ ws: 'intel' }), go3: () => this.setState({ ws: 'portal' }), p3Disp: st.ws === 'portal' ? 'block' : 'none', role: roles[st.ws], toastOn: !!st.toast, toast: st.toast, campOpen: !!st.ce };
+    if (!st.ready || !C) return Object.assign(base, { is: { w1: true, build: true, mBuild: true }, noInc: false });
+    const fmt = C.fmt, ws = st.ws;
+    const tab = (k, c) => { const a = ws === k; return { bg: a ? '#1D2939' : 'transparent', fg: a ? '#FFFFFF' : '#46546A', nb: a ? '#A9C3E0' : '#ECF0F5', nf: a ? '#1D2939' : '#46546A', c }; };
+    const M = st.members, Pall = M.map(m => [m, this.P(m.id)]);
+    const savedN = Pall.filter(x => x[1].saved).length;
+    const wbN = Pall.reduce((s, [m, p]) => s + (p.saved ? Object.keys(p.out).length + 1 : 0), 0);
+    const queueM = M.filter(m => st.queued[m.id]).sort((a, b) => C.ALERT[a.alert][3] - C.ALERT[b.alert][3] || a.slot.localeCompare(b.slot));
+
+    /* ───── cohorts ───── */
+    const cb = st.cb, e = C.estimate(cb); this._target = e.n;
+    const disp = this._disp ?? e.n;
+    const stepN = {}; e.steps.forEach(s => stepN[s.id] = s.n);
+    const q = st.cq.toLowerCase();
+    const cat = C.CATS.map(name => ({ name, fields: Object.keys(C.F).filter(k => C.F[k].cat === name && (!q || C.F[k].label.toLowerCase().includes(q) || name.toLowerCase().includes(q))).map(k => ({ label: C.F[k].label, on: () => this.addRule(k, C.F[k].cat === 'Engagement & consent' && k !== 'pura') })) })).filter(g => g.fields.length);
+    const row = (r, ex) => {
+      const d = C.F[r.f], num = d.type === 'num', labT = d.type === 'lab', la = d.type === 'labage';
+      const L = labT || la ? C.LABS.find(x => x[0] === r.l) : null;
+      const opts = d.type === 'code' && !r.open ? d.opts.filter((o, i) => i < 5 || r.vs.includes(o[0])) : d.opts || [];
+      const chips = d.type === 'enum' || d.type === 'code' ? opts.map(o => Object.assign({ label: o[1], on: () => this.updRule(r.id, { vs: this.togIn(r.vs, o[0]) }) }, chip(r.vs.includes(o[0])))) : (d.type === 'bool' ? [Object.assign({ label: 'Yes', on: () => {} }, chip(true))] : []);
+      if (d.type === 'code' && d.opts.length > opts.length) chips.push({ label: '+' + (d.opts.length - opts.length) + ' more', on: () => this.updRule(r.id, { open: true }), bg: '#FFFFFF', fg: '#3F6C9F', bd: '#CDD6E2' });
+      const left = cb.logic === 'any' && !ex ? '' : stepN[r.id] != null ? fmt(stepN[r.id]) + ' left' : (C.ruleOn(r) ? '' : 'pick one');
+      return { label: d.label, sub: d.sub || d.cat, isLab: labT, isLabAge: la, hasOp: num || labT, hasV: num || labT || la, between: (num || labT) && r.op === 'between',
+        op: r.op, v: r.v, v2: r.v2, l: r.l, step: labT ? '0.1' : '1', unit: num ? d.unit : labT ? L[2] : la ? 'days' : '', chips, left,
+        onOp: ev => this.updRule(r.id, { op: ev.target.value }), onV: ev => this.updRule(r.id, { v: ev.target.value }), onV2: ev => this.updRule(r.id, { v2: ev.target.value }), onL: ev => this.updRule(r.id, { l: ev.target.value }), onDel: () => this.delRule(r.id) };
+    };
+    const has = cb.inc.some(C.ruleOn) || cb.exc.some(C.ruleOn);
+    const tech = this.props.showTechnical !== false;
+    const modes = [['build', 'Build'], ['describe', 'Describe'], tech ? ['ngql', 'nGQL'] : null].filter(Boolean).map(([k, l]) => Object.assign({ label: l, on: () => this.setCb({ mode: k, q: k === 'ngql' && !cb.q ? C.ngql(cb) : cb.q }) }, pill(cb.mode === k)));
+    const qc = cb.qc;
+    const tooFew = e.n < 50 && has;
+    const est = { n: fmt(disp), pct: ((e.n / e.B) * 100).toFixed(e.n / e.B < 0.1 ? 1 : 0) + '%', base: fmt(e.B) + ' ' + C.BASES.find(b => b.id === cb.base).label.toLowerCase(),
+      pill: tooFew ? 'Too few to run' : has ? 'Live estimate' : 'Whole population', pillBg: tooFew ? '#FBEEF0' : '#2A3B52', pillFg: tooFew ? '#934450' : '#C9D9EA',
+      steps: e.steps.map(s => ({ t: s.t, n: fmt(s.n), w: Math.max(1.5, s.n / e.B * 100 * 4 > 100 ? 100 : s.n / e.B * 100 * 4) + '%', c: s.ex ? '#F08A80' : '#A9C3E0' })) };
+    const cohortCards = st.cohorts.map(c => ({ id: c.id, ver: c.ver, name: c.name, def: c.def, n: fmt(c.n), refresh: c.refresh, owner: c.owner, tag: c.fresh ? 'New' : c.src, tagBg: c.fresh ? '#F1F6FB' : '#ECF0F5', tagFg: c.fresh ? '#3F6C9F' : '#46546A', bd: c.fresh ? '#3F6C9F' : '#FFFFFF',
+      onUse: () => this.openCamp(c.id), onOpen: () => { this.setState({ sub: 'build', cb: Object.assign(this.blank(), { name: c.name }) }); this.say('Opened ' + c.id + ' · saving creates v' + (c.ver + 1)); } }));
+    const campCards = st.campaigns.map(k => ({ id: k.id, name: k.name, goal: k.goal || '—', status: k.status, stBg: k.status === 'Live' ? '#F1F6FB' : '#EAF1F9', stFg: k.status === 'Live' ? '#3F6C9F' : '#3F6C9F', n: fmt(this.campN(k)), cap: fmt(k.nurses * k.calls * 5), when: k.start, weeks: k.weeks,
+      trig: k.mode === 'business' ? 'Triggers: ' + k.trig.map(t => (C.TRIG.find(x => x[0] === t) || [t, t])[1]).join(', ') : 'All approved DoH triggers for the cohort’s diagnoses', coh: k.inc.join(', ') }));
+
+    /* campaign editor */
+    let ce = null;
+    if (st.ce) {
+      const c = st.ce, n = this.campN(c), cap = c.nurses * c.calls * 5;
+      ce = { id: c.id, name: c.name, goal: c.goal, onName: ev => this.setCe({ name: ev.target.value }), onGoal: ev => this.setCe({ goal: ev.target.value }),
+        coh: st.cohorts.map(k => Object.assign({ label: k.name, on: () => this.setCe({ inc: this.togIn(st.ce.inc, k.id) }) }, chip(c.inc.includes(k.id)))),
+        ch: ['Voice', 'WhatsApp', 'SMS', 'PURA app'].map(x => Object.assign({ label: x, on: () => this.setCe({ ch: this.togIn(st.ce.ch, x) }) }, chip(c.ch.includes(x)))),
+        mA: pill(c.mode === 'automated'), mP: pill(c.mode === 'business'), onAuto: () => this.setCe({ mode: 'automated' }), onPick: () => this.setCe({ mode: 'business' }),
+        trig: C.TRIG.map(t => Object.assign({ label: t[1], on: () => { if (st.ce.mode === 'business') this.setCe({ trig: this.togIn(st.ce.trig, t[0]) }); } }, chip(c.mode === 'automated' || c.trig.includes(t[0])))),
+        sliders: [['nurses', 'Nurses', 1, 20, c.nurses, c.nurses + ''], ['calls', 'Calls per nurse a day', 5, 40, c.calls, c.calls + ''], ['hold', 'Control group', 5, 30, c.hold, c.hold + '%']].map(s => ({ label: s[1], min: s[2], max: s[3], val: s[4], txt: s[5], on: ev => this.setCe({ [s[0]]: +ev.target.value }) })),
+        n: fmt(n), cap: fmt(cap), weeksTo: n ? Math.ceil(n * (1 - c.hold / 100) / cap) + ' weeks' : '—', holdN: fmt(n * c.hold / 100),
+        cant: !(c.name && c.inc.length), op: c.name && c.inc.length ? 1 : 0.45, hint: !c.name ? 'Name the campaign first.' : !c.inc.length ? 'Add at least one cohort.' : 'Care intelligence picks it up in tonight’s run.', onSend: () => this.sendCamp() };
+    }
+
+    /* ───── intelligence ───── */
+    const tierN = C.TIER;
+    const flt = st.filter;
+    const cnt = k => k === 'all' ? M.length : M.filter(m => m.alert === k).length;
+    const filters = [['all', 'Everyone'], ['urgent', 'Urgent'], ['priority', 'Priority'], ['routine', 'Routine']].map(([k, l]) => { const a = flt === k; return { label: l, n: cnt(k), on: () => this.setState({ filter: k }), bg: a ? '#1D2939' : '#FFFFFF', fg: a ? '#FFFFFF' : '#46546A', bd: a ? '#1D2939' : '#E1E7EF' }; });
+    const LM = M.filter(m => flt === 'all' || m.alert === flt);
+    const intelList = LM.map(m => { const a = st.intelSel === m.id, A = C.ALERT[m.alert], p = this.P(m.id);
+      return { ini: m.initials, name: m.name, reason: m.trigger.reason, R: m.risk2.R, tier: tierN[m.risk2.tier], al: A[0], alBg: A[1], alFg: A[2], wb: st.wb[m.id] ? '↩ updated tonight' : st.queued[m.id] ? '· queued' : '',
+        bg: a ? '#F1F6FB' : '#FFFFFF', sh: a ? 'inset 3px 0 0 #3F6C9F' : 'none', avBg: a ? '#3F6C9F' : '#ECF0F5', avFg: a ? '#FFFFFF' : '#1D2939', on: () => this.setState({ intelSel: m.id }) }; });
+    const sm = M.find(m => m.id === st.intelSel) || M[0], sp = this.P(sm.id), SA = C.ALERT[sm.alert];
+    const im = { ini: sm.initials, name: sm.name, desc: sm.mask + ' · ' + sm.age + ' · ' + sm.sex.toLowerCase() + ' · ' + sm.condTxt + ' · ' + sm.plan,
+      tier: tierN[sm.risk2.tier], tierBg: C.TIERC[sm.risk2.tier][0], tierFg: C.TIERC[sm.risk2.tier][1], al: SA[0], alBg: SA[1], alFg: SA[2], R: sm.risk2.R,
+      parts: sm.risk2.parts.map(p => ({ label: p[0], v: p[1], w: (p[1] / p[2] * 100) + '%' })), prov: sm.risk2.prov ? 'Kidney is provisional: no eGFR on record.' : 'All five factors are from claims and labs.',
+      reason: sm.trigger.reason, detail: sm.trigger.detail, detBand: sm.det.band, detScore: sm.det.score, detPred: sm.det.pred, detWin: sm.det.win, detDrivers: sm.det.drivers.join(' · '), detC: sm.det.band === 'Elevated' ? '#8A6A3E' : '#3F6C9F',
+      plan: sm.needs.map((n, i) => { const o = sp.out[n.id]; const K = C.CLS[n.cls]; return { i: i + 1, cls: K[0], cBg: K[1], cFg: K[2], title: n.title, why: n.why, ref: tech ? n.ref : 'DoH guideline', bg: i < 3 ? '#F7F9FC' : '#FFFFFF', op: i < 3 ? 1 : 0.6,
+        st: o === 'done' ? (sp.saved ? '↩ Done · confirm in claims' : 'Done on call') : o === 'declined' ? 'Declined · again in 90 d' : o === 'later' ? 'Call back' : i < 3 ? 'For nurse' : 'Waiting', stC: o === 'done' ? '#3F6C9F' : o ? '#8A6A3E' : '#66758A' }; }),
+      nba: sm.needs[0] ? sm.needs[0].title : 'No open needs', lang: sm.lang, slot: sm.slot, pref: sm.pref.toLowerCase(),
+      qLabel: st.queued[sm.id] ? 'Open in care portal →' : 'Send to Nadia’s call list',
+      onQueue: () => { if (st.queued[sm.id]) this.setState({ ws: 'portal', focusId: sm.id + '|' + Date.now() }); else { this.setState(s => ({ queued: Object.assign({}, s.queued, { [sm.id]: true }) })); this.say(sm.first + ' added to Nadia’s call list at ' + sm.slot); } } };
+    const actK = st.campaigns.find(k => k.id === st.active) || st.campaigns[0] || { id: 'CMP-0101', name: 'Diabetes control' };
+
+    /* ───── portal ───── */
+    const pmM = M.find(m => m.id === st.portalSel) || queueM[0] || M[0], pp = this.P(pmM.id), pid = pmM.id;
+    const queue = queueM.map(m => { const p = this.P(m.id), a = m.id === pmM.id;
+      const s = p.saved ? ['Done', '#F1F6FB', '#3F6C9F'] : p.call === 'live' ? ['On call', '#1D2939', '#FFFFFF'] : p.consent === 'declined' ? ['Declined', '#FBEEF0', '#934450'] : C.ALERT[m.alert].slice(0, 3);
+      return { slot: m.slot, name: m.name, reason: m.trigger.reason, st: s[0], stBg: s[1], stFg: s[2], bg: a ? '#F1F6FB' : '#FFFFFF', sh: a ? 'inset 3px 0 0 #3F6C9F' : 'none', op: p.saved ? 0.6 : 1, on: () => this.setState({ portalSel: m.id }) }; });
+    const cur = pmM.needs.slice(0, 3), granted = pp.consent === 'granted', declined = pp.consent === 'declined', live = pp.call === 'live', ended = pp.call === 'ended';
+    const outs = cur.filter(n => pp.out[n.id]).length, allOut = outs === cur.length;
+    const mmss = s => String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+    const stepIdx = !live && !ended ? 0 : !granted && !declined ? 1 : declined ? 4 : !allOut ? 2 : 4;
+    const lines = [['OPEN', 'Hi ' + pmM.first + ', this is Nadia from the HICC care team, calling for Daman. Is now a good time?']];
+    if (pp.consent !== 'granted' || pp.wasPending) lines.push(['CONSENT', 'May I look at your recent health records and note what we discuss today? You can say yes or no.']);
+    if (!declined && cur[0]) { lines.push(['WHY', cur[0].why2]); cur.slice(0, 2).forEach(n => lines.push(['ASK', n.ask])); }
+    lines.push(['CLOSE', declined ? 'That is completely fine, ' + pmM.first + '. We will not contact you about this again. Thank you for your time.' : 'Thanks, ' + pmM.first + '. You will get a reminder before each booking. Take care.']);
+    const activeTag = ['OPEN', 'CONSENT', 'WHY', 'ASK', 'CLOSE'][stepIdx];
+    const script = lines.map(([tag, text]) => { const a = tag === activeTag || (activeTag === 'WHY' && tag === 'ASK') || (stepIdx === 2 && (tag === 'WHY' || tag === 'ASK'));
+      const dim = !granted && !declined && (tag === 'WHY' || tag === 'ASK');
+      return { tag, text, bg: a ? '#F1F6FB' : '#FFFFFF', tc: a ? '#3F6C9F' : '#66758A', op: dim ? 0.35 : 1 }; });
+    const OPT = [['done', 'Done'], ['later', 'Later'], ['declined', 'Declined']];
+    const needs = cur.map(n => { const o = pp.out[n.id], K = C.CLS[n.cls];
+      return { cls: K[0], cBg: K[1], cFg: K[2], title: n.title, why: n.why, bg: o === 'done' ? '#F5F8FC' : '#FFFFFF', bd: o === 'done' ? '#C9D9EA' : '#E1E7EF',
+        opts: OPT.map(([k, l]) => { const a = o === k; return { label: l, on: () => { if (pp.saved) return; const out = Object.assign({}, this.P(pid).out); if (out[n.id] === k) delete out[n.id]; else out[n.id] = k; this.setP(pid, { out }); }, bg: a ? (k === 'done' ? '#3F6C9F' : k === 'later' ? '#8A6A3E' : '#B5545E') : 'transparent', fg: a ? '#FFFFFF' : '#46546A' }; }) }; });
+    const DAYS = ['Fri', 'Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu'];
+    const book = []; cur.forEach(n => { const o = pp.out[n.id]; if (o === 'done') book.push([n.book.d, n.book.label, 'done']); if (o === 'later') book.push([2, 'Call back', 'later']); });
+    if (book.some(b => b[2] === 'done')) book.push([7, 'Check-in call', 'call']);
+    const cal = Array.from({ length: 14 }, (_, i) => { const date = 20 + i, dd = date > 30 ? date - 30 : date, mon = date > 30 ? ' Dec' : ''; const wk = i % 7 === 1 || i % 7 === 2;
+      return { label: i === 0 ? 'Today' : DAYS[i % 7] + ' ' + dd + mon, bg: i === 0 ? '#1D2939' : wk ? '#F7F9FC' : '#FFFFFF', fg: i === 0 ? '#FFFFFF' : '#46546A', bd: i === 0 ? '#1D2939' : '#ECF0F5',
+        items: book.filter(b => b[0] === i).map(b => ({ t: b[1], bg: b[2] === 'done' ? '#F1F6FB' : b[2] === 'later' ? '#F4EFE6' : '#EAF1F9', fg: b[2] === 'done' ? '#3F6C9F' : b[2] === 'later' ? '#8A6A3E' : '#3F6C9F' })) }; });
+    const jr = (label, sub, state, n) => ({ label, sub, mk: state === 'done' ? '✓' : n, bg: state === 'done' ? '#3F6C9F' : state === 'cur' ? '#FFFFFF' : '#F7F9FC', fg: state === 'done' ? '#FFFFFF' : state === 'cur' ? '#3F6C9F' : '#66758A', bd: state === 'done' ? '#3F6C9F' : state === 'cur' ? '#3F6C9F' : '#E1E7EF' });
+    const consentTxt = granted ? '✓ Consent given · record open' : declined ? 'Consent declined' : '🔒 Consent needed';
+    const a1 = pmM.labs.map(l => { const v = l.series[l.series.length - 1], bad = l.dir === 'down' ? v > l.target : v < l.target; return { name: l.name, target: (l.dir === 'down' ? '< ' : '> ') + l.target, v, unit: l.unit, when: l.last, c: bad ? '#B5545E' : '#3F6C9F', d: this.spark(l.series, 96, 32) }; });
+    const pm = { name: pmM.name, first: pmM.first, phone: pmM.phone, pref: pmM.pref.toLowerCase(), consentTxt, cBg: granted ? '#F1F6FB' : declined ? '#FBEEF0' : '#F4EFE6', cFg: granted ? '#3F6C9F' : declined ? '#934450' : '#8A6A3E',
+      barBg: live ? '#1D2939' : '#FFFFFF', barFg: live ? '#FFFFFF' : '#1D2939', dot: live ? '#7CC4A8' : ended ? '#98A4B5' : '#8A6A3E',
+      barTitle: live ? 'On call with ' + pmM.first + ' · recorded' : ended ? 'Call ended with ' + pmM.first : 'Ready to call ' + pmM.first, barSub: live ? 'Speaks ' + pmM.lang + ' · Genesys line 2' : ended ? (pp.saved ? 'Outcome written back' : 'Record the outcome below') : pmM.trigger.reason + ' · ' + pmM.slot + ', ' + pmM.pref.toLowerCase(),
+      timer: live || ended ? mmss(pp.secs) : '', btn: live ? 'End call' : ended ? 'Call again' : 'Start call', btnBg: live ? '#B5545E' : '#3F6C9F', btnFg: '#FFFFFF',
+      onCall: () => { const p = this.P(pid); this.setP(pid, { call: p.call === 'live' ? 'ended' : 'live', secs: p.call === 'live' ? p.secs : 0 }); },
+      journey: [jr('Call', live ? 'In progress' : ended ? 'Ended' : 'Not started', live || ended ? 'done' : 'cur', 1),
+        jr('Consent', granted ? 'Given' : declined ? 'Declined' : 'Ask on the call', granted || declined ? 'done' : live ? 'cur' : '', 2),
+        jr('Actions', declined ? 'None' : outs + ' of ' + cur.length + ' recorded', !declined && allOut ? 'done' : granted ? 'cur' : '', 3),
+        jr('Outcome', pp.saved ? 'Written back' : 'Not saved', pp.saved ? 'done' : (allOut || declined) && (live || ended) ? 'cur' : '', 4)],
+      script, askConsent: live && !granted && !declined, needCall: !live && !ended,
+      onYes: () => this.setP(pid, { consent: 'granted', wasPending: true }), onNo: () => this.setP(pid, { consent: 'declined' }),
+      showNeeds: granted, needs, nextUp: pmM.needs.slice(3).map(n => n.title.toLowerCase()).join(' · ') || 'nothing else open',
+      cal, bookNote: book.length ? book.length + ' booking' + (book.length > 1 ? 's' : '') + ' · reminders sent by SMS' : 'Mark an action done to book it',
+      note: pp.note, onNote: ev => this.setP(pid, { note: ev.target.value }),
+      cantSave: pp.saved || !(declined || (granted && allOut)), saveOp: pp.saved || !(declined || (granted && allOut)) ? 0.45 : 1,
+      saveLabel: pp.saved ? '✓ Written back' : 'Save outcome and write back', saved: pp.saved,
+      saveHint: pp.saved ? 'Care intelligence re-scores ' + pmM.first + ' tonight.' : declined ? 'Consent declined is recorded; no further contact.' : !granted ? 'Needs consent and an outcome for each action.' : allOut ? 'Ready to save.' : (cur.length - outs) + ' action' + (cur.length - outs > 1 ? 's' : '') + ' still need an outcome.',
+      onSave: () => { const p = this.P(pid); this.setP(pid, { saved: true, call: 'ended' }); this.say('Written back · ' + (Object.keys(p.out).length + 1) + ' events for ' + pmM.first + ' go to care intelligence tonight'); },
+      onNext: () => { const nx = queueM.find(m => !this.P(m.id).saved && m.id !== pid); if (nx) this.setState({ portalSel: nx.id }); else this.say('All calls done for today'); },
+      locked: !granted, open: granted, sync: granted ? 'Synced ' + pmM.wear.sync : 'Consent required', labs: a1,
+      meds: pmM.meds.filter(d => d.cls !== 'Other').slice(0, 5).map(d => ({ drug: d.drug, cls: d.cls, pdc: d.pdc + '%', w: d.pdc + '%', c: d.pdc < 80 ? '#B5545E' : '#3F6C9F' })),
+      bp: pmM.wear.bp.join('/'), steps: fmt(pmM.wear.steps), sleep: pmM.wear.sleep + ' h',
+      hist: (pp.saved ? [{ t: 'Today: ' + (declined ? 'consent declined' : outs + ' actions recorded, ' + book.length + ' booked'), when: 'Nadia R. · ' + mmss(pp.secs) + ' call', c: '#3F6C9F' }] : []).concat([{ t: pmM.lastContact, when: 'Last contact', c: '#98A4B5' }, { t: 'Flagged: ' + pmM.trigger.reason.toLowerCase(), when: 'Care intelligence · tonight 03:00', c: '#3F6C9F' }]) };
+    const doneN = Pall.reduce((s, [m, p]) => s + Object.values(p.out).filter(v => v === 'done').length, 0);
+    const bookedN = Pall.reduce((s, [m, p]) => { const d = Object.values(p.out); return s + d.filter(v => v !== 'declined').length + (d.includes('done') ? 1 : 0); }, 0);
+
+    return Object.assign(base, {
+      t1: tab('cohort', (st.counts ? st.counts.cohorts : st.cohorts.length) + ' saved'), t2: tab('intel', M.length + ' scored'), t3: tab('portal', queueM.filter(m => !st.wb[m.id]).length + ' to call'),
+      wbTxt: Object.keys(st.wb).length ? Object.keys(st.wb).length + ' outcomes go back tonight' : wbN ? wbN + ' outcomes go back tonight' : 'outcomes feed back nightly',
+      is: { w1: ws === 'cohort', w2: ws === 'intel', w3: ws === 'portal', build: st.sub === 'build', lib: st.sub === 'lib', camp: st.sub === 'camp', mBuild: cb.mode === 'build', mDescribe: cb.mode === 'describe', mNgql: cb.mode === 'ngql' },
+      w1: { title: st.sub === 'build' ? 'Build a cohort' : st.sub === 'lib' ? 'Saved cohorts' : 'Campaigns' },
+      s1: { a: pill(st.sub === 'build'), b: pill(st.sub === 'lib'), c: pill(st.sub === 'camp') }, sub1: () => this.setState({ sub: 'build' }), sub2: () => this.setState({ sub: 'lib' }), sub3: () => this.setState({ sub: 'camp' }),
+      nCoh: st.cohorts.length, nCamp: st.campaigns.length,
+      cq: st.cq, onCq: ev => this.setState({ cq: ev.target.value }), cat, cb, onName: ev => this.setCb({ name: ev.target.value }), modes,
+      bases: C.BASES.map(b => { const a = cb.base === b.id; return { label: b.label, src: b.src, n: fmt(b.n), bd: a ? '#3F6C9F' : '#E1E7EF', sh: a ? 'inset 0 0 0 1px #3F6C9F' : 'none', on: () => this.setCb({ base: b.id, q: null, qc: null }) }; }),
+      lg: { all: pill(cb.logic === 'all'), any: pill(cb.logic === 'any') }, logicAll: () => this.setCb({ logic: 'all', q: null }), logicAny: () => this.setCb({ logic: 'any', q: null }),
+      noInc: !cb.inc.length, incRows: cb.inc.map(r => row(r, 0)), excRows: cb.exc.map(r => row(r, 1)),
+      quickInc: ['dx', 'lab', 'age', 'ed', 'pdc', 'nofu'].map(k => ({ label: C.F[k].label, on: () => this.addRule(k, false) })),
+      quickExc: ['optout', 'onco', 'pregnant'].filter(k => !cb.exc.some(r => r.f === k)).map(k => ({ label: C.F[k].label, on: () => this.addRule(k, true) })),
+      onText: ev => this.setCb({ text: ev.target.value }),
+      onParse: () => { const p = C.parse(cb.text || ''); if (!p.inc.length && !p.exc.length) { this.say('Nothing recognised: try naming a condition, a test or a visit pattern'); return; } this.setCb({ inc: p.inc, exc: p.exc, mode: 'build', q: null, qc: null }); this.say(p.inc.length + ' rules and ' + p.exc.length + ' exclusions created · check them below'); },
+      examples: C.EXAMPLES.map(t => ({ t, on: () => { const p = C.parse(t); this.setCb({ text: t, inc: p.inc, exc: p.exc, mode: 'build', q: null, qc: null }); this.say(p.inc.length + ' rules and ' + p.exc.length + ' exclusions created'); } })),
+      onRegen: () => this.setCb({ q: C.ngql(cb), qc: null }), onQ: ev => this.setCb({ q: ev.target.value, qc: null }), onCheck: () => this.setCb({ qc: C.check(cb.q || '') }),
+      onLoad: () => { if (qc && qc.ok) this.saveCohort(false); }, qBad: !(qc && qc.ok), qOp: qc && qc.ok ? 1 : 0.45,
+      qStatus: qc ? (qc.ok ? 'All checks pass' : 'Fix the failing checks') : 'Not validated yet',
+      checks: qc ? qc.C.map(x => ({ name: x[0], note: x[2], icon: x[1] ? '✓' : '✕', bg: x[1] ? '#F1F6FB' : '#FBEEF0', fg: x[1] ? '#3F6C9F' : '#934450' })) : [],
+      est, onRefresh: ev => this.setCb({ refresh: ev.target.value }), cantSave: !has || tooFew, saveOp: has && !tooFew ? 1 : 0.45,
+      onSave: () => this.saveCohort(false), onSaveUse: () => this.saveCohort(true),
+      cohortCards, campCards, onNewCamp: () => this.openCamp(null), ce: ce || {}, onCloseCamp: () => this.setState({ ce: null }),
+      intelSub: 'Campaign ' + actK.id + ' · ' + actK.name + '. Each member was read against DoH Abu Dhabi guidelines, given a risk score, a plan in safety order and one next best action.',
+      filters, intelList, im,
+      portalSub: queueM.length + ' members on your list, matched to your languages. Records open only after the member consents.',
+      pst: { left: queueM.filter(m => !this.P(m.id).saved).length, done: doneN, booked: bookedN },
+      queue, queueEmpty: !queueM.length, pm
+    });
+  }
+}
+</script>
+
+
+</body></html>

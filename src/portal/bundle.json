@@ -1,0 +1,112 @@
+{
+ "template": "index.template.html",
+ "ext_resources": [],
+ "page_order": [],
+ "assets": {
+  "e643e7d3-5981-4d9c-b11b-b41cab74f4af": {
+   "file": "assets/fonts/e643e7d3-5981-4d9c-b11b-b41cab74f4af.woff2",
+   "mime": "font/woff2",
+   "compressed": false
+  },
+  "d4e1584b-52c5-4675-979c-b956e092c9b0": {
+   "file": "assets/fonts/d4e1584b-52c5-4675-979c-b956e092c9b0.woff2",
+   "mime": "font/woff2",
+   "compressed": false
+  },
+  "d7edad1f-7b6c-41d0-8417-5da34a097dfe": {
+   "file": "assets/fonts/d7edad1f-7b6c-41d0-8417-5da34a097dfe.woff2",
+   "mime": "font/woff2",
+   "compressed": false
+  },
+  "5cfe35e5-aaab-4691-9571-0c5afea1f3b4": {
+   "file": "assets/fonts/5cfe35e5-aaab-4691-9571-0c5afea1f3b4.woff2",
+   "mime": "font/woff2",
+   "compressed": false
+  },
+  "0f8bb46a-29f0-4ab0-a1eb-7bbff803e2d5": {
+   "file": "assets/fonts/0f8bb46a-29f0-4ab0-a1eb-7bbff803e2d5.woff2",
+   "mime": "font/woff2",
+   "compressed": false
+  },
+  "c4ac9f0e-d526-441c-8375-df7e1321a97b": {
+   "file": "assets/fonts/c4ac9f0e-d526-441c-8375-df7e1321a97b.woff2",
+   "mime": "font/woff2",
+   "compressed": false
+  },
+  "22bbe182-f0ef-4678-ad15-aae2c4a6a24b": {
+   "file": "assets/fonts/22bbe182-f0ef-4678-ad15-aae2c4a6a24b.woff2",
+   "mime": "font/woff2",
+   "compressed": false
+  },
+  "e41dbdb4-4fde-4e5d-b26e-3dc0b6d52c4e": {
+   "file": "assets/fonts/e41dbdb4-4fde-4e5d-b26e-3dc0b6d52c4e.woff2",
+   "mime": "font/woff2",
+   "compressed": false
+  },
+  "18cfe09c-9ef4-4451-aa53-e0a61626ee3e": {
+   "file": "assets/fonts/18cfe09c-9ef4-4451-aa53-e0a61626ee3e.woff2",
+   "mime": "font/woff2",
+   "compressed": false
+  },
+  "79dc5eb9-1c60-42e4-8f22-091103e41118": {
+   "file": "assets/fonts/79dc5eb9-1c60-42e4-8f22-091103e41118.woff2",
+   "mime": "font/woff2",
+   "compressed": false
+  },
+  "66bd5e99-c85d-4840-964b-f1a5d4e9476e": {
+   "file": "assets/fonts/66bd5e99-c85d-4840-964b-f1a5d4e9476e.woff2",
+   "mime": "font/woff2",
+   "compressed": false
+  },
+  "79cdbd30-72ba-41ac-bfe2-bfce7f0a88d9": {
+   "file": "assets/fonts/79cdbd30-72ba-41ac-bfe2-bfce7f0a88d9.woff2",
+   "mime": "font/woff2",
+   "compressed": false
+  },
+  "0e3c597f-4ac3-429b-a45d-ff777f1680ce": {
+   "file": "assets/fonts/0e3c597f-4ac3-429b-a45d-ff777f1680ce.woff2",
+   "mime": "font/woff2",
+   "compressed": false
+  },
+  "2aae27f6-e16a-427e-812e-87c67b730e23": {
+   "file": "assets/fonts/2aae27f6-e16a-427e-812e-87c67b730e23.woff2",
+   "mime": "font/woff2",
+   "compressed": false
+  },
+  "6855e08e-334c-4ff2-814f-ee657d788de9": {
+   "file": "assets/fonts/6855e08e-334c-4ff2-814f-ee657d788de9.woff2",
+   "mime": "font/woff2",
+   "compressed": false
+  },
+  "63b1a2d6-8ea9-48eb-87cd-ebf363006032": {
+   "file": "assets/fonts/63b1a2d6-8ea9-48eb-87cd-ebf363006032.woff2",
+   "mime": "font/woff2",
+   "compressed": false
+  },
+  "7eced9c5-833c-41b7-9005-59620bed5940": {
+   "file": "assets/fonts/7eced9c5-833c-41b7-9005-59620bed5940.woff2",
+   "mime": "font/woff2",
+   "compressed": false
+  },
+  "c78a26fd-3938-4a34-80d5-494b749a5e44": {
+   "file": "assets/fonts/c78a26fd-3938-4a34-80d5-494b749a5e44.woff2",
+   "mime": "font/woff2",
+   "compressed": false
+  },
+  "42c5bb98-034d-4d75-9540-d3166c6ec85f": {
+   "file": "assets/fonts/42c5bb98-034d-4d75-9540-d3166c6ec85f.woff2",
+   "mime": "font/woff2",
+   "compressed": false
+  },
+  "9ba52435-9410-4e8a-98b7-5f3fbf7e2965": {
+   "file": "assets/fonts/9ba52435-9410-4e8a-98b7-5f3fbf7e2965.woff2",
+   "mime": "font/woff2",
+   "compressed": false
+  },
+  "c6fd84b0-ce53-49d5-ac95-408957307bb7": {
+   "file": "assets/fonts/c6fd84b0-ce53-49d5-ac95-408957307bb7.woff2",
+   "mime": "font/woff2",
+   "compressed": false
+  }
+ }
+}

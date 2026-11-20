@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chronic Care Loop</title>
+<style>
+:root{--bg:#F5F7FA;--card:#FFFFFF;--ink:#1D2939;--mut:#66758A;--line:#E1E7EF;--acc:#3F6C9F;--accS:#EAF1F9;--dark:#0B1B2A;--teal:#5EC4B6;--warn:#8A6A3E;--warnS:#F4EFE6}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0F1720;--card:#16212D;--ink:#E6ECF2;--mut:#9AA8B8;--line:#26333F;--acc:#8DB3DD;--accS:#1C2B3B;--warn:#E0B97A;--warnS:#2A2418}}
+:root[data-theme="dark"]{--bg:#0F1720;--card:#16212D;--ink:#E6ECF2;--mut:#9AA8B8;--line:#26333F;--acc:#8DB3DD;--accS:#1C2B3B;--warn:#E0B97A;--warnS:#2A2418}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 'IBM Plex Sans',system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--acc)}
+.top{background:var(--dark);color:#F4F2ED}
+.wrap{max-width:1160px;margin:0 auto;padding:0 24px}
+.top .wrap{padding-top:40px;padding-bottom:40px}
+.eyebrow{font:600 12px/1 'IBM Plex Mono',ui-monospace,monospace;letter-spacing:.14em;color:var(--teal)}
+h1{font-size:clamp(30px,4vw,44px);line-height:1.1;margin:12px 0 8px;letter-spacing:-.02em;font-weight:600}
+.top p{margin:0;color:#A9B6C2;max-width:70ch}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px;margin:-24px auto 0;position:relative}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:22px;display:flex;flex-direction:column;gap:10px;text-decoration:none;color:var(--ink);transition:box-shadow .15s,border-color .15s}
+.card:hover{border-color:var(--acc);box-shadow:0 8px 24px rgba(16,36,58,.12)}
+.num{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:13px;background:var(--accS);color:var(--acc)}
+.card h2{margin:0;font-size:19px;letter-spacing:-.01em}
+.card p{margin:0;color:var(--mut);font-size:14px}
+.card ul{margin:0;padding-left:18px;color:var(--mut);font-size:13.5px}
+.go{margin-top:auto;font-weight:700;font-size:14px;color:var(--acc)}
+section{margin:48px auto}
+h3{font-size:22px;margin:0 0 6px;letter-spacing:-.01em;font-weight:600}
+.lede{color:var(--mut);margin:0 0 20px;max-width:75ch}
+.flow{display:flex;flex-wrap:wrap;align-items:stretch;gap:8px}
+.ent{flex:1 1 150px;min-width:140px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;position:relative}
+.ent b{display:block;font-size:14.5px}
+.ent small{display:block;color:var(--mut);font-size:12.5px;margin-top:3px;line-height:1.45}
+.ent .who{display:inline-block;margin-top:8px;font:600 10.5px 'IBM Plex Mono',monospace;letter-spacing:.04em;padding:2px 7px;border-radius:5px;background:var(--accS);color:var(--acc)}
+.ent .who.p{background:var(--warnS);color:var(--warn)}
+.arrow{display:grid;place-items:center;color:var(--mut);font-weight:700}
+.back{margin-top:10px;padding:10px 14px;border:1px dashed var(--line);border-radius:10px;color:var(--mut);font-size:13.5px}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:12px;margin-top:20px}
+.rule{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;font-size:14px}
+.rule b{display:block;margin-bottom:4px}
+footer{color:var(--mut);font-size:13px;padding:24px 0 48px}
+@media (max-width:640px){.arrow{display:none}.top .wrap{padding-top:28px;padding-bottom:36px}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="eyebrow">CHRONIC CARE LOOP · DAMAN × HICC</div>
+  <h1>Find who needs care, plan it, call them, learn from the outcome.</h1>
+  <p>Three connected prototypes. The briefing explains the loop. The studio builds cohorts and scores members. The portal is where nurses call members and keep their care plans moving. Outcomes flow back into the next nightly run.</p>
+</div></header>
+
+<main class="wrap">
+  <div class="cards">
+    <a class="card" href="Chronic-Care-Loop-Briefing.html">
+      <span class="num">1</span><h2>Executive briefing</h2>
+      <p>The case for the loop: what it does, what it saves and a simulation you can play.</p>
+      <span class="go">Open briefing →</span>
+    </a>
+    <a class="card" href="Chronic-Care-Studio.html">
+      <span class="num">2</span><h2>Cohort &amp; care studio</h2>
+      <p>Three screens in one flow.</p>
+      <ul><li>Cohorts: rules, or describe in words (catalogue first, then the graph)</li><li>Care intelligence: risk, triggers, care plan</li><li>Care portal, embedded with the call list passed in</li></ul>
+      <span class="go">Open studio →</span>
+    </a>
+    <a class="card" href="Care-Coordinator-Portal.html">
+      <span class="num">3</span><h2>Care coordinator portal</h2>
+      <p>The nurse's workstation on its own: nudge queue, Member 360, care plans linked to actions, wearables and analytics.</p>
+      <span class="go">Open portal →</span>
+    </a>
+  </div>
+
+  <section id="data-model">
+    <h3>Data model</h3>
+    <p class="lede">Ten entities, one loop. The full field list is in <code>docs/DATA_MODEL.md</code>.</p>
+    <div class="flow">
+      <div class="ent"><b>Member</b><small>who: age, plan, language, conditions, consent</small><span class="who">SOURCE</span></div>
+      <div class="arrow">→</div>
+      <div class="ent"><b>Feature</b><small>a reusable measure, from the catalogue or the graph; values in MemberFeature</small><span class="who">STUDIO · 1</span></div>
+      <div class="arrow">→</div>
+      <div class="ent"><b>Cohort</b><small>versioned rules over features</small><span class="who">STUDIO · 1</span></div>
+      <div class="arrow">→</div>
+      <div class="ent"><b>Campaign</b><small>cohorts + triggers + nurse capacity</small><span class="who">STUDIO · 1</span></div>
+      <div class="arrow">→</div>
+      <div class="ent"><b>Signal</b><small>nightly triggers, risk score and tier</small><span class="who">STUDIO · 2</span></div>
+    </div>
+    <div class="flow" style="margin-top:8px">
+      <div class="ent"><b>CarePlan</b><small>pathway, tier and cadence, after consent</small><span class="who">STUDIO · 2</span></div>
+      <div class="arrow">→</div>
+      <div class="ent"><b>CarePlanNeed</b><small>safety → acute → uncontrolled → barrier → gap → goal</small><span class="who">STUDIO · 2</span></div>
+      <div class="arrow">⇄</div>
+      <div class="ent"><b>Action</b><small>one per current need, plus callbacks and retries</small><span class="who p">PORTAL</span></div>
+      <div class="arrow">←</div>
+      <div class="ent"><b>Contact</b><small>the call: reached, consent, response</small><span class="who p">PORTAL</span></div>
+      <div class="arrow">→</div>
+      <div class="ent"><b>Outcome</b><small>done, declined or not reached, per need</small><span class="who p">PORTAL</span></div>
+    </div>
+    <div class="back">↩ Outcomes are the only way back: the nightly run re-scores Signals and refreshes MemberFeature values from them.</div>
+    <div class="rules">
+      <div class="rule"><b>Reuse before you create</b>Describe searches existing features first. Only what the catalogue cannot express becomes a new graph feature.</div>
+      <div class="rule"><b>One need, one action</b>A current care-plan need and its action share a <code>need_key</code>. Closing one closes the other.</div>
+      <div class="rule"><b>Write events, not state</b>The portal records outcomes. It never edits scores or triggers directly.</div>
+    </div>
+  </section>
+  <footer>All member data in these prototypes is synthetic. Built from <code>src/</code> with <code>python3 tools/bundle.py</code>; see README.</footer>
+</main>
+</body>
+</html>

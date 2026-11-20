@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>*{box-sizing:border-box}body{margin:0;background:#F5F7FA;color:#1D2939;font-family:'IBM Plex Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}a{color:#3F6C9F}a:hover{color:#345C8A}button,input,select,textarea{font-family:inherit}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #A9C3E0;outline-offset:2px}input[type=range]{accent-color:#3F6C9F}</style>
+<!-- engines (lib/cohort-engine-v2.js, lib/kg-engine.js) are loaded once by the Studio shell -->
+</helmet>
+<div style="width:100%;color:#1D2939;font-family:'IBM Plex Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums">
+
+<sc-if value="{{ standalone }}" hint-placeholder-val="{{ true }}">
+  <header style="position:sticky;top:0;z-index:30;background:#FFFFFF;border-bottom:1px solid #E1E7EF">
+    <div style="display:flex;align-items:center;gap:12px 24px;padding:12px 28px;flex-wrap:wrap;max-width:none;margin:0 auto">
+      <svg sc-camel-view-box="0 0 32 32" width="32" height="32" aria-hidden="true"><circle cx="16" cy="16" r="11" fill="none" stroke="#3F6C9F" stroke-width="3" stroke-dasharray="52 17" stroke-linecap="round"></circle><circle cx="27" cy="16" r="3.2" fill="#3F6C9F"></circle></svg>
+      <div style="flex:1;min-width:200px"><div style="font-weight:700;font-size:16px;letter-spacing:-.01em">Cohort &amp; Campaign Studio</div><div style="font-size:13px;color:#66758A">Define who · hand off to care intelligence</div></div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="text-align:right"><div style="font-size:14px;font-weight:700">Layla M.</div><div style="font-size:13px;color:#66758A">Population health</div></div>
+        <span style="width:36px;height:36px;border-radius:50%;background:#1D2939;color:#FFFFFF;display:grid;place-items:center;font-weight:700;font-size:13px">LM</span>
+      </div>
+    </div>
+  </header>
+</sc-if>
+
+<div style="max-width:{{ maxW }};margin:0 auto;padding:{{ pad }}">
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px">
+    <div style="min-width:0">
+      <div style="font-size:13px;font-weight:700;color:#3F6C9F">{{ eyebrow }}</div>
+      <h1 style="margin:4px 0 0;font-size:24px;line-height:1.2;font-weight:600;letter-spacing:-.015em">{{ title }}</h1>
+      <p style="margin:6px 0 0;font-size:15px;color:#46546A;max-width:72ch;text-wrap:pretty">{{ desc }}</p>
+    </div>
+    <div role="tablist" style="display:flex;background:#FFFFFF;border:1px solid #E1E7EF;border-radius:6px;padding:4px;gap:2px">
+      <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="3">
+        <button role="tab" sc-camel-on-click="{{ t.on }}" style="display:flex;align-items:center;gap:8px;border:0;border-radius:6px;padding:9px 16px;font-size:14px;font-weight:700;cursor:pointer;background:{{ t.bg }};color:{{ t.fg }};transition:background .2s;white-space:nowrap">{{ t.label }}<span style="font-size:12px;font-weight:700;padding:1px 8px;border-radius:6px;background:{{ t.cBg }};color:{{ t.cFg }};white-space:nowrap">{{ t.n }}</span></button>
+      </sc-for>
+    </div>
+  </div>
+
+  <sc-if value="{{ is.build }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap">
+      <section style="flex:1 1 620px;min-width:0;display:flex;flex-direction:column;gap:16px">
+
+        <div style="background:#FFFFFF;border-radius:12px;padding:22px 24px">
+          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+            <div style="flex:1;min-width:240px">
+              <input value="{{ cb.name }}" sc-camel-on-change="{{ onName }}" placeholder="Name this cohort" aria-label="Cohort name" style="width:100%;font-size:26px;font-weight:700;border:0;background:transparent;padding:2px 0;outline:none;color:#1D2939;letter-spacing:-.015em">
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#66758A;margin-top:2px"><span style="width:8px;height:8px;border-radius:50%;background:{{ draft.dot }}"></span>{{ draft.txt }}</div>
+            </div>
+            <sc-if value="{{ showModes }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;background:#ECF0F5;border-radius:6px;padding:3px">
+                <sc-for list="{{ modes }}" as="o" hint-placeholder-count="3"><button sc-camel-on-click="{{ o.on }}" style="border:0;border-radius:6px;padding:7px 14px;font-size:13.5px;font-weight:700;cursor:pointer;background:{{ o.bg }};color:{{ o.fg }};white-space:nowrap">{{ o.label }}</button></sc-for>
+              </div>
+            </sc-if>
+          </div>
+          <div style="font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#66758A;margin:18px 0 8px">Start from</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px">
+            <sc-for list="{{ bases }}" as="b" hint-placeholder-count="3">
+              <button sc-camel-on-click="{{ b.on }}" aria-pressed="{{ b.on2 }}" style="display:flex;gap:10px;align-items:flex-start;text-align:left;border:1px solid {{ b.bd }};box-shadow:{{ b.sh }};background:{{ b.bg }};border-radius:8px;padding:12px 14px;cursor:pointer;color:#1D2939">
+                <span style="flex:none;width:18px;height:18px;border-radius:50%;margin-top:1px;border:2px solid {{ b.rd }};display:grid;place-items:center"><span style="width:8px;height:8px;border-radius:50%;background:{{ b.dot }}"></span></span>
+                <span><span style="display:block;font-weight:700;font-size:14px">{{ b.label }}</span><span style="display:block;font-size:13px;color:#66758A">{{ b.src }} · {{ b.n }}</span></span>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+
+        <sc-if value="{{ is.mBuild }}" hint-placeholder-val="{{ true }}">
+          <div style="background:#FFFFFF;border-radius:12px;padding:18px 20px;position:relative;z-index:5">
+            <div style="position:relative">
+              <div style="display:flex;align-items:center;gap:10px;border:2px solid {{ aBd }};border-radius:8px;padding:4px 6px 4px 16px;background:#F7F9FC;transition:border-color .15s">
+                <span style="font-size:20px;color:#3F6C9F;font-weight:700" aria-hidden="true">+</span>
+                <input ref="{{ aRef }}" value="{{ aq }}" sc-camel-on-change="{{ onAq }}" sc-camel-on-focus="{{ onAFocus }}" sc-camel-on-blur="{{ onABlur }}" sc-camel-on-key-down="{{ onAKey }}" placeholder="Add a rule, or describe people: “diabetes with HbA1c above 9”" aria-label="Add a rule or describe people" style="flex:1;min-width:0;border:0;background:transparent;font-size:16px;padding:12px 0;outline:none;color:#1D2939">
+                <button sc-camel-on-click="{{ onBrowse }}" style="flex:none;border:1px solid #E1E7EF;background:#FFFFFF;border-radius:6px;padding:9px 14px;font-size:13.5px;font-weight:700;cursor:pointer;color:#1D2939;white-space:nowrap" style-hover="border-color:#3F6C9F;color:#3F6C9F">{{ browseLabel }}</button>
+              </div>
+              <sc-if value="{{ sugOpen }}" hint-placeholder-val="{{ false }}">
+                <div role="listbox" style="position:absolute;left:0;right:0;top:calc(100% + 6px);background:#FFFFFF;border:1px solid #E1E7EF;border-radius:8px;box-shadow:0 18px 40px rgba(16,36,58,.16);padding:6px;z-index:40">
+                  <sc-for list="{{ sugs }}" as="s" hint-placeholder-count="0">
+                    <div role="option" sc-camel-on-mouse-down="{{ s.on }}" sc-camel-on-mouse-enter="{{ s.hover }}" style="display:flex;gap:12px;align-items:center;padding:10px 12px;border-radius:6px;cursor:pointer;background:{{ s.bg }}">
+                      <span style="flex:none;font-size:12px;font-weight:700;padding:3px 9px;border-radius:6px;background:{{ s.bBg }};color:{{ s.bFg }};min-width:76px;text-align:center;white-space:nowrap">{{ s.badge }}</span>
+                      <span style="min-width:0;flex:1"><span style="display:block;font-size:14.5px;font-weight:700">{{ s.label }}</span><span style="display:block;font-size:13px;color:#66758A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.sub }}</span></span>
+                      <span style="flex:none;font-size:13px;color:#66758A;font-weight:700">{{ s.key }}</span>
+                    </div>
+                  </sc-for>
+                  <div style="display:flex;gap:14px;padding:8px 12px 4px;font-size:13px;color:#66758A;border-top:1px solid #ECF0F5;margin-top:4px"><span>↑ ↓ to move</span><span>↵ to add</span><span>Esc to close</span></div>
+                </div>
+              </sc-if>
+              <sc-if value="{{ noMatch }}" hint-placeholder-val="{{ false }}">
+                <div style="position:absolute;left:0;right:0;top:calc(100% + 6px);background:#FFFFFF;border:1px solid #E1E7EF;border-radius:8px;box-shadow:0 18px 40px rgba(16,36,58,.16);padding:14px 16px;font-size:14px;color:#46546A;z-index:40;display:flex;gap:12px;align-items:center;flex-wrap:wrap"><span style="flex:1;min-width:200px">No existing feature matches “{{ aq }}”.</span><button sc-camel-on-mouse-down="{{ onAqGraph }}" style="border:0;border-radius:6px;padding:8px 14px;background:#1D2939;color:#FFFFFF;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">Query the knowledge graph →</button></div>
+              </sc-if>
+            </div>
+
+            <sc-if value="{{ browse }}" hint-placeholder-val="{{ false }}">
+              <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:4px 16px;margin-top:14px;padding-top:14px;border-top:1px solid #ECF0F5">
+                <sc-for list="{{ cat }}" as="g" hint-placeholder-count="8">
+                  <div>
+                    <div style="font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#66758A;padding:8px 8px 4px">{{ g.name }}</div>
+                    <sc-for list="{{ g.fields }}" as="f" hint-placeholder-count="3">
+                      <button sc-camel-on-click="{{ f.on }}" style="display:flex;width:100%;align-items:center;gap:8px;text-align:left;border:0;background:transparent;padding:7px 8px;border-radius:12px;font-size:14px;color:#1D2939;cursor:pointer" style-hover="background:#F1F6FB">{{ f.label }}<span style="margin-left:auto;font-size:12px;font-weight:700;color:{{ f.c }}">{{ f.tag }}</span></button>
+                    </sc-for>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ showTpl }}" hint-placeholder-val="{{ false }}">
+              <div style="margin-top:16px">
+                <div style="font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#66758A;margin-bottom:8px">Or start from a template</div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px">
+                  <sc-for list="{{ tpls }}" as="t" hint-placeholder-count="4">
+                    <button sc-camel-on-click="{{ t.on }}" style="text-align:left;border:1px solid #E1E7EF;background:#FFFFFF;border-radius:8px;padding:14px;cursor:pointer;color:#1D2939" style-hover="border-color:#3F6C9F">
+                      <div style="font-size:14.5px;font-weight:700">{{ t.name }}</div>
+                      <div style="font-size:13px;color:#66758A;margin-top:2px;line-height:1.4">{{ t.d }}</div>
+                      <div style="font-size:13px;font-weight:700;color:#3F6C9F;margin-top:8px">≈ {{ t.n }} members</div>
+                    </button>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+
+          <div style="background:#FFFFFF;border-radius:12px;overflow:hidden">
+            <div style="display:flex;align-items:center;gap:10px;padding:16px 20px;flex-wrap:wrap;border-bottom:1px solid #ECF0F5">
+              <span style="font-size:15px;font-weight:700">Include members who match</span>
+              <span style="display:flex;background:#ECF0F5;border-radius:6px;padding:3px">
+                <button sc-camel-on-click="{{ logicAll }}" style="border:0;border-radius:6px;padding:5px 14px;font-size:13px;font-weight:700;cursor:pointer;background:{{ lg.all.bg }};color:{{ lg.all.fg }};white-space:nowrap">all</button>
+                <button sc-camel-on-click="{{ logicAny }}" style="border:0;border-radius:6px;padding:5px 14px;font-size:13px;font-weight:700;cursor:pointer;background:{{ lg.any.bg }};color:{{ lg.any.fg }};white-space:nowrap">any</button>
+              </span>
+              <span style="font-size:14px;color:#66758A">of these rules</span>
+              <span style="margin-left:auto;font-size:13px;color:#66758A">{{ funnelHint }}</span>
+            </div>
+            <div style="display:grid;grid-template-columns:110px minmax(0,1fr) 40px;gap:14px;align-items:center;padding:12px 20px;background:#F7F9FC">
+              <div><div style="font-size:16px;font-weight:700">{{ baseN }}</div><div style="height:6px;border-radius:6px;background:#3F6C9F;margin-top:5px"></div></div>
+              <div style="font-size:14px;color:#46546A">Everyone in <b style="color:#1D2939">{{ baseLabel }}</b></div>
+              <span></span>
+            </div>
+            <sc-if value="{{ noInc }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:26px 20px;text-align:center;color:#66758A;font-size:14px;border-top:1px solid #ECF0F5">No rules yet. Type in the box above, browse the fields, or start from a template.</div>
+            </sc-if>
+            <sc-for list="{{ incRows }}" as="r" hint-placeholder-count="3">
+              <div style="display:grid;grid-template-columns:110px minmax(0,1fr) 40px;gap:14px;align-items:start;padding:16px 20px;border-top:1px solid #ECF0F5;background:{{ r.bg }};transition:background .3s">
+                <div style="padding-top:2px">
+                  <div style="font-size:16px;font-weight:700">{{ r.left }}</div>
+                  <div style="height:6px;border-radius:6px;background:#ECF0F5;margin-top:5px;overflow:hidden"><div style="height:100%;width:{{ r.w }};background:#3F6C9F;border-radius:6px;transition:width .4s ease"></div></div>
+                  <div style="font-size:13px;color:#66758A;margin-top:4px">{{ r.leftSub }}</div>
+                </div>
+                <div style="min-width:0">
+                  <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
+                    <span style="font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:6px;background:#F1F6FB;color:#3F6C9F">{{ r.join }}</span>
+                    <span style="font-size:15px;font-weight:700">{{ r.label }}</span>
+                    <span style="font-size:13px;color:#66758A">{{ r.sub }}</span>
+                  </div>
+                  <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:10px">
+                    <sc-if value="{{ r.isLab }}" hint-placeholder-val="{{ false }}">
+                      <sc-raw-select value="{{ r.l }}" sc-camel-on-change="{{ r.onL }}" aria-label="Test" style="border:1px solid #E1E7EF;border-radius:12px;padding:8px 10px;font-size:14px;background:#FFFFFF;color:#1D2939;font-weight:600"><option value="hba1c">HbA1c</option><option value="egfr">eGFR</option><option value="uacr">UACR</option><option value="ldl">LDL</option><option value="sbp">Systolic BP</option><option value="bmi">BMI</option><option value="tsh">TSH</option></sc-raw-select>
+                    </sc-if>
+                    <sc-if value="{{ r.hasOp }}" hint-placeholder-val="{{ false }}">
+                      <span style="display:flex;background:#ECF0F5;border-radius:12px;padding:3px">
+                        <sc-for list="{{ r.ops }}" as="o" hint-placeholder-count="4"><button sc-camel-on-click="{{ o.on }}" aria-label="{{ o.aria }}" style="border:0;border-radius:8px;padding:5px 10px;font-size:13.5px;font-weight:700;cursor:pointer;background:{{ o.bg }};color:{{ o.fg }};white-space:nowrap">{{ o.label }}</button></sc-for>
+                      </span>
+                    </sc-if>
+                    <sc-if value="{{ r.isLabAge }}" hint-placeholder-val="{{ false }}"><span style="font-size:14px;color:#46546A">not done in</span></sc-if>
+                    <sc-if value="{{ r.hasV }}" hint-placeholder-val="{{ false }}">
+                      <input type="number" step="{{ r.step }}" value="{{ r.v }}" sc-camel-on-change="{{ r.onV }}" aria-label="Value" style="width:96px;border:1px solid #E1E7EF;border-radius:12px;padding:8px 10px;font-size:14px;color:#1D2939;font-weight:600">
+                    </sc-if>
+                    <sc-if value="{{ r.between }}" hint-placeholder-val="{{ false }}">
+                      <span style="color:#66758A">and</span><input type="number" step="{{ r.step }}" value="{{ r.v2 }}" sc-camel-on-change="{{ r.onV2 }}" aria-label="Upper value" style="width:96px;border:1px solid #E1E7EF;border-radius:12px;padding:8px 10px;font-size:14px;color:#1D2939;font-weight:600">
+                    </sc-if>
+                    <span style="font-size:13.5px;color:#66758A">{{ r.unit }}</span>
+                    <sc-for list="{{ r.chips }}" as="c" hint-placeholder-count="0"><button sc-camel-on-click="{{ c.on }}" aria-pressed="{{ c.pr }}" style="border:1px solid {{ c.bd }};background:{{ c.bg }};color:{{ c.fg }};border-radius:6px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">{{ c.label }}</button></sc-for>
+                  </div>
+                </div>
+                <button sc-camel-on-click="{{ r.onDel }}" aria-label="Remove rule" style="border:0;background:transparent;color:#66758A;font-size:15px;width:36px;height:36px;border-radius:50%;cursor:pointer;white-space:nowrap" style-hover="background:#FBEEF0;color:#B5545E">✕</button>
+              </div>
+            </sc-for>
+            <div style="padding:12px 20px;border-top:1px solid #ECF0F5">
+              <button sc-camel-on-click="{{ onFocusAdd }}" style="border:1px dashed #CDD6E2;background:#FFFFFF;color:#3F6C9F;border-radius:6px;padding:7px 14px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap" style-hover="border-color:#3F6C9F">+ Add a rule</button>
+            </div>
+
+            <div style="border-top:6px solid #ECF0F5;background:#FDF9FA">
+              <div style="display:flex;align-items:center;gap:10px;padding:14px 20px;flex-wrap:wrap">
+                <span style="font-size:15px;font-weight:700;color:#B5545E">Exclude anyone who</span>
+                <span style="font-size:13px;color:#66758A">Exclusions always win over the rules above</span>
+              </div>
+              <sc-for list="{{ excRows }}" as="r" hint-placeholder-count="1">
+                <div style="display:grid;grid-template-columns:110px minmax(0,1fr) 40px;gap:14px;align-items:start;padding:14px 20px;border-top:1px solid #FBEEF0">
+                  <div style="padding-top:2px">
+                    <div style="font-size:16px;font-weight:700">{{ r.left }}</div>
+                    <div style="font-size:12px;color:#B5545E;margin-top:4px">{{ r.leftSub }}</div>
+                  </div>
+                  <div style="min-width:0">
+                    <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
+                      <span style="font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:6px;background:#FBEEF0;color:#934450">Not</span>
+                      <span style="font-size:15px;font-weight:700">{{ r.label }}</span>
+                      <span style="font-size:13px;color:#66758A">{{ r.sub }}</span>
+                    </div>
+                    <sc-if value="{{ r.hasCtl }}" hint-placeholder-val="{{ false }}">
+                      <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:10px">
+                        <sc-if value="{{ r.hasOp }}" hint-placeholder-val="{{ false }}">
+                          <span style="display:flex;background:#FFFFFF;border:1px solid #EDCFD3;border-radius:12px;padding:3px">
+                            <sc-for list="{{ r.ops }}" as="o" hint-placeholder-count="4"><button sc-camel-on-click="{{ o.on }}" aria-label="{{ o.aria }}" style="border:0;border-radius:8px;padding:5px 10px;font-size:13.5px;font-weight:700;cursor:pointer;background:{{ o.bg }};color:{{ o.fg }};white-space:nowrap">{{ o.label }}</button></sc-for>
+                          </span>
+                        </sc-if>
+                        <sc-if value="{{ r.hasV }}" hint-placeholder-val="{{ false }}">
+                          <input type="number" value="{{ r.v }}" sc-camel-on-change="{{ r.onV }}" aria-label="Value" style="width:96px;border:1px solid #E1E7EF;border-radius:12px;padding:8px 10px;font-size:14px;color:#1D2939;font-weight:600">
+                        </sc-if>
+                        <span style="font-size:13.5px;color:#66758A">{{ r.unit }}</span>
+                        <sc-for list="{{ r.chips }}" as="c" hint-placeholder-count="0"><button sc-camel-on-click="{{ c.on }}" style="border:1px solid {{ c.bd }};background:{{ c.bg }};color:{{ c.fg }};border-radius:6px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">{{ c.label }}</button></sc-for>
+                      </div>
+                    </sc-if>
+                  </div>
+                  <button sc-camel-on-click="{{ r.onDel }}" aria-label="Remove exclusion" style="border:0;background:transparent;color:#66758A;font-size:15px;width:36px;height:36px;border-radius:50%;cursor:pointer;white-space:nowrap" style-hover="background:#FBEEF0;color:#B5545E">✕</button>
+                </div>
+              </sc-for>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;padding:12px 20px 16px;border-top:1px solid #FBEEF0">
+                <sc-for list="{{ quickExc }}" as="q" hint-placeholder-count="3"><button sc-camel-on-click="{{ q.on }}" style="border:1px dashed #DDB0B6;background:#FFFFFF;color:#B5545E;border-radius:6px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap" style-hover="border-color:#B5545E">+ {{ q.label }}</button></sc-for>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ is.mNgql }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#FFFFFF;border-radius:12px;padding:20px 22px">
+            <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+              <span style="font-size:15px;font-weight:700">nGQL on the knowledge graph</span>
+              <span style="font-size:13px;color:#66758A">Read-only. Return members only, no scores.</span>
+              <button sc-camel-on-click="{{ onRegen }}" style="margin-left:auto;border:1px solid #E1E7EF;background:#FFFFFF;border-radius:6px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;color:#1D2939;white-space:nowrap">↻ Rebuild from my rules</button>
+            </div>
+            <div style="display:grid;grid-template-columns:44px minmax(0,1fr);border-radius:8px;overflow:hidden;background:#1D2939">
+              <div style="padding:16px 0;text-align:right;font:13px/1.6 'IBM Plex Mono',ui-monospace,monospace;color:#46546A;white-space:pre;padding-right:10px;user-select:none">{{ qLines }}</div>
+              <textarea rows="{{ qRows }}" spellcheck="false" value="{{ cb.q }}" sc-camel-on-change="{{ onQ }}" aria-label="nGQL query" style="width:100%;border:0;padding:16px 16px 16px 4px;font:13px/1.6 'IBM Plex Mono',ui-monospace,monospace;background:#1D2939;color:#E1E7EF;resize:vertical;outline:none;white-space:pre;overflow:auto"></textarea>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap">
+              <button sc-camel-on-click="{{ onCheck }}" style="border:1px solid #E1E7EF;background:#FFFFFF;border-radius:6px;padding:10px 18px;font-size:14px;font-weight:700;cursor:pointer;color:#1D2939;white-space:nowrap">Validate</button>
+              <button sc-camel-on-click="{{ onLoad }}" disabled="{{ qBad }}" style="border:0;border-radius:6px;padding:10px 18px;background:#3F6C9F;color:#FFFFFF;font-size:14px;font-weight:700;cursor:pointer;opacity:{{ qOp }};white-space:nowrap">Load as cohort</button>
+              <span style="font-size:13.5px;color:{{ qStatusC }};font-weight:600">{{ qStatus }}</span>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;margin-top:12px">
+              <sc-for list="{{ checks }}" as="k" hint-placeholder-count="0">
+                <div style="border-radius:6px;padding:10px 12px;background:{{ k.bg }}">
+                  <div style="font-size:13.5px;font-weight:700;color:{{ k.fg }}">{{ k.icon }} {{ k.name }}</div>
+                  <div style="font-size:12px;color:#46546A;margin-top:2px">{{ k.note }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ is.mAsk }}" hint-placeholder-val="{{ false }}">
+          <div data-screen-label="Describe · knowledge graph" style="background:#FFFFFF;border:1px solid #E1E7EF;border-radius:12px;overflow:hidden">
+            <div style="padding:18px 20px 16px;border-bottom:1px solid #ECF0F5">
+              <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><span style="font-size:15px;font-weight:600">Describe who you want to find</span><span style="font-size:13px;color:#66758A">We check the feature catalogue first. Only if nothing fits do we query the knowledge graph and offer a new feature.</span></div>
+              <div style="display:flex;gap:8px;margin-top:12px;align-items:stretch;flex-wrap:wrap">
+                <textarea rows="2" value="{{ kq }}" sc-camel-on-change="{{ onKq }}" sc-camel-on-key-down="{{ onKKey }}" placeholder="e.g. How many ER visits did each diabetic member have in the last 90 days?" aria-label="Describe who you want to find" style="flex:1 1 360px;min-width:0;border:1px solid #CDD6E2;border-radius:6px;padding:10px 12px;font-size:14.5px;line-height:1.5;background:#FFFFFF;color:#1D2939;resize:vertical"></textarea>
+                <button sc-camel-on-click="{{ onKAsk }}" style="flex:none;border:0;border-radius:6px;padding:0 18px;min-height:44px;background:#1D2939;color:#FFFFFF;font-size:13.5px;font-weight:600;cursor:pointer;white-space:nowrap" style-hover="background:#2A3B52">Find features</button>
+              </div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
+                <sc-for list="{{ kExamples }}" as="x" hint-placeholder-count="5"><button sc-camel-on-click="{{ x.on }}" style="border:1px solid #E1E7EF;background:#F7F9FC;border-radius:5px;padding:5px 9px;font-size:12px;color:#46546A;cursor:pointer;text-align:left" style-hover="border-color:#3F6C9F;color:#345C8A">{{ x.t }}</button></sc-for>
+              </div>
+              <sc-if value="{{ kErr }}" hint-placeholder-val="{{ false }}"><div style="margin-top:10px;padding:8px 12px;border-radius:6px;background:#F4F0E4;color:#7A6440;font-size:13px">{{ kErrTxt }}</div></sc-if>
+            </div>
+
+            <sc-if value="{{ kRes }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:16px 20px 4px">
+                <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:8px"><span style="font-size:12px;font-weight:600;color:#66758A;letter-spacing:.05em;text-transform:uppercase">Step 1 · Feature catalogue</span><span style="font-size:13px;color:#66758A">{{ kHitTxt }}</span></div>
+                <div style="border:1px solid #E1E7EF;border-radius:8px;padding:6px">
+                  <sc-for list="{{ kHits }}" as="s" hint-placeholder-count="3">
+                    <div style="display:flex;gap:12px;align-items:center;padding:9px 10px;border-radius:6px" style-hover="background:#F5F8FC">
+                      <span style="flex:none;font-size:12px;font-weight:700;padding:3px 9px;border-radius:6px;background:{{ s.bBg }};color:{{ s.bFg }};min-width:76px;text-align:center;white-space:nowrap">{{ s.badge }}</span>
+                      <span style="min-width:0;flex:1"><span style="display:block;font-size:14.5px;font-weight:700">{{ s.label }}</span><span style="display:block;font-size:13px;color:#66758A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.sub }}</span></span>
+                      <button sc-camel-on-click="{{ s.on }}" style="flex:none;border:1px solid #CDD6E2;border-radius:6px;padding:6px 12px;background:#FFFFFF;color:#1D2939;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap" style-hover="border-color:#3F6C9F;color:#3F6C9F">+ Add</button>
+                    </div>
+                  </sc-for>
+                  <sc-if value="{{ kNoHits }}" hint-placeholder-val="{{ false }}"><div style="padding:10px;font-size:13.5px;color:#66758A">No existing feature matches this description.</div></sc-if>
+                </div>
+                <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:12px;padding:12px 14px;border-radius:8px;background:{{ kv.bg }}">
+                  <span style="flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;background:{{ kv.ic }};color:#FFFFFF">{{ kv.sym }}</span>
+                  <span style="flex:1;min-width:220px;font-size:14px;line-height:1.45;color:#1D2939"><b>{{ kv.title }}</b> {{ kv.txt }}</span>
+                  <sc-if value="{{ kv.canAll }}" hint-placeholder-val="{{ false }}"><button sc-camel-on-click="{{ onKAll }}" style="flex:none;border:0;border-radius:6px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;background:#3F6C9F;color:#FFFFFF;white-space:nowrap">{{ kv.allLabel }}</button></sc-if>
+                  <sc-if value="{{ kv.canForce }}" hint-placeholder-val="{{ false }}"><button sc-camel-on-click="{{ onKForce }}" style="flex:none;border:1px solid #CDD6E2;border-radius:6px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;background:#FFFFFF;color:#1D2939;white-space:nowrap">Query the graph anyway</button></sc-if>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ kHas }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:16px 20px;display:flex;flex-direction:column;gap:16px">
+                <div style="font-size:12px;font-weight:600;color:#66758A;letter-spacing:.05em;text-transform:uppercase;padding-top:12px;border-top:1px solid #ECF0F5">Step 2 · Knowledge graph · {{ kr.nTxt }} members</div>
+                <div>
+                  <div style="font-size:12px;font-weight:600;color:#66758A;letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px">Understood as</div>
+                  <div style="display:flex;gap:6px;flex-wrap:wrap">
+                    <sc-for list="{{ kr.concepts }}" as="c" hint-placeholder-count="3"><span style="display:inline-flex;border:1px solid #E1E7EF;border-radius:5px;overflow:hidden;font-size:12.5px"><span style="padding:3px 7px;background:#ECF0F5;color:#46546A;font-family:'IBM Plex Mono',monospace;font-size:12px">{{ c.t }}</span><span style="padding:3px 8px;color:#1D2939">{{ c.v }}</span></span></sc-for>
+                  </div>
+                </div>
+                <div>
+                  <div style="font-size:12px;font-weight:600;color:#66758A;letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px">Traversal</div>
+                  <div style="display:flex;flex-wrap:wrap;gap:6px 0;align-items:center;padding:12px;border-radius:6px;background:#F7F9FC;border:1px solid #ECF0F5">
+                    <sc-for list="{{ kr.path }}" as="p" hint-placeholder-count="5">
+                      <sc-if value="{{ p.isNode }}" hint-placeholder-val="{{ true }}"><span style="display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:5px;background:#FFFFFF;border:1px solid {{ p.bd }};font-size:12.5px;font-weight:600;color:#1D2939"><span style="width:6px;height:6px;border-radius:50%;background:{{ p.dot }}"></span>{{ p.label }}</span></sc-if>
+                      <sc-if value="{{ p.isEdge }}" hint-placeholder-val="{{ false }}"><span style="display:inline-flex;align-items:center;padding:0 6px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#66758A">─{{ p.label }}→</span></sc-if>
+                      <sc-if value="{{ p.isBr }}" hint-placeholder-val="{{ false }}"><span style="flex-basis:100%;height:0"></span></sc-if>
+                    </sc-for>
+                  </div>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:12px">
+                  <div style="border:1px solid #E1E7EF;border-radius:6px;padding:12px 14px">
+                    <div style="font-size:13px;color:#66758A">Members matched</div>
+                    <div style="display:flex;align-items:baseline;gap:8px;margin-top:2px"><span style="font-size:28px;font-weight:600;letter-spacing:-.02em">{{ kr.nTxt }}</span><span style="font-size:13px;color:#66758A">{{ kr.pct }} of base</span></div>
+                    <sc-if value="{{ kr.hasDist }}" hint-placeholder-val="{{ false }}">
+                      <div style="display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:3px;align-items:end;height:56px;margin-top:10px">
+                        <sc-for list="{{ kr.dist }}" as="b" hint-placeholder-count="8"><span style="display:block;height:{{ b.h }};background:#A9C3E0;border-radius:2px 2px 0 0" title="{{ b.t }}"></span></sc-for>
+                      </div>
+                      <div style="display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:3px;margin-top:3px"><sc-for list="{{ kr.dist }}" as="b" hint-placeholder-count="8"><span style="font-size:9.5px;color:#66758A;text-align:center;white-space:nowrap;overflow:hidden">{{ b.l }}</span></sc-for></div>
+                      <div style="font-size:13px;color:#66758A;margin-top:4px">{{ kr.unitLbl }}</div>
+                    </sc-if>
+                  </div>
+                  <div style="border:1px solid #E1E7EF;border-radius:6px;overflow:hidden">
+                    <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;padding:7px 12px;font-size:12px;font-weight:600;color:#66758A;background:#F7F9FC;border-bottom:1px solid #ECF0F5"><span>Sample member</span><span>value</span></div>
+                    <sc-for list="{{ kr.sample }}" as="s" hint-placeholder-count="5"><div style="display:grid;grid-template-columns:minmax(0,1fr) auto;padding:6px 12px;border-bottom:1px solid #ECF0F5;font-family:'IBM Plex Mono',monospace;font-size:12px"><span style="color:#46546A">{{ s.id }}</span><span style="color:#1D2939">{{ s.v }}</span></div></sc-for>
+                  </div>
+                </div>
+                <sc-if value="{{ tech }}" hint-placeholder-val="{{ false }}">
+                  <details style="border:1px solid #E1E7EF;border-radius:6px;overflow:hidden">
+                    <summary style="cursor:pointer;padding:9px 12px;font-size:12.5px;font-weight:600;color:#46546A;background:#F7F9FC">Generated nGQL · read-only</summary>
+                    <pre style="margin:0;padding:12px 14px;background:#1D2939;color:#E1E7EF;font:12.5px/1.6 'IBM Plex Mono',ui-monospace,monospace;white-space:pre-wrap;overflow:auto">{{ kr.ngql }}</pre>
+                  </details>
+                </sc-if>
+                <div style="border:1px solid #C9D9EA;background:#F5F8FC;border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+                  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:11px;font-weight:600;padding:2px 6px;border-radius:4px;background:#EAF1F9;color:#345C8A;white-space:nowrap">New feature</span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#46546A">MemberFeature.{{ kr.key }}</span><span style="margin-left:auto;font-size:13px;color:#66758A">{{ kr.typeTxt }}</span></div>
+                  <input value="{{ kName }}" sc-camel-on-change="{{ onKName }}" aria-label="Feature name" style="width:100%;border:1px solid #CDD6E2;border-radius:6px;padding:8px 10px;font-size:15px;font-weight:600;color:#1D2939;background:#FFFFFF">
+                  <div style="font-size:12.5px;color:#46546A">{{ kr.ruleTxt }}</div>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    <button sc-camel-on-click="{{ onKAdd }}" style="border:0;border-radius:6px;padding:9px 16px;background:#3F6C9F;color:#FFFFFF;font-size:13.5px;font-weight:600;cursor:pointer;white-space:nowrap" style-hover="background:#345C8A">Create feature and add as rule</button>
+                    <button sc-camel-on-click="{{ onKSave }}" style="border:1px solid #CDD6E2;border-radius:6px;padding:9px 16px;background:#FFFFFF;color:#1D2939;font-size:13.5px;font-weight:600;cursor:pointer;white-space:nowrap">Save to feature library</button>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ kHasFeats }}" hint-placeholder-val="{{ false }}">
+              <div style="border-top:1px solid #ECF0F5;padding:14px 20px 16px">
+                <div style="font-size:12px;font-weight:600;color:#66758A;letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px">Your graph features · {{ kFeatN }}</div>
+                <sc-for list="{{ kFeats }}" as="f" hint-placeholder-count="0">
+                  <div style="display:flex;gap:10px;align-items:center;padding:8px 0;border-top:1px solid #ECF0F5;flex-wrap:wrap">
+                    <span style="flex:1;min-width:200px"><span style="display:block;font-size:13.5px;font-weight:600">{{ f.label }}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#66758A">{{ f.key }} · {{ f.n }} members</span></span>
+                    <span style="font-size:13px;color:#66758A">{{ f.used }}</span>
+                    <button sc-camel-on-click="{{ f.on }}" style="border:1px solid #CDD6E2;border-radius:6px;padding:6px 12px;background:#FFFFFF;color:#1D2939;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap">+ Add rule</button>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <div style="background:#FFFFFF;border-radius:12px;padding:18px 20px">
+          <div style="font-size:15px;font-weight:700;margin-bottom:10px">Checks</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <sc-for list="{{ lints }}" as="l" hint-placeholder-count="1">
+              <div style="display:flex;gap:12px;align-items:center;padding:11px 14px;border-radius:8px;background:{{ l.bg }};flex-wrap:wrap">
+                <span style="flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;background:{{ l.ic }};color:#FFFFFF">{{ l.sym }}</span>
+                <span style="flex:1;min-width:200px;font-size:14px;line-height:1.45;color:#1D2939">{{ l.t }}</span>
+                <sc-if value="{{ l.hasFix }}" hint-placeholder-val="{{ false }}"><button sc-camel-on-click="{{ l.onFix }}" style="flex:none;border:0;border-radius:6px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;background:#1D2939;color:#FFFFFF;white-space:nowrap">{{ l.fix }}</button></sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </section>
+
+      <aside style="flex:0 1 390px;min-width:300px;display:flex;flex-direction:column;gap:16px;position:sticky;top:{{ stickyTop }}">
+        <section style="background:#1D2939;color:#FFFFFF;border-radius:12px;padding:22px 24px">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+            <span style="font-size:14px;font-weight:700;color:#CDD6E2">Who you’ve got</span>
+            <span style="font-size:12px;font-weight:700;padding:4px 10px;border-radius:6px;background:{{ est.pillBg }};color:{{ est.pillFg }};white-space:nowrap">{{ est.pill }}</span>
+          </div>
+          <div style="display:flex;align-items:baseline;gap:10px;margin-top:10px;flex-wrap:wrap">
+            <span style="font-size:44px;font-weight:600;letter-spacing:-.03em;line-height:1">{{ est.n }}</span>
+            <span style="font-size:14px;font-weight:700;color:{{ est.dC }}">{{ est.delta }}</span>
+          </div>
+          <div style="font-size:14px;color:#CDD6E2;margin-top:6px">members · {{ est.pct }} of {{ est.base }}</div>
+          <div style="display:flex;flex-direction:column;gap:9px;margin-top:18px">
+            <sc-for list="{{ est.steps }}" as="s" hint-placeholder-count="3">
+              <div>
+                <div style="display:flex;justify-content:space-between;gap:10px;font-size:13px"><span style="color:#CDD6E2;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ s.t }}</span><b>{{ s.n }}</b></div>
+                <div style="height:6px;background:#2A3B52;border-radius:6px;margin-top:5px;overflow:hidden"><div style="height:100%;width:{{ s.w }};background:{{ s.c }};border-radius:6px;transition:width .4s ease"></div></div>
+              </div>
+            </sc-for>
+          </div>
+          <p style="margin:16px 0 0;font-size:12.5px;color:#98A4B5">Live estimate as you build. Saving runs the exact query.</p>
+        </section>
+
+        <section style="background:#FFFFFF;border-radius:12px;padding:18px 20px">
+          <div style="display:flex;background:#ECF0F5;border-radius:6px;padding:3px">
+            <sc-for list="{{ pvTabs }}" as="t" hint-placeholder-count="3"><button sc-camel-on-click="{{ t.on }}" style="flex:1;border:0;border-radius:6px;padding:7px 10px;font-size:13px;font-weight:700;cursor:pointer;background:{{ t.bg }};color:{{ t.fg }};white-space:nowrap">{{ t.label }}</button></sc-for>
+          </div>
+          <sc-if value="{{ pv.profile }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;flex-direction:column;gap:16px;margin-top:16px">
+              <div>
+                <div style="font-size:13px;font-weight:700;color:#46546A;margin-bottom:8px">Age</div>
+                <sc-for list="{{ prof.age }}" as="a" hint-placeholder-count="4">
+                  <div style="display:grid;grid-template-columns:52px minmax(0,1fr) 40px;gap:10px;align-items:center;font-size:13px;margin:5px 0">
+                    <span style="color:#46546A">{{ a.l }}</span>
+                    <span style="height:10px;border-radius:6px;background:#ECF0F5;overflow:hidden"><span style="display:block;height:100%;width:{{ a.w }};background:#3F6C9F;border-radius:6px;transition:width .4s ease"></span></span>
+                    <b style="text-align:right">{{ a.p }}</b>
+                  </div>
+                </sc-for>
+              </div>
+              <sc-for list="{{ prof.splits }}" as="g" hint-placeholder-count="4">
+                <div>
+                  <div style="font-size:13px;font-weight:700;color:#46546A;margin-bottom:8px">{{ g.name }}</div>
+                  <div style="display:flex;height:12px;border-radius:6px;overflow:hidden;gap:2px;background:#ECF0F5">
+                    <sc-for list="{{ g.segs }}" as="s" hint-placeholder-count="2"><span style="flex:{{ s.f }};background:{{ s.c }};transition:flex .4s ease"></span></sc-for>
+                  </div>
+                  <div style="display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:6px;font-size:12.5px;color:#46546A">
+                    <sc-for list="{{ g.segs }}" as="s" hint-placeholder-count="2"><span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:2px;background:{{ s.c }}"></span>{{ s.l }} <b style="color:#1D2939">{{ s.p }}</b></span></sc-for>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ pv.sample }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;margin-top:10px">
+              <sc-for list="{{ samples }}" as="m" hint-placeholder-count="5">
+                <div style="display:grid;grid-template-columns:38px minmax(0,1fr);gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid #ECF0F5">
+                  <span style="width:38px;height:38px;border-radius:50%;background:#ECF0F5;display:grid;place-items:center;font-weight:700;font-size:13px">{{ m.ini }}</span>
+                  <span style="min-width:0">
+                    <span style="display:flex;gap:8px;align-items:baseline;flex-wrap:wrap"><b style="font-size:14.5px">{{ m.name }}</b><span style="font-size:13px;color:#66758A">{{ m.meta }}</span></span>
+                    <span style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px"><sc-for list="{{ m.facts }}" as="f" hint-placeholder-count="2"><span style="font-size:12px;font-weight:600;padding:2px 8px;border-radius:6px;background:#F7F9FC;color:#46546A">{{ f.t }}</span></sc-for></span>
+                  </span>
+                </div>
+              </sc-for>
+              <p style="margin:12px 0 0;font-size:12.5px;line-height:1.5;color:#66758A">Synthetic preview of who matches. Real identities open only in the care portal, after the member consents.</p>
+            </div>
+          </sc-if>
+          <sc-if value="{{ pv.overlap }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;gap:12px;margin-top:16px">
+              <sc-for list="{{ overlaps }}" as="o" hint-placeholder-count="4">
+                <div>
+                  <div style="display:flex;justify-content:space-between;gap:10px;font-size:13.5px"><span style="font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.name }}</span><b>{{ o.p }}</b></div>
+                  <div style="height:10px;border-radius:6px;background:#ECF0F5;margin-top:5px;overflow:hidden"><div style="height:100%;width:{{ o.w }};background:{{ o.c }};border-radius:6px;transition:width .4s ease"></div></div>
+                  <div style="font-size:13px;color:#66758A;margin-top:3px">{{ o.n }} members already in {{ o.id }}</div>
+                </div>
+              </sc-for>
+              <p style="margin:4px 0 0;font-size:12.5px;line-height:1.5;color:#66758A">Members in several cohorts are called once, by the highest-priority campaign.</p>
+            </div>
+          </sc-if>
+        </section>
+
+        <section style="background:#FFFFFF;border-radius:12px;padding:20px 22px;display:flex;flex-direction:column;gap:12px">
+          <label style="display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14px;font-weight:700;color:#1D2939">Refresh
+            <sc-raw-select value="{{ cb.refresh }}" sc-camel-on-change="{{ onRefresh }}" style="border:1px solid #E1E7EF;border-radius:6px;padding:8px 12px;font-size:14px;background:#FFFFFF;color:#1D2939;font-weight:600"><option>Live</option><option>Daily</option><option>Nightly</option><option>Every 3 days</option><option>Weekly</option></sc-raw-select>
+          </label>
+          <button sc-camel-on-click="{{ onSaveUse }}" disabled="{{ cantSave }}" style="border:0;border-radius:6px;padding:13px 18px;background:#3F6C9F;color:#FFFFFF;font-size:15px;font-weight:700;cursor:pointer;opacity:{{ saveOp }};white-space:nowrap" style-hover="background:#345C8A">{{ saveUseLabel }}</button>
+          <button sc-camel-on-click="{{ onSave }}" disabled="{{ cantSave }}" style="border:1px solid #E1E7EF;border-radius:6px;padding:12px 18px;background:#FFFFFF;color:#1D2939;font-size:14px;font-weight:700;cursor:pointer;opacity:{{ saveOp }};white-space:nowrap">Save cohort only</button>
+          <div style="font-size:13px;color:#66758A;text-align:center">{{ saveHint }}</div>
+          <div style="background:#EAF1F9;border-radius:8px;padding:12px 14px;font-size:13px;line-height:1.5;color:#3F6C9F"><b>After hand-off, care intelligence adds</b> risk score and tier · DoH triggers · next best action and script · call priority.</div>
+        </section>
+      </aside>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ is.lib }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap">
+      <section style="flex:1 1 560px;min-width:0;background:#FFFFFF;border-radius:12px;padding:8px">
+        <div style="display:flex;gap:10px;align-items:center;padding:10px 12px 12px;flex-wrap:wrap">
+          <input value="{{ lq }}" sc-camel-on-change="{{ onLq }}" placeholder="Search cohorts…" aria-label="Search cohorts" style="flex:1;min-width:180px;border:1px solid #E1E7EF;border-radius:6px;padding:10px 12px;font-size:14px;background:#F7F9FC;color:#1D2939">
+          <button sc-camel-on-click="{{ onNewCoh }}" style="border:0;border-radius:6px;padding:10px 16px;background:#3F6C9F;color:#FFFFFF;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap">+ New cohort</button>
+        </div>
+        <sc-for list="{{ libRows }}" as="c" hint-placeholder-count="4">
+          <button sc-camel-on-click="{{ c.on }}" style="display:grid;grid-template-columns:minmax(0,1fr) 120px 110px;gap:14px;align-items:center;width:100%;text-align:left;border:0;border-radius:8px;padding:14px 16px;cursor:pointer;background:{{ c.bg }};box-shadow:{{ c.sh }};color:#1D2939" style-hover="background:#F7F9FC">
+            <span style="min-width:0">
+              <span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b style="font-size:15.5px">{{ c.name }}</b><span style="font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px;background:{{ c.tagBg }};color:{{ c.tagFg }};white-space:nowrap">{{ c.tag }}</span></span>
+              <span style="display:block;font-size:13px;color:#66758A;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.id }} · v{{ c.ver }} · {{ c.refresh }} · {{ c.owner }} · {{ c.used }}</span>
+            </span>
+            <svg sc-camel-view-box="0 0 120 32" width="120" height="32" aria-hidden="true"><path d="{{ c.spark }}" fill="none" stroke="#3F6C9F" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path></svg>
+            <span style="text-align:right"><span style="display:block;font-size:20px;font-weight:700">{{ c.n }}</span><span style="font-size:12px;font-weight:700;color:{{ c.dC }}">{{ c.delta }}</span></span>
+          </button>
+        </sc-for>
+        <sc-if value="{{ libEmpty }}" hint-placeholder-val="{{ false }}"><p style="padding:16px;margin:0;color:#66758A;font-size:14px">No cohorts match “{{ lq }}”.</p></sc-if>
+      </section>
+
+      <aside style="flex:0 1 440px;min-width:300px;background:#FFFFFF;border-radius:12px;padding:22px 24px;position:sticky;top:{{ stickyTop }};display:flex;flex-direction:column;gap:18px">
+        <div>
+          <div style="font-size:13px;color:#66758A;font-family:'IBM Plex Mono',monospace">{{ sd.id }} · v{{ sd.ver }} · {{ sd.src }}</div>
+          <div style="font-size:22px;font-weight:700;margin-top:4px;line-height:1.2">{{ sd.name }}</div>
+          <div style="display:flex;align-items:baseline;gap:10px;margin-top:10px;flex-wrap:wrap"><span style="font-size:40px;font-weight:700;letter-spacing:-.02em;line-height:1">{{ sd.n }}</span><span style="font-size:13.5px;color:#46546A">members · {{ sd.base }}</span></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:#46546A"><span>Size, last 12 weeks</span><span style="color:{{ sd.dC }}">{{ sd.delta }}</span></div>
+          <svg sc-camel-view-box="0 0 380 90" style="width:100%;height:auto;display:block;margin-top:8px" aria-hidden="true">
+            <path d="{{ sd.area }}" fill="#3F6C9F" fill-opacity="0.1"></path>
+            <path d="{{ sd.line }}" fill="none" stroke="#3F6C9F" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"></path>
+          </svg>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#46546A;margin-bottom:8px">Definition</div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <sc-for list="{{ sd.def }}" as="d" hint-placeholder-count="3">
+              <div style="display:flex;gap:10px;align-items:baseline;font-size:14px"><span style="flex:none;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:6px;background:{{ d.bg }};color:{{ d.fg }}">{{ d.j }}</span><span>{{ d.t }}</span></div>
+            </sc-for>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#46546A;margin-bottom:8px">Versions</div>
+          <sc-for list="{{ sd.versions }}" as="v" hint-placeholder-count="2">
+            <div style="display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:10px;align-items:baseline;padding:8px 0;border-bottom:1px solid #ECF0F5;font-size:13.5px">
+              <b style="color:#3F6C9F">v{{ v.v }}</b><span>{{ v.note }}</span><span style="color:#66758A;font-size:12.5px;white-space:nowrap">{{ v.date }} · {{ v.n }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#46546A;margin-bottom:8px">Used in</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            <sc-for list="{{ sd.camps }}" as="k" hint-placeholder-count="1"><span style="font-size:13px;font-weight:600;padding:5px 12px;border-radius:6px;background:#F1F6FB;color:#3F6C9F">{{ k.t }}</span></sc-for>
+            <sc-if value="{{ sd.noCamps }}" hint-placeholder-val="{{ false }}"><span style="font-size:13.5px;color:#66758A">No campaign yet</span></sc-if>
+          </div>
+        </div>
+        <sc-if value="{{ tech }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#F7F9FC;border-radius:8px;padding:12px 14px;font:12.5px/1.7 'IBM Plex Mono',ui-monospace,monospace;color:#46546A">COHORT · {{ sd.id }} v{{ sd.ver }}<br>COHORT_MEMBER · {{ sd.n }} rows · stable 10% holdout<br>tag · {{ sd.tag }}</div>
+        </sc-if>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button sc-camel-on-click="{{ sd.onUse }}" style="flex:1;border:0;border-radius:6px;padding:12px 16px;background:#3F6C9F;color:#FFFFFF;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap">Use in a campaign →</button>
+          <button sc-camel-on-click="{{ sd.onOpen }}" style="border:1px solid #E1E7EF;border-radius:6px;padding:12px 16px;background:#FFFFFF;color:#1D2939;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap">Edit in builder</button>
+        </div>
+      </aside>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ is.camp }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <section style="background:#FFFFFF;border-radius:12px;padding:20px 22px;overflow-x:auto">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+          <span style="font-size:15px;font-weight:700">Calendar · next 16 weeks</span>
+          <span style="display:flex;gap:14px;font-size:12.5px;color:#46546A">
+            <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:#3F6C9F"></span>Live</span>
+            <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:#3F6C9F"></span>Scheduled</span>
+            <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:#CDD6E2"></span>Draft</span>
+          </span>
+        </div>
+        <div style="min-width:760px">
+          <div style="display:grid;grid-template-columns:200px repeat(16,minmax(0,1fr));gap:0;font-size:13px;color:#66758A;font-weight:700">
+            <span></span>
+            <sc-for list="{{ weeks }}" as="w" hint-placeholder-count="16"><span style="padding:0 0 6px 4px;border-left:1px solid {{ w.bd }};color:{{ w.c }}">{{ w.l }}</span></sc-for>
+          </div>
+          <sc-for list="{{ tl }}" as="k" hint-placeholder-count="3">
+            <div style="display:grid;grid-template-columns:200px repeat(16,minmax(0,1fr));align-items:center;padding:6px 0">
+              <button sc-camel-on-click="{{ k.on }}" style="grid-row:1;grid-column:1;text-align:left;border:0;background:transparent;padding:0 10px 0 0;font-size:14px;font-weight:700;color:#1D2939;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ k.name }}</button>
+              <span style="grid-row:1;grid-column:2 / -1;height:34px;border-radius:12px;background:#F7F9FC"></span>
+              <button sc-camel-on-click="{{ k.on }}" style="grid-row:1;grid-column:{{ k.gc }};height:34px;border:0;border-radius:12px;background:{{ k.c }};color:{{ k.fg }};font-size:12.5px;font-weight:700;text-align:left;padding:0 12px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ k.bar }}</button>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px">
+        <sc-for list="{{ campCards }}" as="k" hint-placeholder-count="3">
+          <button sc-camel-on-click="{{ k.on }}" style="text-align:left;background:#FFFFFF;border:0;border-radius:12px;padding:20px 22px;display:flex;flex-direction:column;gap:10px;cursor:pointer;color:#1D2939" style-hover="box-shadow:0 0 0 2px #3F6C9F">
+            <span style="display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%"><span style="font-size:13px;color:#66758A;font-family:'IBM Plex Mono',monospace">{{ k.id }} · priority {{ k.prio }}</span><span style="font-size:12px;font-weight:700;padding:3px 10px;border-radius:6px;background:{{ k.stBg }};color:{{ k.stFg }};white-space:nowrap">{{ k.status }}</span></span>
+            <span style="font-size:19px;font-weight:700">{{ k.name }}</span>
+            <span style="font-size:13.5px;color:#46546A">{{ k.goal }}</span>
+            <span style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:12px 0;border-top:1px solid #ECF0F5;border-bottom:1px solid #ECF0F5;width:100%">
+              <span><span style="display:block;font-size:20px;font-weight:700">{{ k.n }}</span><span style="font-size:13px;color:#66758A">members</span></span>
+              <span><span style="display:block;font-size:20px;font-weight:700">{{ k.cap }}</span><span style="font-size:13px;color:#66758A">calls a week</span></span>
+              <span><span style="display:block;font-size:20px;font-weight:700;color:{{ k.covC }}">{{ k.cov }}</span><span style="font-size:13px;color:#66758A">reached in window</span></span>
+            </span>
+            <span style="font-size:13.5px;color:#46546A;line-height:1.5">{{ k.when }} · {{ k.ch }}</span>
+          </button>
+        </sc-for>
+        <button sc-camel-on-click="{{ onNewCamp }}" style="border:2px dashed #CDD6E2;background:transparent;border-radius:12px;padding:22px;min-height:220px;font-size:16px;font-weight:700;color:#46546A;cursor:pointer;white-space:nowrap" style-hover="border-color:#3F6C9F;color:#3F6C9F">+ New campaign</button>
+      </div>
+    </div>
+  </sc-if>
+</div>
+
+<sc-if value="{{ ceOpen }}" hint-placeholder-val="{{ false }}">
+  <div sc-camel-on-click="{{ onCeBackdrop }}" style="position:fixed;inset:0;z-index:70;background:rgba(16,36,58,.45);display:flex;align-items:flex-start;justify-content:center;padding:40px 20px;overflow:auto">
+    <div role="dialog" aria-label="Campaign" sc-camel-on-click="{{ stop }}" style="width:100%;max-width:1040px;background:#FFFFFF;border-radius:12px;box-shadow:0 30px 80px rgba(16,36,58,.3);overflow:hidden">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:24px 28px 0">
+        <div><div style="font-size:13px;font-weight:700;color:#3F6C9F">{{ ce.kind }} · {{ ce.id }}</div><input value="{{ ce.name }}" sc-camel-on-change="{{ ce.onName }}" placeholder="Name the campaign" aria-label="Campaign name" style="font-size:26px;font-weight:700;border:0;outline:none;padding:2px 0;color:#1D2939;background:transparent;width:100%;letter-spacing:-.01em"></div>
+        <button sc-camel-on-click="{{ onCloseCe }}" aria-label="Close" style="flex:none;border:0;background:#ECF0F5;width:40px;height:40px;border-radius:50%;font-size:16px;cursor:pointer;color:#1D2939;white-space:nowrap">✕</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:18px 28px 0">
+        <sc-for list="{{ ce.steps }}" as="s" hint-placeholder-count="4">
+          <button sc-camel-on-click="{{ s.on }}" style="display:flex;gap:10px;align-items:center;text-align:left;border:0;background:transparent;padding:10px 0;border-bottom:3px solid {{ s.bd }};cursor:pointer;color:#1D2939;min-width:0">
+            <span style="flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:12.5px;font-weight:700;background:{{ s.bg }};color:{{ s.fg }}">{{ s.mk }}</span>
+            <span style="min-width:0"><span style="display:block;font-size:14px;font-weight:700">{{ s.label }}</span><span style="display:block;font-size:13px;color:#66758A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.sub }}</span></span>
+          </button>
+        </sc-for>
+      </div>
+      <div style="display:flex;gap:24px;padding:24px 28px;flex-wrap:wrap;align-items:flex-start">
+        <div style="flex:1 1 480px;min-width:0;display:flex;flex-direction:column;gap:18px">
+          <sc-if value="{{ ce.s0 }}" hint-placeholder-val="{{ true }}">
+            <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700;color:#46546A">Goal<input value="{{ ce.goal }}" sc-camel-on-change="{{ ce.onGoal }}" placeholder="What should change for these members?" style="border:1px solid #E1E7EF;border-radius:6px;padding:11px 12px;font-size:15px;color:#1D2939;font-weight:500"></label>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:#46546A;margin-bottom:8px">Include cohorts</div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <sc-for list="{{ ce.coh }}" as="c" hint-placeholder-count="4">
+                  <button sc-camel-on-click="{{ c.on }}" aria-pressed="{{ c.pr }}" style="display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:12px;align-items:center;text-align:left;border:1px solid {{ c.bd }};background:{{ c.bg }};border-radius:8px;padding:12px 14px;cursor:pointer;color:#1D2939">
+                    <span style="width:22px;height:22px;border-radius:7px;border:2px solid {{ c.bx }};background:{{ c.bxBg }};color:#FFFFFF;display:grid;place-items:center;font-size:13px;font-weight:700">{{ c.ck }}</span>
+                    <span style="min-width:0"><span style="display:block;font-size:14.5px;font-weight:700">{{ c.label }}</span><span style="display:block;font-size:13px;color:#66758A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.def }}</span></span>
+                    <b style="font-size:15px">{{ c.n }}</b>
+                  </button>
+                </sc-for>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:#46546A;margin-bottom:8px">Leave out anyone already in</div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ ce.exc }}" as="c" hint-placeholder-count="3"><button sc-camel-on-click="{{ c.on }}" style="border:1px solid {{ c.bd }};background:{{ c.bg }};color:{{ c.fg }};border-radius:6px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">{{ c.label }}</button></sc-for></div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ ce.s1 }}" hint-placeholder-val="{{ false }}">
+            <div>
+              <div style="font-size:13px;font-weight:700;color:#46546A;margin-bottom:8px">Which needs should care intelligence act on?</div>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px">
+                <button sc-camel-on-click="{{ ce.onAuto }}" style="text-align:left;border:1px solid {{ ce.mA.bd }};box-shadow:{{ ce.mA.sh }};background:#FFFFFF;border-radius:8px;padding:14px;cursor:pointer;color:#1D2939"><div style="font-size:14.5px;font-weight:700">All DoH triggers</div><div style="font-size:13px;color:#66758A;margin-top:2px">Every approved trigger for the cohort’s diagnoses</div></button>
+                <button sc-camel-on-click="{{ ce.onPick }}" style="text-align:left;border:1px solid {{ ce.mP.bd }};box-shadow:{{ ce.mP.sh }};background:#FFFFFF;border-radius:8px;padding:14px;cursor:pointer;color:#1D2939"><div style="font-size:14.5px;font-weight:700">Pick triggers</div><div style="font-size:13px;color:#66758A;margin-top:2px">Focus the campaign on a few needs</div></button>
+              </div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px"><sc-for list="{{ ce.trig }}" as="c" hint-placeholder-count="8"><button sc-camel-on-click="{{ c.on }}" style="border:1px solid {{ c.bd }};background:{{ c.bg }};color:{{ c.fg }};border-radius:6px;padding:6px 12px;font-size:13px;font-weight:600;cursor:{{ c.cur }};white-space:nowrap">{{ c.label }}</button></sc-for></div>
+              <div style="font-size:13px;color:#66758A;margin-top:8px">{{ ce.trigNote }}</div>
+            </div>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:#46546A;margin-bottom:8px">Channels</div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ ce.ch }}" as="c" hint-placeholder-count="4"><button sc-camel-on-click="{{ c.on }}" style="border:1px solid {{ c.bd }};background:{{ c.bg }};color:{{ c.fg }};border-radius:6px;padding:7px 14px;font-size:13.5px;font-weight:600;cursor:pointer;white-space:nowrap">{{ c.label }}</button></sc-for></div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ ce.s2 }}" hint-placeholder-val="{{ false }}">
+            <sc-for list="{{ ce.sliders }}" as="s" hint-placeholder-count="4">
+              <div>
+                <div style="display:flex;justify-content:space-between;align-items:baseline;font-size:14px;font-weight:700"><span>{{ s.label }}</span><span style="font-size:20px;font-weight:700">{{ s.txt }}</span></div>
+                <input type="range" min="{{ s.min }}" max="{{ s.max }}" value="{{ s.val }}" sc-camel-on-change="{{ s.on }}" aria-label="{{ s.label }}" style="width:100%;margin-top:6px">
+                <div style="font-size:13px;color:#66758A">{{ s.hint }}</div>
+              </div>
+            </sc-for>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px">
+              <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700;color:#46546A">Start<input type="date" value="{{ ce.start }}" sc-camel-on-change="{{ ce.onStart }}" style="border:1px solid #E1E7EF;border-radius:6px;padding:10px 12px;font-size:14px;color:#1D2939"></label>
+              <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700;color:#46546A">Priority<sc-raw-select value="{{ ce.prio }}" sc-camel-on-change="{{ ce.onPrio }}" style="border:1px solid #E1E7EF;border-radius:6px;padding:10px 12px;font-size:14px;color:#1D2939;background:#FFFFFF"><option value="1">1 · highest</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5 · lowest</option></sc-raw-select></label>
+            </div>
+          </sc-if>
+          <sc-if value="{{ ce.s3 }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <sc-for list="{{ ce.review }}" as="r" hint-placeholder-count="5">
+                <div style="display:grid;grid-template-columns:120px minmax(0,1fr);gap:14px;padding:10px 0;border-bottom:1px solid #ECF0F5;font-size:14.5px"><span style="color:#66758A;font-weight:600">{{ r.k }}</span><span>{{ r.v }}</span></div>
+              </sc-for>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px">
+              <div style="background:#F1F6FB;border-radius:8px;padding:12px 14px"><b style="font-size:14px;color:#3F6C9F">1 · Cohort</b><div style="font-size:12.5px;color:#46546A;margin-top:2px">who is in</div></div>
+              <div style="background:#F7F9FC;border-radius:8px;padding:12px 14px"><b style="font-size:14px">2 · Care intelligence</b><div style="font-size:12.5px;color:#46546A;margin-top:2px">risk, DoH triggers, next best action</div></div>
+              <div style="background:#F7F9FC;border-radius:8px;padding:12px 14px"><b style="font-size:14px">3 · Care portal</b><div style="font-size:12.5px;color:#46546A;margin-top:2px">nurse call list, record after consent</div></div>
+              <div style="background:#EAF1F9;border-radius:8px;padding:12px 14px"><b style="font-size:14px;color:#3F6C9F">↩ Write-back</b><div style="font-size:12.5px;color:#46546A;margin-top:2px">outcomes feed the next nightly run</div></div>
+            </div>
+            <sc-if value="{{ tech }}" hint-placeholder-val="{{ false }}">
+              <div style="background:#1D2939;color:#E1E7EF;border-radius:8px;padding:14px 16px;font:12.5px/1.7 'IBM Plex Mono',ui-monospace,monospace;white-space:pre-wrap;word-break:break-word">{{ ce.json }}</div>
+            </sc-if>
+          </sc-if>
+        </div>
+        <aside style="flex:0 1 300px;min-width:260px;background:#1D2939;color:#FFFFFF;border-radius:12px;padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+          <div><div style="font-size:13px;color:#CDD6E2;font-weight:700">Members in scope</div><div style="font-size:40px;font-weight:700;letter-spacing:-.02em;line-height:1.05;margin-top:4px">{{ ce.n }}</div><div style="font-size:12.5px;color:#98A4B5;margin-top:2px">{{ ce.nSub }}</div></div>
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding-top:12px;border-top:1px solid #2A3B52">
+            <div><div style="font-size:20px;font-weight:700">{{ ce.wk }}</div><div style="font-size:12px;color:#98A4B5">calls a week</div></div>
+            <div><div style="font-size:20px;font-weight:700">{{ ce.holdN }}</div><div style="font-size:12px;color:#98A4B5">control group</div></div>
+          </div>
+          <div style="padding-top:12px;border-top:1px solid #2A3B52">
+            <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700"><span style="color:#CDD6E2">Reached in {{ ce.weeks }} weeks</span><span>{{ ce.cov }}</span></div>
+            <div style="height:10px;border-radius:6px;background:#2A3B52;margin-top:8px;overflow:hidden"><div style="height:100%;width:{{ ce.covW }};background:{{ ce.covC }};border-radius:6px;transition:width .4s ease"></div></div>
+            <div style="font-size:13px;line-height:1.5;color:#CDD6E2;margin-top:10px">{{ ce.covTxt }}</div>
+            <sc-if value="{{ ce.canFix }}" hint-placeholder-val="{{ false }}"><button sc-camel-on-click="{{ ce.onFix }}" style="margin-top:10px;border:0;border-radius:6px;padding:9px 14px;background:#A9C3E0;color:#1D2939;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">{{ ce.fixLabel }}</button></sc-if>
+          </div>
+        </aside>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;padding:16px 28px;border-top:1px solid #ECF0F5;background:#F7F9FC;flex-wrap:wrap">
+        <sc-if value="{{ ce.hasBack }}" hint-placeholder-val="{{ false }}"><button sc-camel-on-click="{{ ce.onBack }}" style="border:1px solid #E1E7EF;border-radius:6px;padding:11px 18px;background:#FFFFFF;color:#1D2939;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap">← Back</button></sc-if>
+        <span style="flex:1;font-size:13.5px;color:#66758A;min-width:160px">{{ ce.hint }}</span>
+        <sc-if value="{{ ce.hasNext }}" hint-placeholder-val="{{ true }}"><button sc-camel-on-click="{{ ce.onNext }}" style="border:0;border-radius:6px;padding:12px 20px;background:#1D2939;color:#FFFFFF;font-size:14.5px;font-weight:700;cursor:pointer;white-space:nowrap">Next →</button></sc-if>
+        <sc-if value="{{ ce.isLast }}" hint-placeholder-val="{{ false }}"><button sc-camel-on-click="{{ ce.onSend }}" disabled="{{ ce.cant }}" style="border:0;border-radius:6px;padding:12px 22px;background:#3F6C9F;color:#FFFFFF;font-size:14.5px;font-weight:700;cursor:pointer;opacity:{{ ce.op }};white-space:nowrap">{{ ce.sendLabel }}</button></sc-if>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{ toastOn }}" hint-placeholder-val="{{ false }}">
+  <div role="status" style="position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:80;background:#1D2939;color:#FFFFFF;border-radius:6px;padding:10px 12px 10px 22px;font-size:14.5px;font-weight:600;box-shadow:0 12px 30px rgba(16,36,58,.3);display:flex;gap:14px;align-items:center;max-width:calc(100% - 40px)"><span style="color:#A9C3E0">●</span><span>{{ toast }}</span>
+    <sc-if value="{{ toastUndo }}" hint-placeholder-val="{{ false }}"><button sc-camel-on-click="{{ onUndo }}" style="border:0;border-radius:6px;padding:7px 14px;background:#A9C3E0;color:#1D2939;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap">Undo</button></sc-if>
+    <sc-if value="{{ toastNoUndo }}" hint-placeholder-val="{{ true }}"><span style="width:8px"></span></sc-if>
+  </div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;startTab&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;build&quot;,&quot;lib&quot;,&quot;camp&quot;],&quot;default&quot;:&quot;build&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Builder&quot;},&quot;showTechnical&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Builder&quot;},&quot;embedded&quot;:{&quot;editor&quot;:null,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onHandoff&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(campaign: object) =&gt; void&quot;},&quot;onCounts&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(c: {cohorts:number,campaigns:number}) =&gt; void&quot;}}">
+class Component extends DCLogic {
+  state = { kq: '', kr: null, kres: null, kForce: false, kName: '', feats: [], ready: false, tab: 'build', cb: null, aq: '', aIdx: 0, aOpen: false, browse: false, pv: 'profile', cohorts: [], campaigns: [], sel: 'COH-0101', lq: '', ce: null, toast: null, flash: null };
+  aRef = React.createRef();
+  componentDidMount() {
+    const go = () => {
+      if (!window.CohortEngine) { this.w = setTimeout(go, 40); return; }
+      const E = window.CohortEngine, p = E.parse(E.EXAMPLES[0]);
+      const cb = Object.assign(this.blank(), { name: 'Diabetes · above 9 and missing refills', inc: p.inc, exc: p.exc.concat(E.newRule('optout')) });
+      const tab = ['build', 'lib', 'camp'].includes(this.props.startTab) ? this.props.startTab : 'build';
+      this.setState({ ready: true, cb, cohorts: E.seedCohorts(), campaigns: E.seedCampaigns(), tab });
+    };
+    go();
+  }
+  componentDidUpdate(pp, ps) {
+    const st = this.state;
+    if (st.ready && (this._lc !== st.cohorts || this._lk !== st.campaigns)) { this._lc = st.cohorts; this._lk = st.campaigns; if (this.props.onCounts) this.props.onCounts({ cohorts: st.cohorts.length, campaigns: st.campaigns.length }); }
+    if (this._target != null && this._animTo !== this._target) {
+      const from = this._disp ?? this._target, to = this._target, t0 = performance.now(); this._animTo = to; this._prev = from;
+      cancelAnimationFrame(this._raf);
+      const f = t => { const k = Math.min(1, (t - t0) / 420), e = 1 - Math.pow(1 - k, 3); this._disp = from + (to - from) * e; this.forceUpdate(); if (k < 1) this._raf = requestAnimationFrame(f); };
+      this._raf = requestAnimationFrame(f);
+    }
+  }
+  componentWillUnmount() { clearTimeout(this.w); clearTimeout(this.tt); clearTimeout(this.bt); clearTimeout(this.ft); cancelAnimationFrame(this._raf); }
+  blank() { return { base: 'daman', logic: 'all', inc: [], exc: [], name: '', refresh: 'Nightly', mode: 'build', q: null, qc: null, from: null }; }
+  say(t, undo) { clearTimeout(this.tt); this.setState({ toast: { t, undo } }); this.tt = setTimeout(() => this.setState({ toast: null }), undo ? 6000 : 3600); }
+  setCb(p) { this.setState(s => ({ cb: Object.assign({}, s.cb, { q: null, qc: null }, p) })); }
+  flash(id) { clearTimeout(this.ft); this.setState({ flash: id }); this.ft = setTimeout(() => this.setState({ flash: null }), 900); }
+  upd(id, patch) { const f = L => L.map(r => r.id === id ? Object.assign({}, r, patch) : r); this.setState(s => ({ cb: Object.assign({}, s.cb, { inc: f(s.cb.inc), exc: f(s.cb.exc), q: null, qc: null }) })); }
+  add(inc, exc) {
+    const E = window.CohortEngine;
+    this.setState(s => { const ex = s.cb.exc.slice(); exc.forEach(r => { if (!(E.F[r.f].type === 'bool' && ex.some(x => x.f === r.f))) ex.push(r); });
+      return { cb: Object.assign({}, s.cb, { inc: s.cb.inc.concat(inc), exc: ex, q: null, qc: null, mode: 'build' }) }; });
+    const last = (inc[inc.length - 1] || exc[exc.length - 1]); if (last) this.flash(last.id);
+  }
+  addField(f, preset) { const E = window.CohortEngine, r = E.newRule(f, preset); E.F[f].excl ? this.add([], [r]) : this.add([r], []); }
+  del(id) {
+    const cb = this.state.cb, inInc = cb.inc.some(r => r.id === id), list = inInc ? 'inc' : 'exc', idx = cb[list].findIndex(r => r.id === id), rule = cb[list][idx];
+    this.setCb({ [list]: cb[list].filter(r => r.id !== id) });
+    this.say('Removed “' + window.CohortEngine.ruleText(rule) + '”', () => { this.setState(s => { const L = s.cb[list].slice(); L.splice(idx, 0, rule); return { cb: Object.assign({}, s.cb, { [list]: L }), toast: null }; }); });
+  }
+  sugs() { if (!this.state.aOpen) return []; const q = this.state.aq.trim(), S = window.CohortEngine.suggest(q); if (q.split(/\s+/).length >= 3) S.push({ kind: 'kg', badge: 'New feature', label: 'Not listed? Describe it and check the graph', sub: '“' + q + '” · catalogue first, then a knowledge-graph count' }); return S; }
+  toGraph(q) { this.setState(s => ({ cb: Object.assign({}, s.cb, { mode: 'ask' }), aq: '', aOpen: false })); this.runAsk(q); }
+  apply(s) {
+    const E = window.CohortEngine;
+    if (s.kind === 'kg') { this.toGraph(this.state.aq); return; }
+    if (s.kind === 'parse') { const p = E.parse(this.state.aq); this.add(p.inc, p.exc); this.say(p.inc.length + ' rule' + (p.inc.length === 1 ? '' : 's') + (p.exc.length ? ' and ' + p.exc.length + ' exclusion' + (p.exc.length === 1 ? '' : 's') : '') + ' added. Check them below.'); }
+    else this.addField(s.f, s.preset);
+    this.setState({ aq: '', aIdx: 0, aOpen: false });
+  }
+  onAKey = e => {
+    const S = this.sugs();
+    if (e.key === 'ArrowDown') { e.preventDefault(); this.setState(s => ({ aOpen: true, aIdx: Math.min(S.length - 1, s.aIdx + 1) })); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); this.setState(s => ({ aIdx: Math.max(0, s.aIdx - 1) })); }
+    else if (e.key === 'Enter') { e.preventDefault(); const s = S[this.state.aIdx]; if (s) this.apply(s); }
+    else if (e.key === 'Escape') this.setState({ aOpen: false });
+  };
+  save(thenCamp) {
+    const E = window.CohortEngine, st = this.state, cb = st.cb, e = E.estimate(cb), prev = cb.from && st.cohorts.find(c => c.id === cb.from);
+    const id = prev ? prev.id : 'COH-01' + String(st.cohorts.length + 1).padStart(2, '0');
+    const ver = prev ? prev.versions.length + 1 : 1, n = Math.round(e.n);
+    const v = { v: ver, date: '20 Nov', n, note: prev ? 'Edited in builder' : 'Created in builder' };
+    const coh = { id, name: cb.name || 'Untitled cohort', base: cb.base, n, refresh: cb.refresh, owner: 'You', src: cb.mode === 'ngql' ? 'nGQL' : 'Builder', fresh: true,
+      rules: { logic: cb.logic, inc: cb.inc.map(r => Object.assign({}, r)), exc: cb.exc.map(r => Object.assign({}, r)) }, versions: (prev ? prev.versions : []).concat(v), trend: prev ? prev.trend.slice(0, 11).concat(n) : E.trend(n, E.hash(id)).map((x, i, a) => i < 9 ? 0 : x).slice(0).map((x, i) => i < 9 ? null : x).filter(x => x != null) };
+    const cohorts = prev ? st.cohorts.map(c => c.id === id ? coh : c) : [coh].concat(st.cohorts);
+    this.setState({ cohorts, sel: id, cb: Object.assign({}, cb, { from: id }) });
+    if (thenCamp) this.openCamp([id], null, cohorts); else { this.setState({ tab: 'lib' }); this.say(id + ' v' + ver + ' saved · ' + E.fmt(n) + ' members · runs ' + cb.refresh.toLowerCase()); }
+  }
+  openCamp(inc, existing, cohorts) {
+    const st = this.state, C = cohorts || st.cohorts;
+    if (existing) { this.setState({ ce: Object.assign({}, existing, { step: 0, isNew: false }) }); return; }
+    const id = 'CMP-01' + String(st.campaigns.length + 1).padStart(2, '0'), first = C.find(c => c.id === (inc || [])[0]);
+    this.setState({ ce: { id, name: first ? first.name.split(' · ')[0] + ' outreach' : '', goal: '', inc: inc || [], exc: [], start: '2026-11-30', weeks: 8, prio: st.campaigns.length + 1, mode: 'automated', trig: [], ch: ['Voice'], nurses: 6, calls: 25, hold: 10, status: 'Draft', step: 0, isNew: true } });
+  }
+  setCe(p) { this.setState(s => ({ ce: Object.assign({}, s.ce, p) })); }
+  tog(arr, v) { return arr.includes(v) ? arr.filter(x => x !== v) : arr.concat(v); }
+  send() {
+    const st = this.state, c = Object.assign({}, st.ce), live = c.start <= window.CohortEngine.TODAY;
+    c.status = live ? 'Live' : 'Scheduled'; delete c.step; delete c.isNew;
+    const campaigns = st.campaigns.some(k => k.id === c.id) ? st.campaigns.map(k => k.id === c.id ? c : k) : st.campaigns.concat(c);
+    this.setState({ campaigns, ce: null, tab: 'camp' });
+    if (this.props.onHandoff) this.props.onHandoff(c); else this.say(c.id + ' handed off · care intelligence scores these members tonight at 03:00');
+  }
+  path(a, W, H, pad) {
+    const mn = Math.min(...a), mx = Math.max(...a), r = mx - mn || 1;
+    const pts = a.map((v, i) => [pad + i * (W - 2 * pad) / Math.max(1, a.length - 1), H - pad - (v - mn) / r * (H - 2 * pad)]);
+    const line = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+    return { line, area: line + ' L' + pts[pts.length - 1][0].toFixed(1) + ' ' + H + ' L' + pts[0][0].toFixed(1) + ' ' + H + ' Z' };
+  }
+
+  renderVals() { return Object.assign(this.renderVals0(), this.kgVals()); }
+  renderVals0() {
+    const st = this.state, E = window.CohortEngine, emb = !!this.props.embedded, tech = this.props.showTechnical !== false;
+    const pill = a => a ? { bg: '#1D2939', fg: '#FFFFFF' } : { bg: 'transparent', fg: '#46546A' };
+    const chip = a => a ? { bg: '#F1F6FB', fg: '#3F6C9F', bd: '#3F6C9F', pr: 'true' } : { bg: '#FFFFFF', fg: '#46546A', bd: '#E1E7EF', pr: 'false' };
+    const base = { standalone: !emb, maxW: 'none', pad: emb ? '0' : '24px 28px 56px', stickyTop: emb ? '140px' : '84px', tech,
+      eyebrow: emb ? 'Step 1 · Population health team' : 'Population health', toastOn: !!st.toast, toast: st.toast ? st.toast.t : '', toastUndo: !!(st.toast && st.toast.undo), toastNoUndo: !(st.toast && st.toast.undo),
+      onUndo: () => st.toast && st.toast.undo && st.toast.undo(), ceOpen: !!st.ce, stop: e => e.stopPropagation(), onCeBackdrop: () => this.setState({ ce: null }), onCloseCe: () => this.setState({ ce: null }) };
+    if (!st.ready || !E) return Object.assign(base, { title: 'Build a cohort', desc: '', tabs: [], is: { build: true, mBuild: true }, ce: {} });
+    const fmt = E.fmt, cb = st.cb, e = E.estimate(cb), has = cb.inc.some(E.ruleOn) || cb.exc.some(E.ruleOn);
+    this._target = e.n; const disp = this._disp ?? e.n;
+    const tabMeta = [['build', 'Build', cb.inc.length ? 'draft' : 'new'], ['lib', 'Cohorts', st.cohorts.length], ['camp', 'Campaigns', st.campaigns.length]];
+    const tabs = tabMeta.map(([k, l, n]) => { const a = st.tab === k; return Object.assign({ label: l, n, on: () => this.setState({ tab: k }), cBg: a ? '#A9C3E0' : '#ECF0F5', cFg: a ? '#1D2939' : '#46546A' }, pill(a)); });
+    const titles = { build: ['Build a cohort', 'Describe who the programme is for. Risk, triggers and next best actions are added by care intelligence after hand-off.'], lib: ['Saved cohorts', 'Each cohort re-runs on its schedule. Edit one to create a new version; campaigns pick up the change automatically.'], camp: ['Campaigns', 'Put cohorts to work: what to act on, how much nurse time, and when. Hand-off sends them to care intelligence.'] };
+    const out = Object.assign(base, { tabs, title: titles[st.tab][0], desc: titles[st.tab][1], is: { build: st.tab === 'build', lib: st.tab === 'lib', camp: st.tab === 'camp', mBuild: cb.mode === 'build', mNgql: cb.mode === 'ngql', mAsk: cb.mode === 'ask' } });
+
+    if (st.tab === 'build') {
+      const B = e.B, logW = n => (Math.max(2, Math.log10(n + 1) / Math.log10(B + 1) * 100)).toFixed(1) + '%';
+      const stepN = {}; e.steps.forEach(s => stepN[s.id] = s.n);
+      const prevC = cb.from && st.cohorts.find(c => c.id === cb.from);
+      let prevN = B;
+      const OPS = [['≥', 'at least'], ['≤', 'at most'], ['between', 'between'], ['=', 'exactly']];
+      const row = (r, i, ex) => {
+        const d = E.F[r.f], num = d.type === 'num', lab = d.type === 'lab', la = d.type === 'labage', L = lab || la ? E.labOf(r.l) : null;
+        const opts = d.type === 'code' && !r.open ? d.opts.filter((o, j) => j < 6 || r.vs.includes(o[0])) : (d.opts || []);
+        const chips = d.type === 'enum' || d.type === 'code' ? opts.map(o => Object.assign({ label: o[1], on: () => this.upd(r.id, { vs: this.tog(r.vs, o[0]) }) }, chip(r.vs.includes(o[0])))) : [];
+        if (d.type === 'code' && d.opts.length > opts.length) chips.push({ label: '+' + (d.opts.length - opts.length) + ' more', on: () => this.upd(r.id, { open: true }), bg: '#FFFFFF', fg: '#3F6C9F', bd: '#CDD6E2', pr: 'false' });
+        const on = E.ruleOn(r);
+        let left = '—', leftSub = on ? '' : 'pick a value', w = '0%';
+        if (on && cb.logic === 'any' && !ex) { left = fmt(e.alone[r.id]); leftSub = 'match this rule'; w = logW(e.alone[r.id]); }
+        else if (on && stepN[r.id] != null) { const n = stepN[r.id]; left = fmt(n); leftSub = ex ? '−' + fmt(Math.max(0, prevN - n)) + ' removed' : (prevN ? Math.round(n / prevN * 100) + '% kept' : ''); w = logW(n); prevN = n; }
+        return { label: d.label, sub: lab ? 'latest result in 12 months' : (d.sub || d.cat), join: i === 0 ? 'Where' : cb.logic === 'any' ? 'Or' : 'And',
+          isLab: lab, isLabAge: la, hasOp: num || lab, hasV: num || lab || la, between: (num || lab) && r.op === 'between', hasCtl: d.type !== 'bool',
+          ops: OPS.map(([o, aria]) => Object.assign({ label: o === 'between' ? '↔' : o, aria, on: () => this.upd(r.id, { op: o, v2: o === 'between' && +r.v2 <= +r.v ? +(+r.v + (L ? L[3][1] : 10)).toFixed(1) : r.v2 }) }, r.op === o ? { bg: '#FFFFFF', fg: '#1D2939' } : { bg: 'transparent', fg: '#66758A' })),
+          v: r.v, v2: r.v2, l: r.l, step: lab ? String(L[8]) : '1', unit: num ? d.unit : lab ? L[2] : la ? 'days' : d.type === 'bool' ? '' : '', chips, left, leftSub, w,
+          bg: st.flash === r.id ? '#F5F8FC' : 'transparent',
+          onV: ev => this.upd(r.id, { v: ev.target.value }), onV2: ev => this.upd(r.id, { v2: ev.target.value }), onL: ev => this.upd(r.id, E.labPatch(ev.target.value)), onDel: () => this.del(r.id) };
+      };
+      const incRows = cb.logic === 'any' ? cb.inc.map((r, i) => row(r, i, 0)) : cb.inc.map((r, i) => row(r, i, 0));
+      if (cb.logic === 'any') prevN = stepN.any ?? B;
+      const excRows = cb.exc.map((r, i) => row(r, i, 1));
+      const S = this.sugs();
+      const BADGE = { Graph: ['#EEEDF8', '#4B47A0'], 'New feature': ['#1D2939', '#A9C3E0'], Sentence: ['#1D2939', '#FFFFFF'], Condition: ['#F1F6FB', '#3F6C9F'], Medicine: ['#EAF1F9', '#3F6C9F'], Result: ['#EAF1F9', '#3F6C9F'], Overdue: ['#F4EFE6', '#8A6A3E'], Exclude: ['#FBEEF0', '#934450'] };
+      const sugs = S.map((s, i) => { const b = BADGE[s.badge] || ['#ECF0F5', '#46546A']; return { badge: s.badge, label: s.label, sub: s.sub, bBg: b[0], bFg: b[1], bg: i === st.aIdx ? '#F5F8FC' : 'transparent', key: i === st.aIdx ? '↵' : '', on: ev => { ev.preventDefault(); this.apply(s); }, hover: () => { if (st.aIdx !== i) this.setState({ aIdx: i }); } }; });
+      const lints = E.lint(cb, e, 750).map(l => { const T = { ok: ['#F5F8FC', '#3F6C9F', '✓'], info: ['#F7F9FC', '#66758A', 'i'], warn: ['#FDF3E7', '#8A6A3E', '!'], error: ['#FDF0EF', '#B5545E', '!'] }[l.lvl];
+        return { t: l.t, bg: T[0], ic: T[1], sym: T[2], hasFix: !!l.fix, fix: l.fix ? l.fix.label : '', onFix: () => { if (!l.fix) return; if (l.fix.exc) this.add([], [E.newRule(l.fix.exc)]); else this.add([E.newRule(l.fix.inc, l.fix.preset)], []); } }; });
+      const tooFew = has && e.n < 50, broad = has && e.n > 30000;
+      const delta = this._prev != null && Math.abs(e.n - (this._prev || 0)) >= 1 && st.lastN !== undefined ? '' : '';
+      const pr = E.profile(cb), pc = x => Math.round(x * 100) + '%';
+      const COLS = ['#3F6C9F', '#A9C3E0', '#CDD6E2'];
+      const qtxt = cb.q || '';
+      Object.assign(out, {
+        cb, onName: ev => this.setState({ cb: Object.assign({}, cb, { name: ev.target.value }) }),
+        draft: prevC ? { dot: '#3F6C9F', txt: 'Editing ' + prevC.id + ' · saving creates v' + (prevC.versions.length + 1) } : { dot: '#8A6A3E', txt: 'Draft · not saved yet' },
+        modes: [['build', 'Rules'], ['ask', 'Describe'], tech ? ['ngql', 'nGQL'] : null].filter(Boolean).map(([k, l]) => Object.assign({ label: l, on: () => this.setState({ cb: Object.assign({}, cb, { mode: k, q: k === 'ngql' && !cb.q ? E.ngql(cb) : cb.q }) }) }, pill(cb.mode === k))),
+        bases: E.BASES.map(b => { const a = cb.base === b.id; return { label: b.label, src: b.src, n: fmt(b.n), on2: a ? 'true' : 'false', bd: a ? '#3F6C9F' : '#E1E7EF', sh: a ? 'inset 0 0 0 1px #3F6C9F' : 'none', bg: a ? '#F5F8FC' : '#FFFFFF', rd: a ? '#3F6C9F' : '#CDD6E2', dot: a ? '#3F6C9F' : 'transparent', on: () => this.setCb({ base: b.id }) }; }),
+        aRef: this.aRef, aq: st.aq, aBd: st.aOpen ? '#3F6C9F' : '#F7F9FC',
+        onAq: ev => this.setState({ aq: ev.target.value, aOpen: true, aIdx: 0 }), onAFocus: () => this.setState({ aOpen: true }), onABlur: () => { clearTimeout(this.bt); this.bt = setTimeout(() => this.setState({ aOpen: false }), 120); }, onAKey: this.onAKey,
+        sugs, onAqGraph: ev => { ev.preventDefault(); this.toGraph(st.aq); }, sugOpen: st.aOpen && sugs.length > 0, noMatch: st.aOpen && st.aq.trim().length >= 2 && !sugs.length,
+        browse: st.browse, browseLabel: st.browse ? 'Hide fields' : 'Browse ' + Object.keys(E.F).length + ' fields', onBrowse: () => this.setState({ browse: !st.browse }),
+        cat: E.CATS.map(name => ({ name, fields: Object.keys(E.F).filter(k => E.F[k].cat === name).map(k => ({ label: E.F[k].label, tag: E.F[k].excl ? 'exclude' : '+', c: E.F[k].excl ? '#B5545E' : '#3F6C9F', on: () => this.addField(k) })) })),
+        showTpl: !cb.inc.length, tpls: E.TEMPLATES.map(t => { const x = E.fromTemplate(t); return { name: t.name, d: t.d, n: fmt(E.estimate(Object.assign({}, cb, x)).n), on: () => { this.setState({ cb: Object.assign({}, cb, x, { name: cb.name || t.name, q: null, qc: null }) }); this.say('Template added · adjust any rule below'); } }; }),
+        lg: { all: pill(cb.logic === 'all'), any: pill(cb.logic === 'any') }, logicAll: () => this.setCb({ logic: 'all' }), logicAny: () => this.setCb({ logic: 'any' }),
+        funnelHint: cb.logic === 'any' ? 'Members need to match one rule' : 'Each rule narrows the group',
+        baseN: fmt(B), baseLabel: E.BASES.find(b => b.id === cb.base).label.toLowerCase(),
+        noInc: !cb.inc.length, incRows, excRows,
+        onFocusAdd: () => { const n = this.aRef.current; if (n) { n.focus(); } },
+        quickExc: ['optout', 'onco', 'pregnant', 'contacted'].filter(k => !cb.exc.some(r => r.f === k)).map(k => ({ label: E.F[k].label, on: () => this.add([], [E.newRule(k)]) })),
+        qLines: Array.from({ length: Math.max(8, qtxt.split('\n').length) }, (_, i) => i + 1).join('\n'), qRows: Math.max(8, qtxt.split('\n').length),
+        onRegen: () => this.setState({ cb: Object.assign({}, cb, { q: E.ngql(cb), qc: null }) }), onQ: ev => this.setState({ cb: Object.assign({}, cb, { q: ev.target.value, qc: null }) }),
+        onCheck: () => this.setState({ cb: Object.assign({}, cb, { qc: E.check(cb.q || '') }) }), onLoad: () => { if (cb.qc && cb.qc.ok) this.save(false); },
+        qBad: !(cb.qc && cb.qc.ok), qOp: cb.qc && cb.qc.ok ? 1 : 0.45, qStatus: cb.qc ? (cb.qc.ok ? '✓ All checks pass' : cb.qc.C.filter(c => !c[1]).length + ' check' + (cb.qc.C.filter(c => !c[1]).length > 1 ? 's' : '') + ' failing') : 'Not validated yet', qStatusC: cb.qc ? (cb.qc.ok ? '#3F6C9F' : '#B5545E') : '#66758A',
+        checks: cb.qc ? cb.qc.C.map(x => ({ name: x[0], note: x[2], icon: x[1] ? '✓' : '✕', bg: x[1] ? '#F1F6FB' : '#FBEEF0', fg: x[1] ? '#3F6C9F' : '#934450' })) : [],
+        lints,
+        est: { n: fmt(disp), pct: (e.n / B * 100).toFixed(e.n / B < 0.1 ? 1 : 0) + '%', base: fmt(B) + ' ' + E.BASES.find(b => b.id === cb.base).label.toLowerCase(),
+          pill: tooFew ? 'Too few to run' : broad ? 'Very broad' : has ? 'Live estimate' : 'Whole population', pillBg: tooFew ? '#FBEEF0' : broad ? '#F4EFE6' : '#2A3B52', pillFg: tooFew ? '#934450' : broad ? '#8A6A3E' : '#C9D9EA',
+          delta: prevC ? (e.n - prevC.n >= 0 ? '+' : '−') + fmt(Math.abs(e.n - prevC.n)) + ' vs v' + prevC.versions.length : '', dC: prevC && e.n < prevC.n ? '#F08A80' : '#A9C3E0',
+          steps: e.steps.map(s => ({ t: s.t, n: fmt(s.n), w: logW(s.n), c: s.ex ? '#F08A80' : '#A9C3E0' })) },
+        pvTabs: [['profile', 'Profile'], ['sample', 'Who matches'], ['overlap', 'Overlap']].map(([k, l]) => Object.assign({ label: l, on: () => this.setState({ pv: k }) }, pill(st.pv === k))),
+        pv: { profile: st.pv === 'profile', sample: st.pv === 'sample', overlap: st.pv === 'overlap' },
+        prof: { age: pr.age.map(([l, s]) => ({ l, p: pc(s), w: (s / Math.max(...pr.age.map(a => a[1]), .01) * 100).toFixed(1) + '%' })),
+          splits: [['Gender', pr.sex], ['Plan', pr.plan], ['Region', pr.region], ['Network', pr.net]].map(([name, segs]) => ({ name, segs: segs.map(([l, s], i) => ({ l, p: pc(s), f: Math.max(s, 0.0001), c: COLS[i % 3] })) })) },
+        samples: E.sample(cb, 5).map(m => ({ ini: m.ini, name: m.name, meta: m.id + ' · ' + m.age + ' · ' + (m.sex === 'F' ? 'woman' : 'man'), facts: m.facts.map(t => ({ t })) })),
+        overlaps: E.overlap(cb, e, st.cohorts).map(o => ({ id: o.id, name: o.name, p: Math.round(o.pct * 100) + '%', w: (o.pct * 100).toFixed(1) + '%', n: fmt(o.n), c: o.pct > 0.4 ? '#8A6A3E' : '#3F6C9F' })),
+        onRefresh: ev => this.setState({ cb: Object.assign({}, cb, { refresh: ev.target.value }) }),
+        cantSave: !has || tooFew, saveOp: has && !tooFew ? 1 : 0.45, saveUseLabel: 'Save and set up a campaign →',
+        saveHint: !has ? 'Add a rule to save.' : tooFew ? 'Too few members to save.' : prevC ? 'Saves as ' + prevC.id + ' v' + (prevC.versions.length + 1) + ' · runs ' + cb.refresh.toLowerCase() : 'Saves as a new cohort · runs ' + cb.refresh.toLowerCase(),
+        onSave: () => this.save(false), onSaveUse: () => this.save(true)
+      });
+    }
+
+    if (st.tab === 'lib') {
+      const q = st.lq.toLowerCase(), list = st.cohorts.filter(c => !q || c.name.toLowerCase().includes(q) || c.id.toLowerCase().includes(q));
+      const used = id => st.campaigns.filter(k => k.inc.includes(id));
+      const dl = c => { const a = c.trend, d = a[a.length - 1] - a[Math.max(0, a.length - 5)]; return { t: a.length > 1 ? (d >= 0 ? '+' : '−') + fmt(Math.abs(d)) + ' in 4 wk' : 'new', c: d >= 0 ? '#3F6C9F' : '#B5545E' }; };
+      const s = st.cohorts.find(c => c.id === st.sel) || st.cohorts[0];
+      const sp = this.path(s.trend.length > 1 ? s.trend : [s.n, s.n], 380, 90, 6), sdl = dl(s);
+      Object.assign(out, { lq: st.lq, onLq: ev => this.setState({ lq: ev.target.value }), libEmpty: !list.length,
+        onNewCoh: () => this.setState({ tab: 'build', cb: this.blank() }),
+        libRows: list.map(c => { const a = c.id === s.id, u = used(c.id).length, d = dl(c); return { name: c.name, id: c.id, ver: c.versions.length, refresh: c.refresh, owner: c.owner, used: u ? u + ' campaign' + (u > 1 ? 's' : '') : 'not in a campaign', n: fmt(c.n), delta: d.t, dC: d.c,
+          tag: c.fresh ? 'Saved now' : c.src, tagBg: c.fresh ? '#F1F6FB' : c.src === 'nGQL' ? '#EAF1F9' : '#ECF0F5', tagFg: c.fresh ? '#3F6C9F' : c.src === 'nGQL' ? '#3F6C9F' : '#46546A',
+          spark: this.path(c.trend.length > 1 ? c.trend : [c.n, c.n], 120, 32, 3).line, bg: a ? '#F5F8FC' : '#FFFFFF', sh: a ? 'inset 3px 0 0 #3F6C9F' : 'none', on: () => this.setState({ sel: c.id }) }; }),
+        sd: { id: s.id, ver: s.versions.length, src: s.src, name: s.name, n: fmt(s.n), base: E.BASES.find(b => b.id === s.base).label, line: sp.line, area: sp.area, delta: sdl.t, dC: sdl.c,
+          def: s.rules.inc.filter(E.ruleOn).map((r, i) => ({ j: i ? 'And' : 'Where', t: E.ruleText(r), bg: '#F1F6FB', fg: '#3F6C9F' })).concat(s.rules.exc.map(r => ({ j: 'Not', t: E.ruleText(r), bg: '#FBEEF0', fg: '#934450' }))),
+          versions: s.versions.slice().reverse().map(v => ({ v: v.v, note: v.note, date: v.date, n: fmt(v.n) })),
+          camps: used(s.id).map(k => ({ t: k.name + ' · ' + k.status })), noCamps: !used(s.id).length, tag: 'cohort:' + s.id.toLowerCase() + '@v' + s.versions.length,
+          onUse: () => { this.setState({ tab: 'camp' }); this.openCamp([s.id]); },
+          onOpen: () => { this.setState({ tab: 'build', cb: Object.assign(this.blank(), { base: s.base, name: s.name, refresh: s.refresh, logic: s.rules.logic, inc: s.rules.inc.map(r => Object.assign({}, r)), exc: s.rules.exc.map(r => Object.assign({}, r)), from: s.id }) }); } } });
+    }
+
+    if (st.tab === 'camp') {
+      const ST = { Live: ['#3F6C9F', '#FFFFFF', '#F1F6FB', '#3F6C9F'], Scheduled: ['#3F6C9F', '#FFFFFF', '#EAF1F9', '#3F6C9F'], Draft: ['#CDD6E2', '#1D2939', '#ECF0F5', '#46546A'] };
+      const tw = E.weekCol(E.TODAY);
+      Object.assign(out, {
+        weeks: E.WEEKS.map((w, i) => ({ l: i === tw ? 'This wk' : w.first ? w.d + ' ' + w.m : String(w.d), bd: w.first ? '#E1E7EF' : '#ECF0F5', c: i === tw ? '#3F6C9F' : '#66758A' })),
+        tl: st.campaigns.map(k => { const a = Math.max(0, E.weekCol(k.start)), b = Math.min(16, a + k.weeks), s = ST[k.status] || ST.Draft; return { name: k.name, gc: (a + 2) + ' / ' + (b + 2), c: s[0], fg: s[1], bar: E.fdate(k.start) + ' · ' + k.weeks + ' wk · ' + fmt(E.campN(k, st.cohorts)), on: () => this.openCamp(null, k) }; }),
+        campCards: st.campaigns.map(k => { const n = E.campN(k, st.cohorts), cap = E.capacity(k, n), s = ST[k.status] || ST.Draft;
+          return { id: k.id, prio: k.prio, name: k.name, goal: k.goal || 'No goal yet', status: k.status, stBg: s[2], stFg: s[3], n: fmt(n), cap: fmt(cap.wk), cov: Math.round(cap.cov * 100) + '%', covC: cap.cov < 0.6 ? '#8A6A3E' : '#3F6C9F',
+            when: E.fdate(k.start) + ' for ' + k.weeks + ' weeks', ch: k.ch.join(', '), on: () => this.openCamp(null, k) }; }),
+        onNewCamp: () => this.openCamp([])
+      });
+    }
+
+    const c = st.ce;
+    if (c) {
+      const n = E.campN(c, st.cohorts), cap = E.capacity(c, n), dx = E.dxForCamp(c, st.cohorts);
+      const trs = E.TRIG.filter(t => c.mode === 'business' || t[2] === '*' || dx.includes(t[2]));
+      const ok0 = !!c.name && c.inc.length > 0, ok1 = c.mode === 'automated' || c.trig.length > 0, ok2 = c.ch.length > 0;
+      const stepsDef = [['Who', c.inc.length ? c.inc.length + ' cohort' + (c.inc.length > 1 ? 's' : '') + ' · ' + fmt(n) : 'Pick cohorts', ok0], ['What', c.mode === 'automated' ? 'All DoH triggers' : c.trig.length + ' triggers', ok1], ['Effort', c.nurses + ' nurses · ' + c.weeks + ' weeks', true], ['Review', 'Hand off', ok0 && ok1 && ok2]];
+      const set = (k, v) => this.setCe({ [k]: v });
+      const covPct = Math.round(cap.cov * 100);
+      out.ce = {
+        kind: c.isNew ? 'New campaign' : c.status + ' campaign', id: c.id, name: c.name, goal: c.goal, onName: ev => set('name', ev.target.value), onGoal: ev => set('goal', ev.target.value),
+        steps: stepsDef.map(([l, sub, ok], i) => { const a = c.step === i; return { label: l, sub, mk: ok && i < c.step ? '✓' : i + 1, on: () => set('step', i), bd: a ? '#3F6C9F' : '#ECF0F5', bg: a ? '#3F6C9F' : ok && i < c.step ? '#F1F6FB' : '#ECF0F5', fg: a ? '#FFFFFF' : ok && i < c.step ? '#3F6C9F' : '#46546A' }; }),
+        s0: c.step === 0, s1: c.step === 1, s2: c.step === 2, s3: c.step === 3,
+        coh: st.cohorts.map(k => { const a = c.inc.includes(k.id); return { label: k.name, def: k.id + ' · ' + k.rules.inc.filter(E.ruleOn).map(E.ruleText).join(' · '), n: fmt(k.n), pr: a ? 'true' : 'false', ck: a ? '✓' : '', bd: a ? '#3F6C9F' : '#E1E7EF', bg: a ? '#F5F8FC' : '#FFFFFF', bx: a ? '#3F6C9F' : '#CDD6E2', bxBg: a ? '#3F6C9F' : '#FFFFFF', on: () => this.setCe({ inc: this.tog(c.inc, k.id), exc: c.exc.filter(x => x !== k.id) }) }; }),
+        exc: st.cohorts.filter(k => !c.inc.includes(k.id)).map(k => Object.assign({ label: k.name, on: () => set('exc', this.tog(c.exc, k.id)) }, c.exc.includes(k.id) ? { bg: '#FBEEF0', fg: '#934450', bd: '#B5545E' } : { bg: '#FFFFFF', fg: '#46546A', bd: '#E1E7EF' })),
+        mA: c.mode === 'automated' ? { bd: '#3F6C9F', sh: 'inset 0 0 0 1px #3F6C9F' } : { bd: '#E1E7EF', sh: 'none' }, mP: c.mode === 'business' ? { bd: '#3F6C9F', sh: 'inset 0 0 0 1px #3F6C9F' } : { bd: '#E1E7EF', sh: 'none' },
+        onAuto: () => set('mode', 'automated'), onPick: () => this.setCe({ mode: 'business', trig: c.trig.length ? c.trig : ['Trig9', 'Trig4'] }),
+        trig: trs.map(t => { const a = c.mode === 'automated' || c.trig.includes(t[0]); return Object.assign({ label: t[1], cur: c.mode === 'business' ? 'pointer' : 'default', on: () => { if (c.mode === 'business') set('trig', this.tog(c.trig, t[0])); } }, chip(a)); }),
+        trigNote: c.mode === 'automated' ? (dx.length ? 'Triggers for ' + dx.map(x => (E.COND.find(k => k[0] === x) || [x, x])[1].toLowerCase()).join(' and ') + ', plus the ones every member gets.' : 'Pick a cohort with a diagnosis to see its triggers.') : c.trig.length + ' of ' + E.TRIG.length + ' triggers selected.',
+        ch: ['Voice', 'WhatsApp', 'SMS', 'PURA app'].map(x => Object.assign({ label: x, on: () => set('ch', this.tog(c.ch, x)) }, chip(c.ch.includes(x)))),
+        sliders: [['nurses', 'Nurses', 1, 24, c.nurses, c.nurses + '', 'Matched to member languages'], ['calls', 'Calls per nurse a day', 5, 40, c.calls, c.calls + '', 'Includes retries for no answer'], ['weeks', 'Length', 2, 16, c.weeks, c.weeks + ' weeks', 'Ends ' + E.fdate(new Date(Date.parse(c.start + 'T00:00:00Z') + c.weeks * 7 * 864e5).toISOString().slice(0, 10))], ['hold', 'Control group', 5, 30, c.hold, c.hold + '%', 'Usual care, used to prove impact']].map(s => ({ label: s[1], min: s[2], max: s[3], val: s[4], txt: s[5], hint: s[6], on: ev => set(s[0], +ev.target.value) })),
+        start: c.start, onStart: ev => ev.target.value && set('start', ev.target.value), prio: String(c.prio), onPrio: ev => set('prio', +ev.target.value),
+        review: [['Goal', c.goal || '—'], ['Who', (c.inc.map(id => (st.cohorts.find(k => k.id === id) || { name: id }).name).join(' + ') || '—') + (c.exc.length ? ', minus anyone in ' + c.exc.map(id => (st.cohorts.find(k => k.id === id) || { name: id }).name).join(', ') : '')], ['What', c.mode === 'automated' ? 'All approved DoH triggers for the cohort’s diagnoses' : c.trig.map(t => (E.TRIG.find(x => x[0] === t) || [t, t])[1]).join(', ')], ['Channels', c.ch.join(', ') || '—'], ['Effort', c.nurses + ' nurses × ' + c.calls + ' calls a day, from ' + E.fdate(c.start) + ' for ' + c.weeks + ' weeks · priority ' + c.prio]].map(([k, v]) => ({ k, v })),
+        json: JSON.stringify({ campaign_id: c.id, cohorts: c.inc, exclude: c.exc, trigger_mode: c.mode, triggers: c.mode === 'business' ? c.trig : 'all', channels: c.ch, capacity_per_week: cap.wk, holdout_pct: c.hold, start: c.start, weeks: c.weeks, priority: c.prio }, null, 1),
+        n: fmt(n), nSub: c.inc.length > 1 ? 'De-duplicated across ' + c.inc.length + ' cohorts' : c.inc.length ? 'From ' + c.inc[0] : 'Add a cohort to start', wk: fmt(cap.wk), holdN: fmt(cap.hold), weeks: c.weeks,
+        cov: covPct + '%', covW: covPct + '%', covC: covPct < 60 ? '#F0B35E' : '#A9C3E0',
+        covTxt: !n ? 'Pick at least one cohort.' : covPct >= 100 ? 'Everyone is called at least once, with ' + Math.max(0, Math.round(c.weeks - cap.weeksAll)) + ' weeks to spare for follow-ups.' : 'About ' + fmt(cap.treated * (1 - cap.cov)) + ' members would not be called in time. ' + cap.need + ' nurses would reach everyone.',
+        canFix: !!n && covPct < 100 && cap.need <= 24, fixLabel: 'Use ' + cap.need + ' nurses', onFix: () => set('nurses', Math.min(24, cap.need)),
+        hasBack: c.step > 0, hasNext: c.step < 3, isLast: c.step === 3, onBack: () => set('step', c.step - 1), onNext: () => set('step', c.step + 1),
+        hint: !c.name ? 'Name the campaign at the top.' : !c.inc.length ? 'Add at least one cohort.' : !ok1 ? 'Pick at least one trigger.' : !ok2 ? 'Pick at least one channel.' : c.step === 3 ? 'Care intelligence picks it up in tonight’s run at 03:00.' : 'Step ' + (c.step + 1) + ' of 4',
+        cant: !(ok0 && ok1 && ok2), op: ok0 && ok1 && ok2 ? 1 : 0.45, sendLabel: c.isNew ? 'Hand off to care intelligence →' : 'Save changes and hand off →', onSend: () => this.send()
+      };
+    } else out.ce = {};
+    return out;
+  }
+  regFeature(r, name) {
+    const E = window.CohortEngine, f = r.feature;
+    if (!E.CATS.includes('Graph features')) E.CATS.push('Graph features');
+    E.F[f.key] = { cat: 'Graph features', label: name || f.label, type: f.type, unit: f.unit, op: f.op, v: f.v, v2: f.v, est: f.est, share: f.share, sub: f.sub, ng: f.ng, kg: true, nTxt: r.nTxt };
+    if (!this.state.feats.some(x => x.key === f.key)) this.setState(s => ({ feats: s.feats.concat({ key: f.key, label: name || f.label, n: r.nTxt }) }));
+    else this.setState(s => ({ feats: s.feats.map(x => x.key === f.key ? Object.assign({}, x, { label: name || f.label }) : x) }));
+    return f.key;
+  }
+  runAsk(text) {
+    const q = text != null ? text : this.state.kq;
+    const res = window.KG ? window.KG.resolve(q, this.state.cb ? this.state.cb.base : 'daman', window.CohortEngine) : null, r = res ? res.kg : null;
+    this.setState({ kq: q, kres: res, kr: r, kForce: false, kName: r && r.ok ? r.label : '' });
+  }
+  addHit(s) {
+    const E = window.CohortEngine;
+    if (s.kind === 'parse') { const p = E.parse(this.state.kq); this.add(p.inc, p.exc); } else this.addField(s.f, s.preset);
+    this.say('Added “' + s.label + '” from the catalogue · no new feature needed');
+  }
+  kStep1() {
+    const st = this.state, res = st.kres, E = window.CohortEngine;
+    if (!res || res.status === 'none') return { kRes: false, kHits: [], kNoHits: false, kHitTxt: '', kv: {} };
+    const B = { Graph: ['#EEEDF8', '#4B47A0'], Sentence: ['#1D2939', '#FFFFFF'], Condition: ['#F1F6FB', '#3F6C9F'], Medicine: ['#EAF1F9', '#3F6C9F'], Result: ['#EAF1F9', '#3F6C9F'], Overdue: ['#F4EFE6', '#8A6A3E'], Exclude: ['#FBEEF0', '#934450'] };
+    const hits = res.hits.map(s => { const b = B[s.badge] || ['#ECF0F5', '#46546A']; return { badge: s.badge, label: s.label, sub: s.sub, bBg: b[0], bFg: b[1], on: () => this.addHit(s) }; });
+    const sent = res.hits.find(s => s.kind === 'parse'), n = res.kg && res.kg.ok ? res.kg.nTxt : '';
+    const V = {
+      saved: { bg: '#F5F8FC', ic: '#3F6C9F', sym: '✓', title: 'This feature already exists.', txt: '“' + (E.F[res.saved] || {}).label + '” is in your graph feature library, so nothing new is created.', canAll: true, allLabel: 'Add it as a rule', canForce: false },
+      covered: { bg: '#F5F8FC', ic: '#3F6C9F', sym: '✓', title: 'Covered by existing features.', txt: 'Everything you described maps to fields that already exist' + (n ? ' (about ' + n + ' members)' : '') + '. No new feature needed.', canAll: !!sent || hits.length > 0, allLabel: sent ? sent.label : 'Add the first match', canForce: !!(res.kg && res.kg.ok) },
+      new: { bg: '#FDF3E7', ic: '#8A6A3E', sym: '!', title: 'Not in the catalogue yet:', txt: res.missing.join(', ') + '. We queried the knowledge graph: ' + n + ' members match. Create it as a new feature below.', canAll: false, canForce: false }
+    }[res.status];
+    return { kRes: true, kHits: hits, kNoHits: !hits.length, kHitTxt: hits.length ? hits.length + ' existing feature' + (hits.length > 1 ? 's' : '') + ' match' + (hits.length > 1 ? '' : 'es') : 'nothing matches', kv: V,
+      onKAll: () => { if (res.status === 'saved') { this.addField(res.saved); this.say('Added “' + E.F[res.saved].label + '” as a rule'); } else { const s = sent || res.hits[0]; if (s) this.addHit(s); } },
+      onKForce: () => this.setState({ kForce: true }) };
+  }
+  kgVals() {
+    const st = this.state, r = st.kr, E = window.CohortEngine, K = window.KG;
+    const v = {
+      showModes: true, kq: st.kq, onKq: ev => this.setState({ kq: ev.target.value }),
+      onKKey: ev => { if (ev.key === 'Enter' && (ev.metaKey || ev.ctrlKey)) { ev.preventDefault(); this.runAsk(ev.target.value); } },
+      onKAsk: () => this.runAsk(), kExamples: (K ? K.EXAMPLES : []).map(t => ({ t, on: () => this.runAsk(t) })),
+      kErr: !!(st.kres && st.kres.status === 'none'), kErrTxt: 'Nothing in the catalogue matches and the graph found no condition, medicine, test, provider or visit type. Try naming one.', kHas: !!(r && r.ok && st.kres && (st.kres.status === 'new' || st.kForce)), kName: st.kName, onKName: ev => this.setState({ kName: ev.target.value }),
+      kHasFeats: st.feats.length > 0, kFeatN: st.feats.length,
+      kFeats: st.feats.map(f => { const used = st.cb ? st.cb.inc.concat(st.cb.exc).filter(x => x.f === f.key).length : 0; return { label: f.label, key: f.key, n: f.n, used: used ? 'in this cohort' : 'not used yet', on: () => { this.addField(f.key); this.setState(s => ({ cb: Object.assign({}, s.cb, { mode: 'build' }) })); this.say('Added “' + f.label + '” as a rule'); } }; }),
+      onKSave: () => { if (!r || !r.ok) return; this.regFeature(r, st.kName); this.say('Saved to feature library · available in the field list under Graph features'); },
+      onKAdd: () => { if (!r || !r.ok) return; const k = this.regFeature(r, st.kName); this.addField(k); this.setState(s => ({ cb: Object.assign({}, s.cb, { mode: 'build' }) })); this.say('“' + (st.kName || r.label) + '” added as a rule · nightly refresh materialises it'); },
+      kr: {}
+    };
+    Object.assign(v, this.kStep1());
+    if (r && r.ok) {
+      const DOT = { Member: '#1D2939', Claim: '#66758A', Diagnosis: '#B5545E', Drug: '#6B6AA8', DrugClass: '#6B6AA8', Observation: '#3F6C9F', Provider: '#8A6A3E' };
+      const mx = r.dist ? Math.max(...r.dist, 1) : 1, f = r.feature;
+      v.kr = { concepts: r.concepts.map(c => ({ t: c[0], v: c[1] })),
+        path: r.path.map(p => p.br ? { isBr: true } : p.n ? { isNode: true, label: (p.v ? p.v + ':' : '') + p.n, dot: DOT[p.n] || '#66758A', bd: p.n === 'Member' ? '#1D2939' : '#E1E7EF' } : { isEdge: true, label: p.e }),
+        nTxt: r.nTxt, pct: r.pct, hasDist: !!r.dist, dist: (r.dist || []).map((n, i) => ({ h: Math.max(4, n / mx * 100) + '%', l: r.bins[i], t: r.bins[i] + ': ' + (E ? E.fmt(n) : n) })),
+        unitLbl: r.kind === 'count' ? 'Distribution of ' + (r.unit || 'events') + ' per member' : r.kind === 'days' ? 'Days since last result' : 'Share of claims, %',
+        sample: r.sample, ngql: r.ngql, key: f.key, typeTxt: f.type === 'bool' ? 'Yes / no flag' : 'Number · ' + f.unit,
+        ruleTxt: f.type === 'bool' ? 'Becomes a yes/no rule. Nightly refresh writes it to MemberFeature so estimates stay fast.' : 'Default rule: ' + f.op + ' ' + f.v + ' ' + f.unit + '. You can change the threshold once it is in Build.' };
+    }
+    return v;
+  }
+
+}
+</script>
+</body>
+</html>
