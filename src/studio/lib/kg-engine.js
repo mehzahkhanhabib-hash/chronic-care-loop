@@ -46,7 +46,10 @@ function ask(text,base,cat){
   const key='kg_'+slug(label);
   const ng='USE '+sp+';\nMATCH '+renderPath(path)+'\nWHERE '+where.join('\n  AND ')+'\nWITH m, '+valExpr+' AS value\nRETURN id(m) AS member_vid, value;';
   /* estimate */
-  let share=1;conds.forEach(c=>share*=c[3]*1.4);drugs.forEach(d=>share*=Math.min(.9,d[3]*(conds.length?6:1)));labs.forEach(l=>share*=Math.min(.95,l[3]*(conds.length?4:1)));specs.forEach(s=>share*=neg?1-s[3]*(conds.length||drugs.length?4:1):s[3]);
+  /* one source of truth: for concepts the feature catalogue already knows, use the catalogue's prevalence
+     (cat.shares, keyed by ICD-10 / ATC code) so a graph count matches the same rule built in Rules mode */
+  const SH=(cat&&cat.shares)||{},pv=(code,dflt)=>SH[code]!=null?SH[code]:dflt;
+  let share=1;conds.forEach(c=>share*=pv(c[1],c[3]));drugs.forEach(d=>share*=Math.min(.9,pv(d[1],d[3])*(conds.length?6:1)));labs.forEach(l=>share*=Math.min(.95,l[3]*(conds.length?4:1)));specs.forEach(s=>share*=neg?1-s[3]*(conds.length||drugs.length?4:1):s[3]);
   if(er)share*=.18*(days/365+.3);if(adm)share*=(/readmi/.test(L)?.04:.08)*(days/365+.3);if(oon)share*=.62;
   share=Math.max(.0004,Math.min(.92,share));
   const B={daman:412300,seha:742310,pura:318940}[base||'daman'];const n=Math.round(B*share);
@@ -76,7 +79,8 @@ function ask(text,base,cat){
    catalogue cannot express the question, fall back to a graph traversal that becomes a new feature. */
 function resolve(text,base,E){
   const t=(text||'').trim();if(!t||!E)return null;
-  const cat={dx:E.COND.map(c=>c[0]),atc:E.F.atc.opts.map(o=>o[0]),lab:E.LABS.map(l=>l[1].toLowerCase()),spec:E.F.spec.opts.map(o=>o[0])};
+  const cat={dx:E.COND.map(c=>c[0]),atc:E.F.atc.opts.map(o=>o[0]),lab:E.LABS.map(l=>l[1].toLowerCase()),spec:E.F.spec.opts.map(o=>o[0]),
+    shares:Object.fromEntries(E.COND.concat(E.F.atc.opts).map(c=>[c[0],c[2]]))};
   const r=ask(t,base,cat),hits=[],seen=new Set();
   const add=s=>{const k=s.kind+'|'+s.label;if(!seen.has(k)){seen.add(k);hits.push(s);}};
   E.suggest(t).forEach(add);
