@@ -1,60 +1,49 @@
 # Chronic Care Loop · data model
 
-Ten entities, one loop. Every screen reads or writes only these.
+There are 21 tables in five groups. The schema is `backend/schema.sql` (SQLite). The PostgreSQL version with sample rows is `docs/schema.sql`. `dist/database.html` shows every table and every read and write, step by step.
 
 ```
- Feature ──defines──▶ Cohort ──feeds──▶ Campaign ──scores──▶ Signal ──builds──▶ CarePlan ──has──▶ CarePlanNeed ◀──1:1──▶ Action
-    ▲                                                                                                                │
-    └──────────────── nightly run ◀── Outcome ◀── Contact (call + consent) ◀───────────────────────────────────────────┘
+ extract ─▶ member_feature ─▶ cohort (builder rules) ─▶ campaign ─▶ assessment + signal ─▶ care_plan_need ◀─1:1─▶ action
+                ▲                                                                                       │
+                └───────────────────── nightly run ◀── outcome ◀── contact (call + consent) ◀───────────┘
 ```
 
-```mermaid
-erDiagram
-  MEMBER        ||--o{ MEMBER_FEATURE : "has values"
-  FEATURE       ||--o{ MEMBER_FEATURE : "is measured as"
-  FEATURE       ||--o{ COHORT_RULE    : "used in"
-  COHORT        ||--|{ COHORT_RULE    : "defined by"
-  COHORT        }o--o{ CAMPAIGN       : "targeted by"
-  CAMPAIGN      ||--o{ SIGNAL         : "scored nightly"
-  MEMBER        ||--o{ SIGNAL         : "flagged with"
-  MEMBER        ||--o| CARE_PLAN      : "enrolled in"
-  CARE_PLAN     ||--|{ CARE_PLAN_NEED : "ordered needs"
-  SIGNAL        ||--o| CARE_PLAN_NEED : "raises"
-  CARE_PLAN_NEED ||--o| ACTION        : "worked as"
-  MEMBER        ||--o{ CONTACT        : "called"
-  CONTACT       ||--o{ OUTCOME        : "records"
-  ACTION        ||--o{ OUTCOME        : "closed by"
-```
+| Group | Tables | Written by |
+|-------|--------|------------|
+| Ingest & reference | `ingest_run`, `src_member_row`, `data_issue`, `trigger_def` | Extract load; rulebook |
+| Population | `member`, `feature`, `member_feature` | Extract load (consent: the portal) |
+| Targeting | `cohort`, `cohort_rule`, `cohort_member`, `campaign`, `campaign_cohort` | Studio · builder; nightly run (`cohort_member`) |
+| Care intelligence | `assessment`, `signal`, `care_plan`, `care_plan_need` | Nightly run |
+| Care operations | `care_team_user`, `action`, `contact`, `outcome`, `event_log` | Nightly run (actions); portal (contacts, outcomes) |
 
-## Entities
+## How the rulebook maps onto the tables
 
-| # | Entity | Key fields | Written by | Read by |
-|---|--------|-----------|------------|---------|
-| 1 | **Member** | `member_id`, `mask`, age, sex, plan, language, conditions[], `consent_status` | Claims / EMR load | all screens |
-| 2 | **Feature** | `feature_key`, label, `source` (`catalogue` \| `graph`), type (`bool` \| `num` \| `code`), unit, nGQL | Studio · Cohorts (Describe → *Create feature*) | Cohort rules, Rules search |
-| 3 | **MemberFeature** | `member_id`, `feature_key`, value, `as_of` | Nightly refresh (materialises graph features) | Cohort estimate, care intelligence |
-| 4 | **Cohort** | `cohort_id`, `version`, base, logic (`all` \| `any`), rules[] = (`feature_key`, op, value, exclude?), refresh | Studio · Cohorts | Campaigns |
-| 5 | **Campaign** | `campaign_id`, `cohort_ids[]`, exclude[], trigger mode, channels, nurses × calls, holdout %, start, weeks, priority, status | Studio · Campaigns (hand-off) | Care intelligence |
-| 6 | **Signal** | `member_id`, `code` (e.g. `REPEAT_ER`), class (`safety` → `goal`), severity, evidence, `run_at`; plus risk score R / tier | Care intelligence (03:00 run) | Care plan, Nudge queue |
-| 7 | **CarePlan** | `careplan_id`, `member_id`, pathway (DM, HTN, DM + HTN), tier, cadence | Care intelligence, after consent | Portal · Care plans |
-| 8 | **CarePlanNeed** | `need_key` (= signal code), class, slot (`CURRENT` \| `NEXT` \| `FUTURE`), owner role, *done when*, due, status | Care intelligence; status from Action/Outcome | Portal · Care plans |
-| 9 | **Action** | `action_id`, `member_id`, `need_key` (nullable), kind (`care_plan` \| `agreed` \| `callback` \| `retry` \| `check_in`), due, assignee, status | Portal (call outcome, care plan, Actions page) | Portal · Actions, Care plans |
-| 10 | **Contact → Outcome** | Contact: `member_id`, `campaign_id`, reached, consent (granted / declined), response, notes. Outcome: `member_id`, `need_key` / `action_id`, result (`done` \| `declined` \| `not_reached`), `at` | Portal · Nudge queue | Nightly run (write-back) |
+| Rulebook | Where |
+|----------|-------|
+| §2 Cohort filters use raw inputs only. Risk, triggers and persona are outputs. | `feature.cohort_selectable = 0` for the Risk score, Trigger and Persona categories. The builder never offers them. |
+| §2 R = C + M + K + U + A, tiers 0–3 / 4–7 / 8–12 / 13+ | `assessment`: the parts come from the extract's score columns, and the tier is recomputed. |
+| Safety flag (DKA, hypoglycaemia) → priority clinical review | `assessment.priority_review`, which turns the alert RED |
+| Alert RED / AMBER / YELLOW / GREEN → P1 same day, P2 next working day, P3 in 3 days, P4 digital nudge | `assessment.alert`, `assessment.contact_priority`. The worklist `action.due_date` follows from them. |
+| §3 Trigger → action → owner → done when | `trigger_def`. A trigger that fires becomes a `signal`, then a `care_plan_need`. |
+| Needs ordered safety → acute → uncontrolled → barrier → gap → goal. Current = top 3, Next = 4–6. | `care_plan_need.class`, `care_plan_need.slot` |
+| One care-plan need = one action | Unique index `action_one_per_need` |
+| Write-back: done promotes the next need, declined holds 90 days, not reached retries (max 3) | `outcome` rows, applied by `engine.process_outcomes()` |
+| Consent gate; 10% holdout | `member.consent_status`; `cohort_member.holdout` (a stable hash, so a member stays in the control group run after run) |
+| Exclusions (cancer, palliative care, dialysis and the others) | Members with `Exclusion = 1` in the extract are never in a campaign |
 
-## Three rules that keep it lean
+## Keys worth knowing
 
-1. **A feature is reused before it is created.** Describe checks the catalogue first (the same search as the Rules box). Only parts the catalogue cannot express go to the knowledge graph. They become a new `Feature` with `source = graph`.
-2. **One care-plan need = one action.** Each `CURRENT` `CarePlanNeed` has exactly one `Action` with the same `need_key`. Closing either one closes the other: a tick, a booking, a refill or the care plan's *Done*. *Declined* holds the need for 90 days. *Not reached* keeps it open and adds a retry.
-3. **Outcomes are the only way back.** The portal never edits signals or scores. It writes `Outcome` events. The next nightly run re-scores from them.
+- `member_feature (member_id, feature_key)`: `feature_key` is `x:<extract column>` or `d:<derived>`. For example, `d:pdc_min_pct` is the lower of the diabetes and blood-pressure adherence.
+- `care_plan_need.need_key` is a rulebook trigger code (`Trig1` … `Trig13`, `BPU`). The portal shows it with its own signal code (for example, Trig3 → `HYPO`). The mapping is `PORTAL_CODE` in `backend/reference.py`.
+- `action.source`: `care_plan` (one per Current need), `worklist` (the outreach call), `call` (retries).
+- `outcome.processed_at` stays empty until the outcome has been applied.
 
-## How the artefacts exchange data (prototype)
+## How the artefacts exchange data
 
-When the portal runs inside the Studio (screen 3), the two talk over `postMessage`:
+When the Studio and the portal are served by `backend/server.py`, both read and write through `/api` (see README). When the portal runs inside the Studio (screen 3), they also talk over `postMessage`:
 
 | Message | Direction | Payload |
 |---------|-----------|---------|
 | `ccl:ready` | portal → studio | none |
-| `ccl:sync` | studio → portal | `queued` (member masks on the call list), `focus` (member to open), `campaign` |
-| `ccl:writeback` | portal → studio | `id` (mask), name, response, actions, open tasks |
-
-All data in the prototypes is synthetic.
+| `ccl:sync` | studio → portal | `queued` (member masks on the call list), `focus`, `campaign` |
+| `ccl:writeback` | portal → studio | `id` (mask), name, response, actions, open tasks. In live mode the Studio then reloads its list from the database. |
