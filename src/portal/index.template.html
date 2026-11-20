@@ -2270,9 +2270,9 @@ VIEWS.wear=function(){
 /* Analytics */
 VIEWS.analytics=function(){
   const reached=D.filter(m=>!['new','noreach'].includes(m._status)).length;
-  const funnel=[['Flagged',D.length],['Contacted',D.length-3],['Reached',reached],['Action agreed',D.filter(m=>['agreed','enrolled'].includes(m._status)).length+S.done.length],['Enrolled',D.filter(m=>m._status==='enrolled').length],['Evidence verified',3]];
+  const funnel=[['Flagged',D.length],['Contacted',D[0]&&D[0].live?D.filter(m=>m.lastContact!=='No prior contact').length:D.length-3],['Reached',reached],['Action agreed',D.filter(m=>['agreed','enrolled'].includes(m._status)).length+S.done.length],['Enrolled',D.filter(m=>m._status==='enrolled').length],['Evidence verified',D[0]&&D[0].live?D.reduce((a,m)=>a+m.live.needs.filter(n=>n.status==='done').length,0):3]];
   const trig={};D.forEach(m=>trig[m.trigger.kpi]=(trig[m.trigger.kpi]||0)+1);
-  const segs=['A','B','C'].map(s=>{const L=D.filter(m=>m.seg===s);return [s,L.length,Math.round(L.filter(hasConsent).length/L.length*100),Math.round(L.reduce((a,m)=>a+profStats(m).pct,0)/L.length)];});
+  const segs=['A','B','C'].map(s=>{const L=D.filter(m=>m.seg===s);return [s,L.length,Math.round(L.filter(hasConsent).length/L.length*100),Math.round(L.reduce((a,m)=>a+profStats(m).pct,0)/L.length)];}).filter(s=>s[1]);
   const pwAgg={};D.forEach(m=>{if(!hasConsent(m))return;pathsFor(m).slice(0,2).forEach(p=>{pwAgg[p.id]=pwAgg[p.id]||{p,n:0};pwAgg[p.id].n++;});});
   const pwRows=Object.values(pwAgg).sort((a,b)=>b.n-a.n).slice(0,6);
   const bars=(rows,max,col)=>rows.map(r=>`<div class="frow"><span>${esc(r[0])}</span><span class="hbar"><i style="width:${r[1]/max*100}%;background:${col||'var(--accent)'}"></i></span><span class="v">${r[1]}</span></div>`).join('');
@@ -3241,7 +3241,7 @@ if(window.CCL&&window.CCL.live){(()=>{const CL=window.CCL,orig=JSON.parse(D0);
     const open=L.filter(n=>!st[n.k]);open.forEach((n,i)=>{n.slot=i<3?'CURRENT':i<6?'NEXT':'FUTURE';n.due=n.due||isoDay(DUE[n.cls]||7);});
     return {all:L,open,closed:L.filter(n=>st[n.k]),r};};
   seedTasks=function(){const T=[];D.forEach(m=>{if(!m.live)return;m.live.actions.forEach(a=>{const n=m.live.needs.find(x=>x.need_id===a.need);
-    T.push({id:a.id,mid:m.id,title:a.title,kind:a.kind==='care_plan'?'nba':a.kind==='retry'?'retry':a.kind==='check_in'?'checkin':'callback',need:n?n.k:undefined,cls:n?n.cls:undefined,
+    T.push({id:a.id,mid:m.id,title:a.title,kind:a.kind==='retry'?'retry':'nba',need:n?n.k:undefined,cls:n?n.cls:undefined,
       due:a.due,as:WHO[a.assignee]||COORDS[0],st:a.status==='open'?'open':'done',res:a.status==='declined'?'declined':a.status==='done'?'done':undefined,db:a.id});});});return T;};
   /* write-through: every care-plan decision and saved call outcome becomes an OUTCOME row in the database */
   const sent=new Set(),apply=(m,r)=>{if(!r||!r.member)return;m.live=r.member.live;m.cp=r.member.cp;m.lastContact=r.member.lastContact;};
@@ -3255,6 +3255,22 @@ if(window.CCL&&window.CCL.live){(()=>{const CL=window.CCL,orig=JSON.parse(D0);
   (()=>{const _s=A.save;A.save=(...a)=>{const m=byId(S.sel),o=ocSt(m.id),was=o.saved;_s(...a);if(was||!o.saved||!m.live)return;
     push(m,{kind:'call',reached:o.reached==='Reached',response:o.response||o.reached,notes:o.notes||'',consent:['granted','declined'].includes(m.consent.status)?m.consent.status:undefined},'Call outcome');
     render();};})();
+  /* timeline: only events the extract or the database actually holds (no invented dates) */
+  const _ct=coordTimeline;coordTimeline=function(m){if(!m.live)return _ct(m);
+    const E=[],add=(d,kind,title,detail,tag,x)=>E.push(Object.assign({d,kind,title,detail,tag},x||{})),day0=Date.parse(isoDay(0));
+    (S.jr[m.id]||[]).forEach((e,i)=>add(0.0001*(i+1),'coord',e.title,e.detail,'This session',{t:e.t}));
+    m.live.needs.filter(n=>n.status==='open'&&n.slot==='CURRENT').forEach(n=>add(-Math.max(0.5,(Date.parse(n.due)-day0)/864e5),'coord',n.t,'Care plan · due '+n.due,n.trig,{up:true}));
+    m.live.needs.filter(n=>n.status!=='open').forEach(n=>add(0.5,'coord',n.t,n.status==='done'?'Closed as done':'Declined · held until '+(n.hold||''),'Outcome'));
+    const sg=signalsFor(m)[0];add(0.2,'coord','Flagged · '+m.trigger.reason,m.trigger.detail,'Nightly run'+(sg?' · '+sg.trig:''));
+    if(m.lastContact&&!/no prior/i.test(m.lastContact))add(0.3,'coord','Last call',m.lastContact,'Care team');
+    if(m.live.consent==='granted')add(400,'coord','Consent on record','Date not in the extract','Consent');
+    m.labs.forEach(l=>add(rdays(l.last),'clin',l.name+' '+lastOf(l)+' '+l.unit,'Target '+(l.dir==='down'?'< ':'> ')+l.target,'Lab',{flag:(l.dir==='down'?lastOf(l)>l.target:lastOf(l)<l.target)?'Off target':''}));
+    const lo=[...m.meds].sort((a,b)=>a.pdc-b.pdc)[0];if(lo)add(365,'clin','Adherence · '+lo.drug,lo.pdc+'% of days covered (PDC, last 12 months)','Claims',{flag:lo.pdc<80?'Below 80%':''});
+    if(m.er12)add(365,'clin','Emergency visits · '+m.er12,'In the last 12 months','Claims',{key:'er'});
+    if(m.adm12)add(365,'clin','Hospital admissions · '+m.adm12,'In the last 12 months','Claims',{key:'er'});
+    (m.specs||[]).forEach(sp=>add(365,'clin',sp+' visit','Within the last 12 months','Claims'));
+    m.conds.forEach(cd=>add(500,'clin','Diagnosis · '+cd.name,cd.code,'Claims',{key:'dx'}));
+    return E.sort((a,b)=>(a.up&&b.up)?b.d-a.d:a.d-b.d);};
   window.__portal_live=CL;
 })();}
 /* ===================== v8 · Chronic Care Loop integration ===================== */
