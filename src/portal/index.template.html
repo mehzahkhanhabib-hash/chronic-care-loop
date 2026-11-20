@@ -3244,7 +3244,7 @@ window.addEventListener('message',e=>{if(!BR.embedded||e.source!==window.parent)
   if(BR.embedded&&!was&&o.saved)window.parent.postMessage({type:'ccl:writeback',id:m.mask,name:m.name,response:o.response||o.reached,actions:o.acts.length,tasks:tasks().filter(x=>x.mid===m.id&&x.st==='open').length},'*');};})();
 if(BR.embedded)window.parent.postMessage({type:'ccl:ready'},'*');
 (()=>{if(BR.embedded)return;const _d=draw;draw=function(){_d();const sp=document.querySelector('.rail .rail-sp');if(!sp||document.querySelector('.rail .ccl'))return;
-  const L=[['Chronic-Care-Loop-Briefing.html','Executive briefing','chart'],['Chronic-Care-Studio.html','Cohort & care studio','user'],['index.html#data-model','Data model','actions']];
+  const L=[['Chronic-Care-Loop-Briefing.html','Executive briefing','chart'],['Chronic-Care-Studio.html','Cohort & care studio','user'],['database.html','Data model','actions']];
   sp.insertAdjacentHTML('beforebegin','<div class="rail-group ccl">Chronic Care Loop</div>'+L.map(([h,l,i])=>`<a class="nav" href="${h}" title="${l}">${svg(i)}<span>${l}</span></a>`).join(''));};})();
 window.__portal={S,D,A,byId,needsOf,planTask,cpx,LOCKED,tasks,render}; /* test hook */
 

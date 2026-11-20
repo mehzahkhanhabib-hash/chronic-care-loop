@@ -13,3 +13,11 @@ build(os.path.join(ROOT, 'src/studio'), os.path.join(OUT, 'Chronic-Care-Studio.h
 build(os.path.join(ROOT, 'src/portal'), os.path.join(OUT, 'Care-Coordinator-Portal.html'))
 shutil.copy(os.path.join(ROOT, 'src/hub/index.html'), os.path.join(OUT, 'index.html'))
 print('copied', os.path.join(OUT, 'index.html'))
+# database.html is authored as an artifact body (no <html>/<head>); wrap it for standalone use
+body = open(os.path.join(ROOT, 'src/hub/database.html'), encoding='utf-8').read()
+head = ('<!doctype html>\n<html lang="en"><head><meta charset="utf-8">'
+        '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'
+        '<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}'
+        'body{margin:0}[hidden]{display:none!important}</style>\n')
+open(os.path.join(OUT, 'database.html'), 'w', encoding='utf-8').write(head + body + '\n</html>\n')
+print('wrapped', os.path.join(OUT, 'database.html'))

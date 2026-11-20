@@ -12,6 +12,11 @@ Three connected prototypes for the Daman × HICC chronic care programme:
 
 The data model is in [`docs/DATA_MODEL.md`](docs/DATA_MODEL.md).
 
+The relational backend is 16 PostgreSQL tables:
+
+- `dist/database.html`: interactive page with a high-level model, sample rows, and every read and write per step.
+- [`docs/schema.sql`](docs/schema.sql): DDL plus the sample rows. It is generated from the page by `node tools/gen_schema.js`, which also checks every step, column and foreign key. Load it with `psql -f docs/schema.sql`.
+
 ## Run
 
 Open `dist/index.html` in a browser. Each file is self-contained and works from `file://` or any static host.

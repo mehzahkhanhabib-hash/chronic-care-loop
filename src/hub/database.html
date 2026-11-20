@@ -1,0 +1,490 @@
+<title>Care Loop Database</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one header band, two views behind tabs. View 1 = four domain lanes joined by FK lines.
+   View 2 = step list (left) driving table cards with read/write marks (right), then a step × table matrix. */
+:root{
+  --bg:#F3F5F8; --card:#FFFFFF; --ink:#1D2939; --ink2:#46546A; --mut:#66758A; --line:#E1E7EF; --line2:#ECF0F5; --sunk:#F7F9FC;
+  --acc:#3F6C9F; --accS:#EAF1F9; --band:#0B1B2A; --bandInk:#F4F2ED; --bandMut:#A9B6C2; --teal:#5EC4B6;
+  --r:#2F6DB5; --rS:#E3EEFA; --w:#9A5B12; --wS:#FBEBD3; --hit:#FFF6DC; --trace:#E6F4EF; --traceInk:#1F6E59;
+  --d-pop:#5B6B80; --d-tgt:#3F6C9F; --d-int:#5A4FB0; --d-ops:#2F7D72;
+  --sans:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif; --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0E151D; --card:#151F2A; --ink:#E4EAF1; --ink2:#B7C3D0; --mut:#8E9CAD; --line:#253242; --line2:#1E2a37; --sunk:#111A24;
+  --acc:#8DB3DD; --accS:#1A2A3C; --band:#080F17; --bandInk:#EEF2F5; --bandMut:#8F9EAE; --teal:#5EC4B6;
+  --r:#8CC0F5; --rS:#16293E; --w:#F0B66A; --wS:#33240F; --hit:#2C2614; --trace:#12302A; --traceInk:#7FD8BE;
+  --d-pop:#97A6B8; --d-tgt:#8DB3DD; --d-int:#ADA4F2; --d-ops:#6CC9B9; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E151D; --card:#151F2A; --ink:#E4EAF1; --ink2:#B7C3D0; --mut:#8E9CAD; --line:#253242; --line2:#1E2a37; --sunk:#111A24;
+  --acc:#8DB3DD; --accS:#1A2A3C; --band:#080F17; --bandInk:#EEF2F5; --bandMut:#8F9EAE; --teal:#5EC4B6;
+  --r:#8CC0F5; --rS:#16293E; --w:#F0B66A; --wS:#33240F; --hit:#2C2614; --trace:#12302A; --traceInk:#7FD8BE;
+  --d-pop:#97A6B8; --d-tgt:#8DB3DD; --d-int:#ADA4F2; --d-ops:#6CC9B9; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+.gut{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.in{max-width:1320px;margin:0 auto}
+code,.mono{font-family:var(--mono);font-size:.92em}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+
+/* header band */
+.band{background:var(--band);color:var(--bandInk);margin-top:calc(-1 * env(safe-area-inset-top,0px));padding-top:calc(env(safe-area-inset-top,0px) + 28px);padding-bottom:0}
+.eyebrow{font:600 11.5px/1 var(--mono);letter-spacing:.14em;color:var(--teal)}
+h1{margin:10px 0 6px;font-size:clamp(26px,3.4vw,36px);line-height:1.12;letter-spacing:-.02em;font-weight:600;text-wrap:balance}
+.lede{margin:0;color:var(--bandMut);max-width:78ch}
+.tabs{display:flex;gap:4px;margin-top:22px;flex-wrap:wrap}
+.tab{border:0;background:transparent;color:var(--bandMut);padding:12px 16px 13px;border-radius:8px 8px 0 0;font-weight:600;font-size:14.5px;cursor:pointer;display:flex;gap:8px;align-items:center}
+.tab .n{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;background:rgba(255,255,255,.1)}
+.tab[aria-selected="true"]{background:var(--bg);color:var(--ink)}
+.tab[aria-selected="true"] .n{background:var(--acc);color:#fff}
+main{padding-block:24px 56px}
+
+/* view 1 */
+.loop{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 18px;font-size:13.5px;color:var(--ink2)}
+.loop .st{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:5px 12px;white-space:nowrap}
+.loop .st b{font-weight:600;color:var(--ink)}
+.loop .ar{color:var(--mut)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--mut);margin-bottom:14px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.erd{position:relative}
+.erd svg.wires{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.lanes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:28px;position:relative}
+.lane h2{margin:0 0 2px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:700}
+.lane .lsub{font-size:12.5px;color:var(--mut);margin-bottom:10px;min-height:2.8em}
+.lane .stack{display:flex;flex-direction:column;gap:12px}
+.tb{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:0;cursor:default;text-align:left;width:100%;position:relative;z-index:1;transition:border-color .15s,box-shadow .15s,opacity .15s}
+.tb .th{display:flex;align-items:center;gap:8px;padding:9px 12px 7px;border-bottom:1px solid var(--line2)}
+.tb .th .dot{width:9px;height:9px;border-radius:2px;flex:none}
+.tb .th b{font-family:var(--mono);font-size:13.5px;font-weight:600}
+.tb .th .cnt{margin-left:auto;font-size:11.5px;color:var(--mut)}
+.tb .pur{padding:7px 12px 4px;font-size:12.5px;color:var(--ink2);line-height:1.4}
+.tb ul{list-style:none;margin:0;padding:4px 12px 10px;font-family:var(--mono);font-size:12px;line-height:1.75}
+.tb li{display:flex;gap:6px;align-items:baseline;min-width:0}
+.tb li .k{font-size:10px;font-weight:600;padding:0 4px;border-radius:3px;flex:none}
+.tb li .k.pk{background:var(--accS);color:var(--acc)}
+.tb li .k.fk{background:var(--sunk);color:var(--mut);border:1px solid var(--line)}
+.tb li .to{color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tb .wr{display:flex;gap:4px;flex-wrap:wrap;padding:0 12px 10px}
+.chip{font-size:10.5px;font-weight:600;padding:2px 7px;border-radius:5px;background:var(--wS);color:var(--w);white-space:nowrap}
+.erd.focus .tb{opacity:.38}
+.erd.focus .tb.on,.erd.focus .tb.rel{opacity:1}
+.tb.on{border-color:var(--acc);box-shadow:0 0 0 2px var(--accS)}
+.wires path{fill:none;stroke:var(--line);stroke-width:1.4;transition:stroke .15s,opacity .15s}
+.erd.focus .wires path{opacity:.15}
+.erd.focus .wires path.on{opacity:1;stroke:var(--acc);stroke-width:2}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:12px;margin-top:26px}
+.rule{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;font-size:14px;color:var(--ink2)}
+.rule b{display:block;color:var(--ink);margin-bottom:3px}
+
+/* view 2 */
+.v2{display:grid;grid-template-columns:300px minmax(0,1fr);gap:24px;align-items:start}
+.steps{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px;max-height:calc(100vh - 24px);overflow:auto}
+.sg{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--mut);padding:12px 10px 4px}
+.sg small{display:block;text-transform:none;letter-spacing:0;font-weight:500;font-size:12px}
+.sb{display:grid;grid-template-columns:24px minmax(0,1fr);gap:8px;width:100%;border:0;background:transparent;text-align:left;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:13.5px;line-height:1.35}
+.sb:hover{background:var(--sunk)}
+.sb[aria-pressed="true"]{background:var(--accS);color:var(--ink)}
+.sb .i{font:600 11px var(--mono);color:var(--mut);padding-top:2px}
+.sb .rw{display:flex;gap:4px;margin-top:4px}
+.mk{font:600 10px var(--mono);padding:1px 5px;border-radius:4px}
+.mk.r{background:var(--rS);color:var(--r)}
+.mk.w{background:var(--wS);color:var(--w)}
+.allbtn{margin:6px 2px 4px;width:calc(100% - 4px);border:1px dashed var(--line);border-radius:8px;background:transparent;padding:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--acc)}
+.allbtn[aria-pressed="true"]{background:var(--accS);border-style:solid}
+.detail{display:flex;flex-direction:column;gap:16px;min-width:0}
+.sh{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px}
+.sh .who{font-size:12.5px;color:var(--mut)}
+.sh h2{margin:4px 0 6px;font-size:21px;letter-spacing:-.01em;font-weight:600}
+.sh p{margin:0;color:var(--ink2);max-width:80ch}
+.sh .sum{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.sh .sum span{font-size:12.5px;padding:3px 9px;border-radius:6px}
+.sum .r{background:var(--rS);color:var(--r)} .sum .w{background:var(--wS);color:var(--w)}
+pre.sql{margin:12px 0 0;background:var(--sunk);border:1px solid var(--line2);border-radius:8px;padding:12px 14px;font:12.5px/1.6 var(--mono);color:var(--ink2);overflow-x:auto;white-space:pre}
+.trace{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--trace);color:var(--traceInk);border-radius:10px;padding:10px 14px;font-size:13.5px}
+.trace button{margin-left:auto;border:1px solid currentColor;background:transparent;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:12.5px;font-weight:600;color:inherit}
+.hint{font-size:12.5px;color:var(--mut)}
+.tcard{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.tcard .hd{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid var(--line2)}
+.tcard .hd b{font-family:var(--mono);font-size:14px}
+.tcard .hd .pur{font-size:13px;color:var(--mut);flex:1;min-width:200px}
+.tcard .hd .dom{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th,td{padding:7px 12px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--line2);vertical-align:top}
+th{font:600 11.5px var(--mono);color:var(--ink2);background:var(--sunk)}
+th .ty{display:block;font-weight:400;font-size:10.5px;color:var(--mut)}
+th .ky{font-size:9.5px;margin-left:4px;color:var(--acc)}
+th.r{background:var(--rS);color:var(--r)} th.w{background:var(--wS);color:var(--w)} th.rw{background:linear-gradient(90deg,var(--rS) 50%,var(--wS) 50%);color:var(--ink)}
+th .op{display:inline-block;font-size:9.5px;font-weight:700;margin-left:4px}
+td{font-family:var(--mono);color:var(--ink)}
+td.nul{color:var(--mut)}
+td.key{cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px;color:var(--acc)}
+tr.hit td{background:var(--hit)}
+tr.tr td{background:var(--trace)}
+tr.dim td{opacity:.45}
+.tag{font:600 10px var(--sans);padding:1px 6px;border-radius:4px;margin-left:6px;background:var(--wS);color:var(--w)}
+.mx-wrap{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.mx-wrap h3{margin:0 0 4px;font-size:16px}
+.mx{overflow-x:auto;margin-top:10px}
+.mx table{font-size:12px}
+.mx th{writing-mode:vertical-rl;transform:rotate(180deg);height:118px;padding:6px 4px;font-weight:500;background:transparent;border-bottom:1px solid var(--line)}
+.mx th.sn{writing-mode:horizontal-tb;transform:none;height:auto;text-align:left;vertical-align:bottom}
+.mx td{text-align:center;padding:5px 3px;font-size:10.5px;font-weight:600;border:1px solid var(--line2);min-width:30px}
+.mx td.sn{text-align:left;font-family:var(--sans);font-size:12.5px;font-weight:500;cursor:pointer;min-width:240px;padding:5px 10px}
+.mx td.sn:hover{color:var(--acc)}
+.mx td.c-r{background:var(--rS);color:var(--r)} .mx td.c-w{background:var(--wS);color:var(--w)} .mx td.c-rw{background:linear-gradient(135deg,var(--rS) 50%,var(--wS) 50%);color:var(--ink)}
+.mx tr.on td.sn{color:var(--acc);font-weight:700}
+.mx .gr td{background:var(--sunk);font:700 10.5px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--mut);text-align:left;padding:6px 10px}
+[hidden]{display:none!important}
+@media (max-width:1080px){.lanes{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:860px){.v2{grid-template-columns:minmax(0,1fr)}.steps{position:static;max-height:none}}
+@media (max-width:620px){.lanes{grid-template-columns:minmax(0,1fr)}.erd svg.wires{display:none}.lane .lsub{min-height:0}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<header class="band gut">
+  <div class="in">
+    <div class="eyebrow">CHRONIC CARE LOOP · RELATIONAL BACKEND · POSTGRESQL</div>
+    <h1>The database behind the loop</h1>
+    <p class="lede">16 tables in four groups. The Studio defines who to reach, the 03:00 nightly run scores them and builds care plans, and the portal records calls and actions. Outcomes are read back by the next nightly run. Sample rows follow one demo story: Layla creates a graph feature, the cohort and campaign pick up Priya, and Nadia calls her.</p>
+    <div class="tabs" role="tablist" aria-label="Views">
+      <button class="tab" role="tab" id="tab-model" aria-controls="model" aria-selected="true"><span class="n">1</span>High-level model</button>
+      <button class="tab" role="tab" id="tab-flow" aria-controls="flow" aria-selected="false"><span class="n">2</span>Tables, sample data and reads/writes</button>
+    </div>
+  </div>
+</header>
+
+<main class="gut">
+  <div class="in">
+    <section id="model" role="tabpanel" aria-labelledby="tab-model">
+      <div class="loop" aria-label="The loop">
+        <span class="st"><b>Studio · Cohorts</b> writes features, cohorts, campaigns</span><span class="ar">→</span>
+        <span class="st"><b>Nightly 03:00</b> writes feature values, signals, scores, care plans</span><span class="ar">→</span>
+        <span class="st"><b>Studio · Care intelligence</b> writes the call list</span><span class="ar">→</span>
+        <span class="st"><b>Care portal</b> writes contacts, actions, outcomes</span><span class="ar">↩</span>
+        <span class="st">outcomes read by the next nightly run</span>
+      </div>
+      <div class="legend"><span><i style="background:var(--accS);border:1px solid var(--acc)"></i>PK primary key</span><span><i style="background:var(--sunk);border:1px solid var(--line)"></i>FK foreign key → table</span><span><i style="background:var(--wS)"></i>who writes the table</span><span>Hover or tap a table to see its relations.</span></div>
+      <div class="erd" id="erd">
+        <svg class="wires" id="wires" aria-hidden="true"></svg>
+        <div class="lanes" id="lanes"></div>
+      </div>
+      <div class="rules">
+        <div class="rule"><b>Clinical source data stays in the knowledge graph</b>Claims, labs and devices are queried there, read-only. This database keeps only derived values (<code>member_feature</code>) and what the care team does.</div>
+        <div class="rule"><b>One care-plan need = one action</b><code>action.need_id</code> points at a <code>care_plan_need</code>. Closing either one updates the other in the same transaction and writes an <code>outcome</code>.</div>
+        <div class="rule"><b>Outcomes are the only way back</b>The portal never edits <code>signal</code> or <code>risk_score</code>. It inserts <code>outcome</code> rows. The nightly run reads the unprocessed ones and stamps <code>processed_at</code>.</div>
+      </div>
+    </section>
+
+    <section id="flow" role="tabpanel" aria-labelledby="tab-flow" hidden>
+      <div class="v2">
+        <nav class="steps" id="steps" aria-label="Steps"></nav>
+        <div class="detail">
+          <div class="sh" id="stepHead"></div>
+          <div class="trace" id="trace" hidden></div>
+          <div id="cards" class="detail"></div>
+          <div class="mx-wrap">
+            <h3>Every read and write</h3>
+            <div class="hint">Each row is a step in the demo, each column a table. <span class="mk r">R</span> reads, <span class="mk w">W</span> writes (insert or update). Click a step to open it.</div>
+            <div class="mx" id="mx"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script type="application/json" id="model-data">
+{
+"domains":{
+ "pop":{"label":"Population","sub":"Members and the features that describe them","color":"--d-pop"},
+ "tgt":{"label":"Targeting","sub":"Who to reach, and with what campaign","color":"--d-tgt"},
+ "int":{"label":"Care intelligence","sub":"Nightly triggers, risk and care plans","color":"--d-int"},
+ "ops":{"label":"Care operations","sub":"Calls, actions and their outcomes","color":"--d-ops"}
+},
+"tables":[
+ {"name":"member","domain":"pop","purpose":"One row per person, loaded from Daman / SEHA / PURA.",
+  "cols":[["member_id","text","PK"],["mask","text",""],["full_name","text",""],["age","int",""],["sex","char(1)",""],["plan","text",""],["language","text",""],["base","text",""],["segment","char(1)",""],["consent_status","text",""]],
+  "rows":[["M-x57","x57","Priya Nair",50,"F","Enhanced Gold","English","daman","A","granted"],
+          ["M-x12","x12","Ahmed Youssef",50,"M","Enhanced Bronze","English","daman","B","pending"],
+          ["M-x44","x44","Mohammed Al Hammadi",50,"M","USelect Silver","Arabic","daman","A","granted"],
+          ["M-x108","x108","Salem Al Nuaimi",60,"M","Enhanced Silver","Arabic","daman","B","declined"],
+          ["M-x35","x35","Joseph Mathew",50,"M","Enhanced Silver","English","daman","A","granted"]]},
+ {"name":"feature","domain":"pop","purpose":"Reusable measures: the catalogue, plus features created from the knowledge graph.",
+  "cols":[["feature_key","text","PK"],["label","text",""],["source","text",""],["category","text",""],["value_type","text",""],["unit","text","NULL"],["definition","text","NULL"],["created_by","text","FK:care_team_user"],["created_at","timestamptz",""]],
+  "rows":[["dx_E11","Has condition: Type 2 diabetes","catalogue","Health","bool",null,null,"U-0201","2026-01-10"],
+          ["lab_hba1c_last","Latest result · HbA1c","catalogue","Tests & results","num","%",null,"U-0201","2026-01-10"],
+          ["pdc_min","Adherence (PDC)","catalogue","Medicines","num","%",null,"U-0201","2026-01-10"],
+          ["ed_12m","ED visits · 12 months","catalogue","Visits & admissions","num","visits",null,"U-0201","2026-01-10"],
+          ["contact_opt_out","Opted out of contact","catalogue","Engagement & consent","bool",null,null,"U-0201","2026-01-10"],
+          ["kg_er_visits_type_2_diabetes_90_d","ER visits · type 2 diabetes · 90 d","graph","Graph features","num","visits","MATCH (m:Member)-[:FILED]->(c:Claim)-[:CODED_AS]->(d:Diagnosis) WHERE d.code STARTS WITH \"E11\" AND c.setting == \"ED\" …","U-0201","2026-11-20 09:42"]]},
+ {"name":"member_feature","domain":"pop","purpose":"Each member's value for each feature, refreshed every night.",
+  "cols":[["member_id","text","PK,FK:member"],["feature_key","text","PK,FK:feature"],["value","text",""],["as_of","timestamptz",""]],
+  "rows":[["M-x57","dx_E11","true","2026-11-20 03:00"],["M-x57","lab_hba1c_last","7.9","2026-11-20 03:00"],["M-x57","pdc_min","61","2026-11-20 03:00"],["M-x57","kg_er_visits_type_2_diabetes_90_d","2","2026-11-20 03:00"],
+          ["M-x12","dx_E11","true","2026-11-20 03:00"],["M-x12","lab_hba1c_last","8.1","2026-11-20 03:00"],["M-x12","pdc_min","52","2026-11-20 03:00"],
+          ["M-x44","dx_E11","true","2026-11-20 03:00"],["M-x44","lab_hba1c_last","7.4","2026-11-20 03:00"],["M-x44","kg_er_visits_type_2_diabetes_90_d","2","2026-11-20 03:00"],
+          ["M-x108","dx_E11","true","2026-11-20 03:00"],["M-x108","lab_hba1c_last","8.8","2026-11-20 03:00"],["M-x108","kg_er_visits_type_2_diabetes_90_d","3","2026-11-20 03:00"],
+          ["M-x35","kg_er_visits_type_2_diabetes_90_d","4","2026-11-20 03:00"]]},
+ {"name":"cohort","domain":"tgt","purpose":"A named definition of who is in. Saving an edit bumps the version; campaigns always use the current one.",
+  "cols":[["cohort_id","text","PK"],["version","int",""],["name","text",""],["base","text",""],["logic","text",""],["refresh","text",""],["row_count","int",""],["owner","text","FK:care_team_user"],["created_at","timestamptz",""]],
+  "rows":[["COH-0101",1,"Diabetes · above goal","daman","all","Nightly",13420,"U-0201","2026-09-02"],
+          ["COH-0105",1,"ER visits · diabetes · 90 d","daman","all","Nightly",1407,"U-0201","2026-11-20 09:51"]]},
+ {"name":"cohort_rule","domain":"tgt","purpose":"The rules of each cohort version, each on one feature. Old versions are kept for audit.",
+  "cols":[["rule_id","text","PK"],["cohort_id","text","FK:cohort"],["version","int",""],["feature_key","text","FK:feature"],["operator","text",""],["value","text",""],["value2","text","NULL"],["is_exclusion","bool",""]],
+  "rows":[["R-1","COH-0101",1,"dx_E11","in","E11",null,false],["R-2","COH-0101",1,"lab_hba1c_last","≥","8",null,false],["R-3","COH-0101",1,"contact_opt_out","=","true",null,true],
+          ["R-4","COH-0105",1,"kg_er_visits_type_2_diabetes_90_d","≥","2",null,false],["R-5","COH-0105",1,"contact_opt_out","=","true",null,true]]},
+ {"name":"cohort_member","domain":"tgt","purpose":"Who matched a cohort version on its last run. 10% are held out as the control group.",
+  "cols":[["cohort_id","text","PK,FK:cohort"],["version","int",""],["member_id","text","PK,FK:member"],["holdout","bool",""],["run_at","timestamptz",""]],
+  "rows":[["COH-0101",1,"M-x12",false,"2026-11-20 03:00"],["COH-0101",1,"M-x108",false,"2026-11-20 03:00"],
+          ["COH-0105",1,"M-x57",false,"2026-11-20 03:00"],["COH-0105",1,"M-x44",false,"2026-11-20 03:00"],["COH-0105",1,"M-x108",false,"2026-11-20 03:00"],["COH-0105",1,"M-x35",true,"2026-11-20 03:00"]]},
+ {"name":"campaign","domain":"tgt","purpose":"Puts cohorts to work: which triggers, which channels, how much nurse time, when.",
+  "cols":[["campaign_id","text","PK"],["name","text",""],["goal","text",""],["trigger_mode","text",""],["channels","text[]",""],["nurses","int",""],["calls_per_day","int",""],["holdout_pct","int",""],["start_date","date",""],["weeks","int",""],["priority","int",""],["status","text",""]],
+  "rows":[["CMP-0101","Diabetes control","Bring HbA1c to goal","all","{Voice}",8,25,10,"2026-11-23",8,1,"Live"],
+          ["CMP-0104","ER follow-up","GP review within 7 days of an ER visit","all","{Voice}",6,25,10,"2026-11-20",8,2,"Live"]]},
+ {"name":"campaign_cohort","domain":"tgt","purpose":"Which cohorts a campaign includes or leaves out.",
+  "cols":[["campaign_id","text","PK,FK:campaign"],["cohort_id","text","PK,FK:cohort"],["role","text",""]],
+  "rows":[["CMP-0101","COH-0101","include"],["CMP-0104","COH-0105","include"],["CMP-0104","COH-0101","exclude"]]},
+ {"name":"signal","domain":"int","purpose":"A trigger raised for a member in a campaign, with its evidence.",
+  "cols":[["signal_id","text","PK"],["member_id","text","FK:member"],["campaign_id","text","FK:campaign"],["code","text",""],["class","text",""],["severity","text",""],["evidence","text",""],["run_at","timestamptz",""],["status","text",""]],
+  "rows":[["SG-1","M-x57","CMP-0104","REPEAT_ER","acute","high","2 ER visits in 90 days, no GP review since","2026-11-20 03:00","open"],
+          ["SG-2","M-x57","CMP-0104","REFILL_GAP","barrier","mod","Novorapid PDC 61% over 180 days","2026-11-20 03:00","open"],
+          ["SG-3","M-x108","CMP-0101","HBA1C_ABOVE_GOAL","unctl","high","HbA1c 8.8% (goal < 7%)","2026-11-20 03:00","open"],
+          ["SG-4","M-x44","CMP-0104","REPEAT_ER","acute","high","2 ER visits in 90 days","2026-11-20 03:00","open"],
+          ["SG-5","M-x44","CMP-0104","HBA1C_ABOVE_GOAL","unctl","high","HbA1c 7.4% (goal < 7%)","2026-11-20 03:00","open"],
+          ["SG-6","M-x44","CMP-0104","FOOT_UNKNOWN","gap","low","No foot exam on record","2026-11-20 03:00","open"],
+          ["SG-7","M-x12","CMP-0101","REFILL_GAP","barrier","mod","PDC 52% over 180 days","2026-11-20 03:00","open"]]},
+ {"name":"risk_score","domain":"int","purpose":"Nightly risk score (0–23) and tier, with its five parts.",
+  "cols":[["member_id","text","PK,FK:member"],["run_at","timestamptz","PK"],["r_total","int",""],["tier","int",""],["clinical","int",""],["comorbid","int",""],["kidney","int",""],["utilisation","int",""],["age_sex","int",""],["alert","text",""]],
+  "rows":[["M-x57","2026-11-20 03:00",10,3,1,4,0,4,1,"AMBER"],["M-x12","2026-11-20 03:00",11,3,4,1,0,5,1,"AMBER"],["M-x44","2026-11-20 03:00",12,3,3,3,0,5,1,"AMBER"],["M-x108","2026-11-20 03:00",12,3,4,1,0,5,2,"AMBER"]]},
+ {"name":"care_plan","domain":"int","purpose":"One active plan per consented member: pathway, tier and contact cadence.",
+  "cols":[["care_plan_id","text","PK"],["member_id","text","FK:member"],["pathway","text",""],["tier","int",""],["cadence","text",""],["status","text",""],["opened_at","timestamptz",""]],
+  "rows":[["CP-x44","M-x44","DM + HTN",3,"Base · W2 · M1 · M2 · M3 · M4 · M6","active","2026-11-12 10:20"],
+          ["CP-x57","M-x57","DM",3,"Base · W2 · M1 · M2 · M3 · M4 · M6","active","2026-11-20 16:08"]]},
+ {"name":"care_plan_need","domain":"int","purpose":"The plan's needs in safety order. The top three are CURRENT and each has one action.",
+  "cols":[["need_id","text","PK"],["care_plan_id","text","FK:care_plan"],["signal_id","text","FK:signal,NULL"],["need_key","text",""],["class","text",""],["slot","text",""],["title","text",""],["owner_role","text",""],["done_when","text",""],["due_date","date",""],["status","text",""]],
+  "rows":[["N-1","CP-x44","SG-4","REPEAT_ER","acute","CURRENT","Book GP follow-up within 72 h","Coordinator","GP outpatient claim within 7 days","2026-11-23","done"],
+          ["N-2","CP-x44","SG-5","HBA1C_ABOVE_GOAL","unctl","CURRENT","Book a glycaemic treatment review","Doctor","Clinician recorded goal and plan","2026-11-27","open"],
+          ["N-3","CP-x44","SG-6","FOOT_UNKNOWN","gap","FUTURE","Foot exam; podiatry if high risk","Registered nurse","Verified in claims","2027-02-02","open"],
+          ["N-4","CP-x57","SG-1","REPEAT_ER","acute","CURRENT","Book GP follow-up within 72 h","Coordinator","GP outpatient claim within 7 days","2026-11-23","open"],
+          ["N-5","CP-x57","SG-2","REFILL_GAP","barrier","CURRENT","Arrange a medication refill","Coordinator","Refill dispensed (pharmacy claim)","2026-11-27","open"]]},
+ {"name":"care_team_user","domain":"ops","purpose":"People who build cohorts, review members and make calls.",
+  "cols":[["user_id","text","PK"],["name","text",""],["role","text",""],["languages","text",""]],
+  "rows":[["U-0142","Nadia Rahman","Registered nurse","English, Hindi"],["U-0150","Omar Khalid","Care coordinator","Arabic, English"],["U-0201","Layla M.","Population health","English, Arabic"],["U-0310","Dr. Rana K.","Clinical lead","Arabic, English"]]},
+ {"name":"action","domain":"ops","purpose":"Everything on someone's to-do list: calls, care-plan actions, callbacks, retries, check-ins.",
+  "cols":[["action_id","text","PK"],["member_id","text","FK:member"],["need_id","text","FK:care_plan_need,NULL"],["kind","text",""],["title","text",""],["agreed","bool",""],["due_date","date",""],["assignee","text","FK:care_team_user"],["status","text",""],["closed_at","timestamptz","NULL"]],
+  "rows":[["A-1","M-x57",null,"call","Call · Repeat ER + no follow-up",false,"2026-11-20","U-0142","done","2026-11-20 16:14"],
+          ["A-2","M-x57","N-4","care_plan","Book GP follow-up within 72 h",true,"2026-11-23","U-0150","open",null],
+          ["A-3","M-x57","N-5","care_plan","Arrange a medication refill",false,"2026-11-27","U-0150","open",null],
+          ["A-4","M-x57",null,"check_in","Check-in call with Priya",true,"2026-12-18","U-0142","open",null],
+          ["A-5","M-x44","N-1","care_plan","Book GP follow-up within 72 h",true,"2026-11-23","U-0142","done","2026-11-20 11:30"],
+          ["A-6","M-x44","N-2","care_plan","Book a glycaemic treatment review",false,"2026-11-27","U-0142","open",null],
+          ["A-7","M-x12",null,"call","Call · Medication refill gap",false,"2026-11-20","U-0142","open",null]]},
+ {"name":"contact","domain":"ops","purpose":"One call attempt: who, when, whether reached, consent and the member's response.",
+  "cols":[["contact_id","text","PK"],["member_id","text","FK:member"],["campaign_id","text","FK:campaign"],["user_id","text","FK:care_team_user"],["started_at","timestamptz",""],["ended_at","timestamptz","NULL"],["reached","bool",""],["consent","text",""],["response","text","NULL"],["notes","text","NULL"]],
+  "rows":[["C-1","M-x57","CMP-0104","U-0142","2026-11-20 16:05","2026-11-20 16:14",true,"granted","Engaged","Prefers calls after 4 pm"],
+          ["C-2","M-x108","CMP-0101","U-0142","2026-11-19 10:02","2026-11-19 10:05",true,"declined","Declined",null]]},
+ {"name":"outcome","domain":"ops","purpose":"Write-back events. The nightly run reads the unprocessed ones.",
+  "cols":[["outcome_id","text","PK"],["contact_id","text","FK:contact,NULL"],["member_id","text","FK:member"],["need_id","text","FK:care_plan_need,NULL"],["action_id","text","FK:action,NULL"],["result","text",""],["recorded_by","text","FK:care_team_user"],["recorded_at","timestamptz",""],["processed_at","timestamptz","NULL"]],
+  "rows":[["O-1","C-1","M-x57","N-4","A-2","agreed","U-0142","2026-11-20 16:14",null],
+          ["O-2","C-1","M-x57",null,"A-4","agreed","U-0142","2026-11-20 16:14",null],
+          ["O-3",null,"M-x44","N-1","A-5","done","U-0142","2026-11-20 11:30",null],
+          ["O-4","C-2","M-x108",null,null,"declined","U-0142","2026-11-19 10:05","2026-11-20 03:00"]]}
+],
+"groups":[
+ {"id":"studio1","label":"Studio · Cohorts","who":"Layla M. · population health"},
+ {"id":"nightly","label":"Nightly run · 03:00","who":"Cohort engine and care intelligence"},
+ {"id":"studio2","label":"Studio · Care intelligence","who":"Dr. Rana K. · clinical lead"},
+ {"id":"portal","label":"Care portal","who":"Nadia R. · nurse"}
+],
+"steps":[
+ {"id":"search","group":"studio1","title":"Search or browse features","what":"The Rules box and Describe both search the catalogue first. Nothing is written.",
+  "ops":[{"t":"feature","r":["feature_key","label","source","category","value_type","unit"],"rows":[3,5]}],
+  "sql":"SELECT feature_key, label, source, category\nFROM feature\nWHERE label ILIKE '%ER visits%' OR category ILIKE '%ER visits%';"},
+ {"id":"newfeat","group":"studio1","title":"Create a feature from the graph (Describe)","what":"No existing feature covers “ER visits in the last 90 days”. The question runs on the knowledge graph (read-only), and its definition is saved as a new feature.",
+  "ops":[{"t":"feature","r":["feature_key"],"w":["feature_key","label","source","category","value_type","unit","definition","created_by","created_at"],"rows":[5]}],
+  "sql":"INSERT INTO feature (feature_key, label, source, category, value_type, unit, definition, created_by, created_at)\nVALUES ('kg_er_visits_type_2_diabetes_90_d', 'ER visits · type 2 diabetes · 90 d', 'graph',\n        'Graph features', 'num', 'visits', 'MATCH (m:Member)-[:FILED]->(c:Claim) …', 'U-0201', now());"},
+ {"id":"estimate","group":"studio1","title":"Live estimate while building","what":"Every rule change re-counts members from the latest feature values.",
+  "ops":[{"t":"member","r":["member_id","base"],"rows":[0,2,3,4]},{"t":"member_feature","r":["member_id","feature_key","value"],"rows":[3,9,12,13]},{"t":"feature","r":["feature_key","value_type"],"rows":[4,5]}],
+  "sql":"SELECT count(*) FROM member m\nWHERE m.base = 'daman'\n  AND EXISTS (SELECT 1 FROM member_feature f WHERE f.member_id = m.member_id\n              AND f.feature_key = 'kg_er_visits_type_2_diabetes_90_d' AND f.value::numeric >= 2)\n  AND NOT EXISTS (SELECT 1 FROM member_feature f WHERE f.member_id = m.member_id\n              AND f.feature_key = 'contact_opt_out' AND f.value = 'true');"},
+ {"id":"savecoh","group":"studio1","title":"Save cohort","what":"Saves the definition as COH-0105 version 1. Membership is filled by the nightly run.",
+  "ops":[{"t":"feature","r":["feature_key"],"rows":[4,5]},{"t":"cohort","w":["cohort_id","version","name","base","logic","refresh","row_count","owner","created_at"],"rows":[1]},{"t":"cohort_rule","w":["rule_id","cohort_id","version","feature_key","operator","value","value2","is_exclusion"],"rows":[3,4]}],
+  "sql":"INSERT INTO cohort VALUES ('COH-0105', 1, 'ER visits · diabetes · 90 d', 'daman', 'all', 'Nightly', 1407, 'U-0201', now());\nINSERT INTO cohort_rule VALUES\n  ('R-4', 'COH-0105', 1, 'kg_er_visits_type_2_diabetes_90_d', '≥', '2', NULL, false),\n  ('R-5', 'COH-0105', 1, 'contact_opt_out', '=', 'true', NULL, true);"},
+ {"id":"handoff","group":"studio1","title":"Hand off a campaign","what":"Creates CMP-0104 on COH-0105 and leaves out anyone already in Diabetes control (COH-0101).",
+  "ops":[{"t":"cohort","r":["cohort_id","version","row_count"],"rows":[0,1]},{"t":"campaign","w":["campaign_id","name","goal","trigger_mode","channels","nurses","calls_per_day","holdout_pct","start_date","weeks","priority","status"],"rows":[1]},{"t":"campaign_cohort","w":["campaign_id","cohort_id","role"],"rows":[1,2]}],
+  "sql":"INSERT INTO campaign VALUES ('CMP-0104', 'ER follow-up', 'GP review within 7 days of an ER visit',\n  'all', '{Voice}', 6, 25, 10, '2026-11-20', 8, 2, 'Live');\nINSERT INTO campaign_cohort VALUES ('CMP-0104', 'COH-0105', 'include'), ('CMP-0104', 'COH-0101', 'exclude');"},
+ {"id":"refresh","group":"nightly","title":"Refresh feature values and cohorts","what":"Reads yesterday's unprocessed outcomes, recomputes every feature (graph features through their stored definition), re-runs each cohort and stamps the outcomes as processed.",
+  "ops":[{"t":"outcome","r":["outcome_id","member_id","need_id","result","processed_at"],"w":["processed_at"],"rows":[3]},{"t":"feature","r":["feature_key","source","definition"],"rows":[0,1,2,3,4,5]},{"t":"cohort_rule","r":["cohort_id","version","feature_key","operator","value","is_exclusion"],"rows":[0,1,2,3,4]},{"t":"member_feature","w":["value","as_of"],"rows":[0,1,2,3,4,5,6,7,8,9,10,11,12,13]},{"t":"cohort_member","w":["cohort_id","version","member_id","holdout","run_at"],"rows":[0,1,2,3,4,5]},{"t":"cohort","w":["row_count"],"rows":[0,1]}],
+  "sql":"INSERT INTO member_feature (member_id, feature_key, value, as_of) SELECT … ON CONFLICT (member_id, feature_key)\n  DO UPDATE SET value = EXCLUDED.value, as_of = EXCLUDED.as_of;\nDELETE FROM cohort_member WHERE cohort_id = 'COH-0105';\nINSERT INTO cohort_member SELECT 'COH-0105', 1, member_id, (hashtext(member_id) % 10 = 0), now() FROM … ;\nUPDATE outcome SET processed_at = now() WHERE processed_at IS NULL;"},
+ {"id":"score","group":"nightly","title":"Score members and raise triggers","what":"For each live campaign, scores its cohort members (minus excluded cohorts and the hold-out) against the DoH rules.",
+  "ops":[{"t":"campaign","r":["campaign_id","trigger_mode","status"],"rows":[0,1]},{"t":"campaign_cohort","r":["campaign_id","cohort_id","role"],"rows":[0,1,2]},{"t":"cohort_member","r":["member_id","holdout"],"rows":[0,1,2,3,4,5]},{"t":"member_feature","r":["member_id","feature_key","value"],"rows":[0,1,2,3,4,5,6,7,8,9,10,11]},{"t":"signal","w":["signal_id","member_id","campaign_id","code","class","severity","evidence","run_at","status"],"rows":[0,1,2,3,4,5,6]},{"t":"risk_score","w":["member_id","run_at","r_total","tier","clinical","comorbid","kidney","utilisation","age_sex","alert"],"rows":[0,1,2,3]}],
+  "sql":"INSERT INTO signal (signal_id, member_id, campaign_id, code, class, severity, evidence, run_at, status)\nVALUES ('SG-1', 'M-x57', 'CMP-0104', 'REPEAT_ER', 'acute', 'high', '2 ER visits in 90 days…', now(), 'open'), …;\nINSERT INTO risk_score VALUES ('M-x57', now(), 10, 3, 1, 4, 0, 4, 1, 'AMBER'), …;"},
+ {"id":"plans","group":"nightly","title":"Update care plans","what":"For consented members, re-orders needs in safety order from tonight's signals, and keeps closed needs closed.",
+  "ops":[{"t":"member","r":["member_id","consent_status"],"rows":[2]},{"t":"signal","r":["signal_id","member_id","code","class"],"rows":[3,4,5]},{"t":"risk_score","r":["member_id","tier"],"rows":[2]},{"t":"action","r":["need_id","status"],"rows":[4,5]},{"t":"care_plan","w":["tier","cadence"],"rows":[0]},{"t":"care_plan_need","w":["slot","due_date","status"],"rows":[0,1,2]}],
+  "sql":"UPDATE care_plan SET tier = r.tier, cadence = … FROM risk_score r WHERE …;\nINSERT INTO care_plan_need (…) SELECT … FROM signal s WHERE s.member_id = 'M-x44'\n  ON CONFLICT (care_plan_id, need_key) DO UPDATE SET slot = EXCLUDED.slot, due_date = EXCLUDED.due_date;"},
+ {"id":"review","group":"studio2","title":"Review a member, send to the call list","what":"Dr. Rana opens Priya's risk, triggers and planned needs, then puts her on Nadia's list.",
+  "ops":[{"t":"member","r":["member_id","full_name","age","sex","plan","language"],"rows":[0]},{"t":"signal","r":["code","class","severity","evidence"],"rows":[0,1]},{"t":"risk_score","r":["r_total","tier","clinical","comorbid","kidney","utilisation","age_sex","alert"],"rows":[0]},{"t":"action","w":["action_id","member_id","kind","title","agreed","due_date","assignee","status"],"rows":[0]}],
+  "sql":"INSERT INTO action (action_id, member_id, need_id, kind, title, agreed, due_date, assignee, status)\nVALUES ('A-1', 'M-x57', NULL, 'call', 'Call · Repeat ER + no follow-up', false, current_date, 'U-0142', 'open');"},
+ {"id":"queue","group":"portal","title":"Open the nudge queue","what":"Nadia's open calls, callbacks and retries, highest priority first.",
+  "ops":[{"t":"action","r":["action_id","member_id","kind","title","due_date","assignee","status"],"rows":[0,6]},{"t":"member","r":["full_name","language","segment","consent_status"],"rows":[0,1]},{"t":"signal","r":["code","evidence"],"rows":[0,1,6]},{"t":"risk_score","r":["r_total","tier","alert"],"rows":[0,1]}],
+  "sql":"SELECT a.action_id, m.full_name, m.language, s.code, s.evidence, r.r_total, r.tier\nFROM action a\nJOIN member m USING (member_id)\nLEFT JOIN signal s ON s.member_id = a.member_id AND s.status = 'open'\nLEFT JOIN risk_score r ON r.member_id = a.member_id\nWHERE a.assignee = 'U-0142' AND a.status = 'open' AND a.kind IN ('call', 'callback', 'retry')\nORDER BY r.r_total DESC, a.due_date;"},
+ {"id":"consent","group":"portal","title":"Start the call and log consent","what":"Opens a contact row. Consent unlocks the record and opens Priya's care plan from tonight's signals.",
+  "ops":[{"t":"contact","w":["contact_id","member_id","campaign_id","user_id","started_at","consent"],"rows":[0]},{"t":"member","w":["consent_status"],"rows":[0]},{"t":"signal","r":["signal_id","code","class"],"rows":[0,1]},{"t":"care_plan","w":["care_plan_id","member_id","pathway","tier","cadence","status","opened_at"],"rows":[1]},{"t":"care_plan_need","w":["need_id","care_plan_id","signal_id","need_key","class","slot","title","owner_role","done_when","due_date","status"],"rows":[3,4]},{"t":"action","w":["action_id","member_id","need_id","kind","title","due_date","assignee","status"],"rows":[1,2]}],
+  "sql":"BEGIN;\nINSERT INTO contact (contact_id, member_id, campaign_id, user_id, started_at, consent)\n  VALUES ('C-1', 'M-x57', 'CMP-0104', 'U-0142', now(), 'granted');\nUPDATE member SET consent_status = 'granted' WHERE member_id = 'M-x57';\nINSERT INTO care_plan VALUES ('CP-x57', 'M-x57', 'DM', 3, 'Base · W2 · M1 …', 'active', now());\nINSERT INTO care_plan_need … ('N-4', 'CP-x57', 'SG-1', 'REPEAT_ER', …), ('N-5', 'CP-x57', 'SG-2', 'REFILL_GAP', …);\nINSERT INTO action … ('A-2', 'M-x57', 'N-4', 'care_plan', …), ('A-3', 'M-x57', 'N-5', 'care_plan', …);\nCOMMIT;"},
+ {"id":"m360","group":"portal","title":"Member 360 (after consent)","what":"Every read is gated on member.consent_status = 'granted'. Before consent the portal shows only name and reason for the call.",
+  "ops":[{"t":"member","r":["member_id","full_name","age","sex","plan","language","consent_status"],"rows":[0]},{"t":"member_feature","r":["feature_key","value","as_of"],"rows":[0,1,2,3]},{"t":"signal","r":["code","severity","evidence"],"rows":[0,1]},{"t":"care_plan_need","r":["title","class","slot","due_date","status"],"rows":[3,4]},{"t":"contact","r":["started_at","reached","response","notes"],"rows":[0]}],
+  "sql":"SELECT f.feature_key, f.value, f.as_of\nFROM member_feature f JOIN member m USING (member_id)\nWHERE m.member_id = 'M-x57' AND m.consent_status = 'granted';"},
+ {"id":"save","group":"portal","title":"Agree actions and save the call","what":"Priya agrees to the GP follow-up and a check-in call. One transaction closes the contact, updates actions and writes the outcomes.",
+  "ops":[{"t":"care_plan_need","r":["need_id","title"],"rows":[3,4]},{"t":"contact","w":["ended_at","reached","response","notes"],"rows":[0]},{"t":"action","w":["agreed","status","closed_at","action_id","member_id","kind","title","due_date","assignee"],"rows":[0,1,3]},{"t":"outcome","w":["outcome_id","contact_id","member_id","need_id","action_id","result","recorded_by","recorded_at"],"rows":[0,1]}],
+  "sql":"BEGIN;\nUPDATE contact SET ended_at = now(), reached = true, response = 'Engaged', notes = 'Prefers calls after 4 pm' WHERE contact_id = 'C-1';\nUPDATE action SET status = 'done', closed_at = now() WHERE action_id = 'A-1';\nUPDATE action SET agreed = true WHERE action_id = 'A-2';\nINSERT INTO action VALUES ('A-4', 'M-x57', NULL, 'check_in', 'Check-in call with Priya', true, '2026-12-18', 'U-0142', 'open', NULL);\nINSERT INTO outcome VALUES ('O-1', 'C-1', 'M-x57', 'N-4', 'A-2', 'agreed', 'U-0142', now(), NULL),\n                           ('O-2', 'C-1', 'M-x57', NULL, 'A-4', 'agreed', 'U-0142', now(), NULL);\nCOMMIT;"},
+ {"id":"cpdone","group":"portal","title":"Care plan: Done, Declined or Not reached","what":"Marking Mohammed's GP follow-up Done on the care plan closes the linked action too. Not reached would instead insert a retry action.",
+  "ops":[{"t":"care_plan_need","w":["status"],"rows":[0]},{"t":"action","w":["status","closed_at"],"rows":[4]},{"t":"outcome","w":["outcome_id","member_id","need_id","action_id","result","recorded_by","recorded_at"],"rows":[2]}],
+  "sql":"BEGIN;\nUPDATE care_plan_need SET status = 'done' WHERE need_id = 'N-1';\nUPDATE action SET status = 'done', closed_at = now() WHERE need_id = 'N-1' AND kind = 'care_plan';\nINSERT INTO outcome VALUES ('O-3', NULL, 'M-x44', 'N-1', 'A-5', 'done', 'U-0142', now(), NULL);\nCOMMIT;"},
+ {"id":"tick","group":"portal","title":"Actions: tick, book or log a refill","what":"The same link from the other side: closing the action closes its care-plan need, in one transaction.",
+  "ops":[{"t":"action","r":["action_id","member_id","need_id","kind","title","agreed","due_date","assignee","status"],"w":["status","closed_at"],"rows":[1,2,4,5,6]},{"t":"member","r":["full_name"],"rows":[0,1,2]},{"t":"care_plan_need","r":["class"],"w":["status"],"rows":[0,1,3,4]},{"t":"outcome","w":["outcome_id","member_id","need_id","action_id","result","recorded_by","recorded_at"],"rows":[2]}],
+  "sql":"SELECT a.*, m.full_name, n.class FROM action a JOIN member m USING (member_id)\n  LEFT JOIN care_plan_need n USING (need_id) WHERE a.status = 'open' ORDER BY a.due_date;\n-- tick A-5:\nUPDATE action SET status = 'done', closed_at = now() WHERE action_id = 'A-5';\nUPDATE care_plan_need SET status = 'done' WHERE need_id = 'N-1';\nINSERT INTO outcome VALUES ('O-3', NULL, 'M-x44', 'N-1', 'A-5', 'done', 'U-0142', now(), NULL);"},
+ {"id":"analytics","group":"portal","title":"Analytics","what":"Read-only aggregates for the funnel and trigger mix.",
+  "ops":[{"t":"contact","r":["reached","consent","response"],"rows":[0,1]},{"t":"outcome","r":["result"],"rows":[0,1,2,3]},{"t":"signal","r":["code","class"],"rows":[0,1,2,3,4,5,6]},{"t":"action","r":["kind","status"],"rows":[0,1,2,3,4,5,6]}],
+  "sql":"SELECT count(*) FILTER (WHERE reached)          AS reached,\n       count(*) FILTER (WHERE consent = 'granted') AS consented\nFROM contact WHERE started_at >= current_date - 30;"}
+]
+}
+</script>
+
+<script>
+(() => {
+  const M = JSON.parse(document.getElementById('model-data').textContent);
+  const T = Object.fromEntries(M.tables.map(t => [t.name, t]));
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const flags = c => c[2] ? c[2].split(',') : [];
+  const isPK = c => flags(c).includes('PK');
+  const fkOf = c => (flags(c).find(f => f.startsWith('FK:')) || '').slice(3);
+  const dcol = d => `var(${M.domains[d].color})`;
+
+  /* who writes each table, derived from the steps */
+  const writers = {};
+  M.steps.forEach(s => s.ops.forEach(o => { if (o.w && o.w.length) { const g = M.groups.find(x => x.id === s.group).label.split(' · ')[0]; (writers[o.t] = writers[o.t] || new Set()).add(g === 'Nightly run' ? 'Nightly' : g); } }));
+  writers.member = new Set(['Source load', ...(writers.member || [])]);
+  writers.care_team_user = new Set(['Admin']);
+
+  /* ---------- view 1: lanes + wires ---------- */
+  const edges = [];
+  M.tables.forEach(t => t.cols.forEach(c => { const to = fkOf(c); if (to && !edges.some(e => e.from === t.name && e.to === to)) edges.push({ from: t.name, to }); }));
+  $('#lanes').innerHTML = Object.entries(M.domains).map(([k, d]) => `
+    <div class="lane"><h2 style="color:${dcol(k)}">${esc(d.label)}</h2><div class="lsub">${esc(d.sub)}</div><div class="stack">
+    ${M.tables.filter(t => t.domain === k).map(t => {
+      const keys = t.cols.filter(c => isPK(c) || fkOf(c));
+      return `<div class="tb" tabindex="0" data-t="${t.name}" aria-label="Table ${t.name}">
+        <div class="th"><span class="dot" style="background:${dcol(k)}"></span><b>${t.name}</b><span class="cnt">${t.cols.length} cols</span></div>
+        <div class="pur">${esc(t.purpose)}</div>
+        <ul>${keys.map(c => `<li>${isPK(c) ? '<span class="k pk">PK</span>' : ''}${fkOf(c) ? '<span class="k fk">FK</span>' : ''}<span>${c[0]}</span>${fkOf(c) ? `<span class="to">→ ${fkOf(c)}</span>` : ''}</li>`).join('')}</ul>
+        <div class="wr">${[...(writers[t.name] || [])].map(w => `<span class="chip">${esc(w)}</span>`).join('')}</div>
+      </div>`; }).join('')}
+    </div></div>`).join('');
+
+  const erd = $('#erd'), svg = $('#wires');
+  function drawWires() {
+    if (!erd.offsetParent) return;
+    const R = erd.getBoundingClientRect(), box = n => erd.querySelector(`.tb[data-t="${n}"]`).getBoundingClientRect();
+    svg.setAttribute('viewBox', `0 0 ${R.width} ${R.height}`);
+    svg.innerHTML = edges.map(e => {
+      const a = box(e.from), b = box(e.to);
+      const ay = a.top - R.top + Math.min(26, a.height / 2), by = b.top - R.top + Math.min(26, b.height / 2);
+      let d;
+      if (Math.abs(a.left - b.left) < 20) { const x = a.left - R.left, bulge = 16; d = `M${x} ${ay} C${x - bulge} ${ay}, ${x - bulge} ${by}, ${x} ${by}`; }
+      else { const rightward = b.left > a.left, ax = (rightward ? a.right : a.left) - R.left, bx = (rightward ? b.left : b.right) - R.left, mx = (ax + bx) / 2; d = `M${ax} ${ay} C${mx} ${ay}, ${mx} ${by}, ${bx} ${by}`; }
+      return `<path data-f="${e.from}" data-to="${e.to}" d="${d}"/>`;
+    }).join('');
+  }
+  function focusTable(n) {
+    erd.classList.toggle('focus', !!n);
+    erd.querySelectorAll('.tb').forEach(el => { const t = el.dataset.t; el.classList.toggle('on', t === n); el.classList.toggle('rel', !!n && edges.some(e => (e.from === n && e.to === t) || (e.to === n && e.from === t))); });
+    svg.querySelectorAll('path').forEach(p => p.classList.toggle('on', !!n && (p.dataset.f === n || p.dataset.to === n)));
+  }
+  erd.addEventListener('mouseover', e => { const b = e.target.closest('.tb'); if (b) focusTable(b.dataset.t); });
+  erd.addEventListener('mouseleave', () => focusTable(null));
+  erd.addEventListener('focusin', e => { const b = e.target.closest('.tb'); if (b) focusTable(b.dataset.t); });
+  erd.addEventListener('focusout', () => focusTable(null));
+  erd.addEventListener('click', e => { const b = e.target.closest('.tb'); focusTable(b ? b.dataset.t : null); });
+  new ResizeObserver(drawWires).observe(erd);
+
+  /* ---------- view 2: steps, table cards, matrix ---------- */
+  let cur = M.steps[0].id, all = false, trace = null;
+  const stepOf = id => M.steps.find(s => s.id === id);
+  const cnt = s => ({ r: s.ops.filter(o => o.r && o.r.length).length, w: s.ops.filter(o => o.w && o.w.length).length });
+
+  function renderSteps() {
+    $('#steps').innerHTML = M.groups.map(g => `<div class="sg">${esc(g.label)}<small>${esc(g.who)}</small></div>` +
+      M.steps.filter(s => s.group === g.id).map(s => { const c = cnt(s), i = M.steps.indexOf(s) + 1;
+        return `<button class="sb" data-s="${s.id}" aria-pressed="${!all && s.id === cur}"><span class="i">${String(i).padStart(2, '0')}</span><span>${esc(s.title)}<span class="rw">${c.r ? `<span class="mk r">R ${c.r}</span>` : ''}${c.w ? `<span class="mk w">W ${c.w}</span>` : ''}</span></span></button>`; }).join('')).join('') +
+      `<button class="allbtn" data-all="1" aria-pressed="${all}">Show all 16 tables with sample data</button>`;
+  }
+  function cell(v) { return v === null ? '<td class="nul">NULL</td>' : null; }
+  function tableCard(t, op) {
+    const r = new Set((op && op.r) || []), w = new Set((op && op.w) || []), hit = new Set((op && op.rows) || []);
+    const mark = c => r.has(c) && w.has(c) ? 'rw' : r.has(c) ? 'r' : w.has(c) ? 'w' : '';
+    const opTxt = c => ({ rw: 'R+W', r: 'R', w: 'W' })[mark(c)] || '';
+    const touched = op ? (w.size && r.size ? 'reads and writes' : w.size ? 'writes' : 'reads') : '';
+    const keyCols = new Set(t.cols.filter(c => isPK(c) || fkOf(c)).map(c => c[0]));
+    const head = t.cols.map(c => `<th class="${mark(c[0])}">${c[0]}${isPK(c) ? '<span class="ky">PK</span>' : ''}${fkOf(c) ? `<span class="ky">→${fkOf(c)}</span>` : ''}${opTxt(c[0]) ? `<span class="op">${opTxt(c[0])}</span>` : ''}<span class="ty">${c[1]}${flags(c).includes('NULL') ? ' · null' : ''}</span></th>`).join('');
+    const body = t.rows.map((row, i) => {
+      const tr = trace && row.some(v => v === trace), cls = tr ? 'tr' : hit.has(i) ? 'hit' : op && !all ? 'dim' : '';
+      return `<tr class="${cls}">${row.map((v, j) => cell(v) || `<td class="${keyCols.has(t.cols[j][0]) ? 'key' : ''}" ${keyCols.has(t.cols[j][0]) ? `data-v="${esc(v)}" title="Trace ${esc(v)} across tables"` : ''}>${esc(v)}</td>`).join('')}</tr>`;
+    }).join('');
+    const d = M.domains[t.domain];
+    return `<div class="tcard"><div class="hd"><span class="dom" style="color:${dcol(t.domain)}">${esc(d.label)}</span><b>${t.name}</b><span class="pur">${esc(t.purpose)}</span>${touched ? `<span class="mk ${w.size ? 'w' : 'r'}">${touched}</span>` : ''}${op && hit.size ? `<span class="hint">${hit.size} of ${t.rows.length} rows touched</span>` : ''}</div>
+      <div class="tw"><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div></div>`;
+  }
+  function renderDetail() {
+    const s = stepOf(cur), g = M.groups.find(x => x.id === s.group), c = cnt(s);
+    if (all) $('#stepHead').innerHTML = `<div class="who">Reference</div><h2>All 16 tables with sample data</h2><p>The rows follow one demo day, 20 Nov 2026. Click any underlined key, such as <code>M-x57</code>, to trace it through every table.</p>`;
+    else $('#stepHead').innerHTML = `<div class="who">${esc(g.label)} · ${esc(g.who)}</div><h2>${esc(s.title)}</h2><p>${esc(s.what)}</p>
+      <div class="sum">${c.r ? `<span class="r">Reads ${c.r} table${c.r > 1 ? 's' : ''}: ${s.ops.filter(o => o.r && o.r.length).map(o => o.t).join(', ')}</span>` : ''}${c.w ? `<span class="w">Writes ${c.w} table${c.w > 1 ? 's' : ''}: ${s.ops.filter(o => o.w && o.w.length).map(o => o.t).join(', ')}</span>` : ''}</div>
+      <pre class="sql">${esc(s.sql)}</pre>`;
+    $('#trace').hidden = !trace;
+    if (trace) $('#trace').innerHTML = `<span>Tracing <b class="mono">${esc(trace)}</b>: rows that contain it are highlighted in green.</span><button type="button" data-clear="1">Clear</button>`;
+    $('#cards').innerHTML = all ? M.tables.map(t => tableCard(t, null)).join('') : s.ops.map(o => tableCard(T[o.t], o)).join('');
+    if (!all) $('#cards').insertAdjacentHTML('beforeend', '<div class="hint">Highlighted rows are the ones this step touches. Column headers show R (read) and W (written). Click an underlined key to trace it.</div>');
+  }
+  function renderMatrix() {
+    const names = M.tables.map(t => t.name);
+    let h = `<table><thead><tr><th class="sn">Step</th>${names.map(n => `<th>${n}</th>`).join('')}</tr></thead><tbody>`;
+    M.groups.forEach(g => {
+      h += `<tr class="gr"><td colspan="${names.length + 1}">${esc(g.label)}</td></tr>`;
+      M.steps.filter(s => s.group === g.id).forEach(s => {
+        h += `<tr class="${!all && s.id === cur ? 'on' : ''}"><td class="sn" data-s="${s.id}" tabindex="0">${esc(s.title)}</td>` + names.map(n => {
+          const o = s.ops.find(x => x.t === n); if (!o) return '<td></td>';
+          const r = o.r && o.r.length, w = o.w && o.w.length, k = r && w ? 'rw' : r ? 'r' : 'w';
+          return `<td class="c-${k}" title="${esc(s.title)} · ${n}: ${k === 'rw' ? 'reads ' + o.r.join(', ') + ' · writes ' + o.w.join(', ') : k === 'r' ? 'reads ' + o.r.join(', ') : 'writes ' + o.w.join(', ')}">${k === 'rw' ? 'RW' : k.toUpperCase()}</td>`;
+        }).join('') + '</tr>';
+      });
+    });
+    $('#mx').innerHTML = h + '</tbody></table>';
+  }
+  function render() { renderSteps(); renderDetail(); renderMatrix(); }
+  function pick(id) { cur = id; all = false; render(); }
+  $('#steps').addEventListener('click', e => { const b = e.target.closest('[data-s],[data-all]'); if (!b) return; if (b.dataset.all) { all = true; render(); } else pick(b.dataset.s); });
+  $('#mx').addEventListener('click', e => { const b = e.target.closest('[data-s]'); if (b) { pick(b.dataset.s); $('#stepHead').scrollIntoView({ behavior: 'smooth', block: 'start' }); } });
+  $('#mx').addEventListener('keydown', e => { const b = e.target.closest('[data-s]'); if (b && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); pick(b.dataset.s); } });
+  $('#cards').addEventListener('click', e => { const c = e.target.closest('td[data-v]'); if (c) { trace = trace === c.dataset.v ? null : c.dataset.v; renderDetail(); } });
+  $('#trace').addEventListener('click', e => { if (e.target.closest('[data-clear]')) { trace = null; renderDetail(); } });
+
+  /* ---------- tabs (hash routed) ---------- */
+  const views = { model: 'tab-model', flow: 'tab-flow' };
+  function show(v) {
+    if (!views[v]) v = 'model';
+    Object.entries(views).forEach(([k, t]) => { $('#' + k).hidden = k !== v; $('#' + t).setAttribute('aria-selected', k === v); });
+    if (v === 'model') requestAnimationFrame(drawWires);
+  }
+  $('#tab-model').addEventListener('click', () => { location.hash = 'model'; show('model'); });
+  $('#tab-flow').addEventListener('click', () => { location.hash = 'flow'; show('flow'); });
+  window.addEventListener('hashchange', () => show(location.hash.slice(1)));
+  render();
+  show(location.hash.slice(1));
+  window.addEventListener('load', drawWires);
+  if (document.fonts) document.fonts.ready.then(drawWires);
+})();
+</script>
