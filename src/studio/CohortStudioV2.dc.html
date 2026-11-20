@@ -388,7 +388,7 @@
               </div>
             </sc-for>
           </div>
-          <p style="margin:16px 0 0;font-size:12.5px;color:#98A4B5">Live estimate as you build. Saving runs the exact query.</p>
+          <p style="margin:16px 0 0;font-size:12.5px;color:#98A4B5">{{ est.foot }}</p>
         </section>
 
         <section style="background:#FFFFFF;border-radius:12px;padding:18px 20px">
@@ -751,6 +751,7 @@ class Component extends DCLogic {
     const v = { v: ver, date: '20 Nov', n, note: prev ? 'Edited in builder' : 'Created in builder' };
     const coh = { id, name: cb.name || 'Untitled cohort', base: cb.base, n, refresh: cb.refresh, owner: 'You', src: cb.mode === 'ngql' ? 'nGQL' : 'Builder', fresh: true,
       rules: { logic: cb.logic, inc: cb.inc.map(r => Object.assign({}, r)), exc: cb.exc.map(r => Object.assign({}, r)) }, versions: (prev ? prev.versions : []).concat(v), trend: prev ? prev.trend.slice(0, 11).concat(n) : E.trend(n, E.hash(id)).map((x, i, a) => i < 9 ? 0 : x).slice(0).map((x, i) => i < 9 ? null : x).filter(x => x != null) };
+    if (window.CCL_API) { const r = window.CCL_API.saveCohort(coh); if (r) { coh.n = r.row_count; coh.versions[coh.versions.length - 1].n = r.row_count; } }
     const cohorts = prev ? st.cohorts.map(c => c.id === id ? coh : c) : [coh].concat(st.cohorts);
     this.setState({ cohorts, sel: id, cb: Object.assign({}, cb, { from: id }) });
     if (thenCamp) this.openCamp([id], null, cohorts); else { this.setState({ tab: 'lib' }); this.say(id + ' v' + ver + ' saved · ' + E.fmt(n) + ' members · runs ' + cb.refresh.toLowerCase()); }
@@ -766,6 +767,7 @@ class Component extends DCLogic {
   send() {
     const st = this.state, c = Object.assign({}, st.ce), live = c.start <= window.CohortEngine.TODAY;
     c.status = live ? 'Live' : 'Scheduled'; delete c.step; delete c.isNew;
+    if (window.CCL_API) window.CCL_API.saveCampaign(c);
     const campaigns = st.campaigns.some(k => k.id === c.id) ? st.campaigns.map(k => k.id === c.id ? c : k) : st.campaigns.concat(c);
     this.setState({ campaigns, ce: null, tab: 'camp' });
     if (this.props.onHandoff) this.props.onHandoff(c); else this.say(c.id + ' handed off · care intelligence scores these members tonight at 03:00');
@@ -823,7 +825,7 @@ class Component extends DCLogic {
       const sugs = S.map((s, i) => { const b = BADGE[s.badge] || ['#ECF0F5', '#46546A']; return { badge: s.badge, label: s.label, sub: s.sub, bBg: b[0], bFg: b[1], bg: i === st.aIdx ? '#F5F8FC' : 'transparent', key: i === st.aIdx ? '↵' : '', on: ev => { ev.preventDefault(); this.apply(s); }, hover: () => { if (st.aIdx !== i) this.setState({ aIdx: i }); } }; });
       const lints = E.lint(cb, e, 750).map(l => { const T = { ok: ['#F5F8FC', '#3F6C9F', '✓'], info: ['#F7F9FC', '#66758A', 'i'], warn: ['#FDF3E7', '#8A6A3E', '!'], error: ['#FDF0EF', '#B5545E', '!'] }[l.lvl];
         return { t: l.t, bg: T[0], ic: T[1], sym: T[2], hasFix: !!l.fix, fix: l.fix ? l.fix.label : '', onFix: () => { if (!l.fix) return; if (l.fix.exc) this.add([], [E.newRule(l.fix.exc)]); else this.add([E.newRule(l.fix.inc, l.fix.preset)], []); } }; });
-      const tooFew = has && e.n < 50, broad = has && e.n > 30000;
+      const tooFew = has && e.n < (E.MIN_N || 50), broad = has && e.n > 30000;
       const delta = this._prev != null && Math.abs(e.n - (this._prev || 0)) >= 1 && st.lastN !== undefined ? '' : '';
       const pr = E.profile(cb), pc = x => Math.round(x * 100) + '%';
       const COLS = ['#3F6C9F', '#A9C3E0', '#CDD6E2'];
@@ -851,7 +853,7 @@ class Component extends DCLogic {
         qBad: !(cb.qc && cb.qc.ok), qOp: cb.qc && cb.qc.ok ? 1 : 0.45, qStatus: cb.qc ? (cb.qc.ok ? '✓ All checks pass' : cb.qc.C.filter(c => !c[1]).length + ' check' + (cb.qc.C.filter(c => !c[1]).length > 1 ? 's' : '') + ' failing') : 'Not validated yet', qStatusC: cb.qc ? (cb.qc.ok ? '#3F6C9F' : '#B5545E') : '#66758A',
         checks: cb.qc ? cb.qc.C.map(x => ({ name: x[0], note: x[2], icon: x[1] ? '✓' : '✕', bg: x[1] ? '#F1F6FB' : '#FBEEF0', fg: x[1] ? '#3F6C9F' : '#934450' })) : [],
         lints,
-        est: { n: fmt(disp), pct: (e.n / B * 100).toFixed(e.n / B < 0.1 ? 1 : 0) + '%', base: fmt(B) + ' ' + E.BASES.find(b => b.id === cb.base).label.toLowerCase(),
+        est: { foot: e.live ? 'Live count from the database (' + e.src + ')' + (e.unsupported && e.unsupported.length ? ' · not in the extract: ' + e.unsupported.map(u => u.reason).join('; ') : '') + '. Saving runs the same SQL.' : 'Live estimate as you build. Saving runs the exact query.', n: fmt(disp), pct: (e.n / B * 100).toFixed(e.n / B < 0.1 ? 1 : 0) + '%', base: fmt(B) + ' ' + E.BASES.find(b => b.id === cb.base).label.toLowerCase(),
           pill: tooFew ? 'Too few to run' : broad ? 'Very broad' : has ? 'Live estimate' : 'Whole population', pillBg: tooFew ? '#FBEEF0' : broad ? '#F4EFE6' : '#2A3B52', pillFg: tooFew ? '#934450' : broad ? '#8A6A3E' : '#C9D9EA',
           delta: prevC ? (e.n - prevC.n >= 0 ? '+' : '−') + fmt(Math.abs(e.n - prevC.n)) + ' vs v' + prevC.versions.length : '', dC: prevC && e.n < prevC.n ? '#F08A80' : '#A9C3E0',
           steps: e.steps.map(s => ({ t: s.t, n: fmt(s.n), w: logW(s.n), c: s.ex ? '#F08A80' : '#A9C3E0' })) },

@@ -195,6 +195,11 @@
    "build": "../portal",
    "mime": "text/html",
    "compressed": true
+  },
+  "4a134934-a886-4cf9-a616-a40c0610a30b": {
+   "file": "lib/ccl-live.js",
+   "mime": "application/javascript",
+   "compressed": true
   }
  }
 }

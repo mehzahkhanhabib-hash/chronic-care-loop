@@ -1613,6 +1613,25 @@ window.NBA_SEED=[
 ];
 window.ROLES=['Registered nurse','Coordinator','Pharmacist','Doctor','Dietitian'];
 
+/* ===== Chronic Care Loop · live mode: when served by backend/server.py, members come from the relational backend ===== */
+window.CCL=(function(){
+  const os=[];try{os.push(location.origin);}catch(e){}try{os.push(parent.location.origin);}catch(e){}
+  const base=os.find(o=>/^https?:/.test(o||''));if(!base)return {live:false};
+  const api=(method,path,body)=>{const x=new XMLHttpRequest();x.open(method,base+path,false);if(body)x.setRequestHeader('Content-Type','application/json');
+    x.send(body?JSON.stringify(body):null);if(x.status!==200)throw new Error(path+' → '+x.status+' '+x.responseText);return JSON.parse(x.responseText);};
+  try{const h=api('GET','/api/health');if(!h.ok)return {live:false};
+    const M=api('GET','/api/portal/members').members;if(!M.length)return {live:false};
+    window.HICC_DATA=M;
+    Object.assign(window.SIGNALS.HYPO,{label:'Hypoglycaemia risk',rule:'Trig3: hypoglycaemia claim in 90 days, or insulin / sulfonylurea without rescue glucagon',reads:['flag_dm_hypoglycaemia_last90days','flag_no_glucagon_last12months']});
+    Object.assign(window.SIGNALS,{
+      POST_DISCHARGE:{label:'Post-discharge care gap',sev:'high',rule:'Trig4: discharged with no clinic visit since, or a medicine not refilled within 30 days',reads:['last_ip_discharge_date','flag_no_visit_after_discharge'],paths:['DOH-14']},
+      POTASSIUM_DUE:{label:'Potassium test due',sev:'mod',rule:'Trig7: on ACEi / ARB / MRA / thiazide with no potassium test in 365 days',reads:['last_potassium_date'],paths:['DOH-11']},
+      ANNUAL_LABS:{label:'Annual labs due',sev:'low',rule:'Trig11: an annual lab missing or older than 365 days',reads:['last_lipid_panel_date','last_cbc_date'],paths:['DOH-8']},
+      NUTRITION_DUE:{label:'Nutrition and education due',sev:'low',rule:'Trig8: no dietitian or educator visit in 365 days',reads:['last_dietitian_visit','last_diabeducator_visit'],paths:['DOH-1']}});
+    console.info('[ccl] portal live · '+M.length+' members · run '+h.run_id);
+    return {live:true,base,api,health:h,post:ev=>api('POST','/api/portal/event',ev)};
+  }catch(e){console.warn('[ccl] portal stays on built-in data',e);return {live:false};}
+})();
 /* ===== HICC Care Workstation — core: state, helpers, intelligence engine, data lens, shell ===== */
 const D=window.HICC_DATA, PW=window.PATHWAYS, SIG=window.SIGNALS, DM=window.DM;
 const $=s=>document.querySelector(s);
@@ -1786,10 +1805,10 @@ const fill=(t,v)=>String(t).replace(/\{(\w+)\}/g,(x,k)=>v[k]!=null&&v[k]!==''?v[
 
 /* ---------- state ---------- */
 const S={page:(['queue','m360','actions','care','wear','analytics'].includes(store.get('hicc-nurse-page','queue'))?store.get('hicc-nurse-page','queue'):'queue'),theme:store.get('hicc-theme',''),lens:store.get('hicc-lens',false),railMin:store.get('hicc-railmin',window.innerWidth<1100),qMin:store.get('hicc-qmin',window.innerWidth<900),
-  sel:'DMN-x57',sort:'risk',segF:'all',q:'',done:[],shiftTotal:10,
+  sel:D[0].id,sort:'risk',segF:'all',q:'',done:[],shiftTotal:10,
   call:{},oc:{},ticks:{},pe:{open:false,cat:'lab',v:{},src:'Member-reported'},histOpen:false,
-  m360:'DMN-x57',actF:'all',actSel:null,cpSel:null,
-  intel:{set:'DOH',sel:'DOH-7',stage:-1},lib:{sel:LIB[0].id,q:'',role:'',status:'',tab:'preview',mem:'DMN-x57',confirmDel:false},
+  m360:D[0].id,actF:'all',actSel:null,cpSel:null,
+  intel:{set:'DOH',sel:'DOH-7',stage:-1},lib:{sel:LIB[0].id,q:'',role:'',status:'',tab:'preview',mem:D[0].id,confirmDel:false},
   flow:{step:0},blocks:{},tables:{q:'',sel:'DISPOSITION_EVENT'},events:[],seq:0,demo:null};
 if(S.theme)document.documentElement.setAttribute('data-theme',S.theme);
 const call=id=>S.call[id]||(S.call[id]={st:'idle',t0:0,secs:0});
@@ -1882,7 +1901,7 @@ A.reset=()=>{
   clearTimeout(S.resetT);S.resetArm=false;
   const raw=JSON.parse(D0);D.forEach((m,i)=>{Object.keys(m).forEach(k=>delete m[k]);Object.assign(m,raw[i]);});initMembers();
   if(tick){clearInterval(tick);tick=null;}
-  Object.assign(S,{page:'queue',sel:'DMN-x57',sort:'risk',segF:'all',q:'',done:[],call:{},oc:{},ticks:{},pe:{open:false,cat:'lab',v:{},src:'Member-reported'},histOpen:false,m360:'DMN-x57',actF:'all',actSel:null,cpSel:null,jr:{},cta:{},ctaOpen:null,otherOpen:false,tlF:'all',tree:{mem:''},libView:'tree',nbaMore:false,lensF:'all',intel:{set:'DOH',sel:'DOH-7',stage:-1},flow:{step:0},blocks:{},tables:{q:'',sel:'DISPOSITION_EVENT'},events:[],seq:0});
+  Object.assign(S,{page:'queue',sel:D[0].id,sort:'risk',segF:'all',q:'',done:[],call:{},oc:{},ticks:{},pe:{open:false,cat:'lab',v:{},src:'Member-reported'},histOpen:false,m360:D[0].id,actF:'all',actSel:null,cpSel:null,jr:{},cta:{},ctaOpen:null,otherOpen:false,tlF:'all',tree:{mem:''},libView:'tree',nbaMore:false,lensF:'all',intel:{set:'DOH',sel:'DOH-7',stage:-1},flow:{step:0},blocks:{},tables:{q:'',sel:'DISPOSITION_EVENT'},events:[],seq:0});
   store.set('hicc-nurse-page','queue');
   onSelect(S.sel);toast('Reset — every selection cleared');render();
 };
@@ -2080,7 +2099,7 @@ function workHTML(m){
   const header=`<section class="card mh" data-screen-label="Member header" id="mhead">
     <div class="r1"><span class="ini" style="background:var(--seg-${m.seg.toLowerCase()}-soft);color:var(--seg-${m.seg.toLowerCase()})">${initials(m.name)}</span>
       <div style="min-width:0"><div class="nm"><b>${esc(m.name)}</b>${segPill(m)}<span class="risk ${sev(m.risk)}">Risk ${m.risk}</span>${prioPill(m)}${m.cp?`<span class="pill ok">${esc(m.cp.prog)}</span>`:''}</div>
-      <div class="meta">${m.age} · ${esc(m.sex)} · speaks ${esc(m.lang)} · ${esc(m.plan)} · ${m.source==='real'?'Real claims':'Synthetic'} · masked ${esc(m.mask)}</div></div>
+      <div class="meta">${m.age} · ${esc(m.sex)} · speaks ${esc(m.lang)} · ${esc(m.plan)} · ${m.source==='real'?'Real claims':m.source==='extract'?'Claims extract · pseudonym':'Synthetic'} · masked ${esc(m.mask)}</div></div>
       <div class="acts"><button class="btn" data-act="go360" data-arg="${m.id}">Member 360</button>${callUI}</div></div>
 </section>`;
   /* script — compact, at the top */
@@ -3200,6 +3219,44 @@ S.lens=false;A.lens=()=>{};
 .cpv>.card+.card,.pg-in>.card+.card{margin-top:0}
 `;document.head.appendChild(st);})();
 
+/* ===================== Chronic Care Loop · live mode overrides (backend is the source of truth) ===================== */
+if(window.CCL&&window.CCL.live){(()=>{const CL=window.CCL,orig=JSON.parse(D0);
+  const WHO={'U-0142':COORDS[0],'U-0150':'Omar Khalid','U-0161':'Sara Mansour'};
+  D.forEach((m,i)=>{if(!m.live)return;const c=m.live.consent;m.seg=(m.live.phg||0)>0?'A':'B';m.plan=(orig[i]||{}).plan||m.plan;m.consentStep=c==='pending';
+    m.consent=c==='granted'?{status:'granted',perms:{data:true,care:true,contact:true},via:'On record',when:'before this run'}:{status:c,perms:{data:false,care:false,contact:false}};
+    m.prof=buildProfile(m);m.profDone={};});
+  if(!byId(S.sel)){S.sel=D[0].id;S.m360=D[0].id;S.lib.mem=D[0].id;}
+  const _sf=signalsFor;signalsFor=function(m){if(!m.live)return _sf(m);
+    const out=m.live.sig.filter(s=>SIG[s.code]).map(s=>Object.assign({},SIG[s.code],{code:s.code,trig:s.trig,evidence:s.evidence+(s.state==='cannot_tell'?' · cannot tell from the extract':''),
+      points:[[s.trig+' ('+s.campaign+')',s.state==='fired'?'1':'cannot tell']],primary:s.name===m.trigger.reason,unsure:s.state==='cannot_tell'}));
+    if(m._status==='noreach')out.push(Object.assign({},SIG.NOREACH,{code:'NOREACH',evidence:'Not reached on the last attempt',points:[['contact.reached','0']]}));
+    out.sort((a,b)=>((a.sev==='crit')?-1:0)-((b.sev==='crit')?-1:0)||(b.primary-a.primary)||SEVRANK[a.sev]-SEVRANK[b.sev]);return out;};
+  const _ro=riskOf;riskOf=function(m){return m.live&&m.live.risk?m.live.risk:_ro(m);};
+  const _al=alertOf;alertOf=function(m){const r=m.live&&m.live.risk;if(!r)return _al(m);
+    return {RED:['RED','crit','Same-day clinician · '+r.priority],AMBER:['AMBER','high','Next working day · '+r.priority],YELLOW:['YELLOW','mod','Within 3 days · '+r.priority],GREEN:['GREEN','ok','Digital nudge · '+r.priority]}[r.alert];};
+  const SO={CURRENT:0,NEXT:1,FUTURE:2,CLOSED:3},ord=CLS.map(x=>x[0]);
+  const _no=needsOf;needsOf=function(m){if(!m.live)return _no(m);const r=riskOf(m),st=cpx(m.id).st;
+    const L=m.live.needs.map(n=>Object.assign({},n));L.forEach(n=>{if(n.status!=='open'&&!st[n.k])st[n.k]=n.status;});
+    L.sort((a,b)=>SO[a.slot]-SO[b.slot]||ord.indexOf(a.cls)-ord.indexOf(b.cls));
+    const open=L.filter(n=>!st[n.k]);open.forEach((n,i)=>{n.slot=i<3?'CURRENT':i<6?'NEXT':'FUTURE';n.due=n.due||isoDay(DUE[n.cls]||7);});
+    return {all:L,open,closed:L.filter(n=>st[n.k]),r};};
+  seedTasks=function(){const T=[];D.forEach(m=>{if(!m.live)return;m.live.actions.forEach(a=>{const n=m.live.needs.find(x=>x.need_id===a.need);
+    T.push({id:a.id,mid:m.id,title:a.title,kind:a.kind==='care_plan'?'nba':a.kind==='retry'?'retry':a.kind==='check_in'?'checkin':'callback',need:n?n.k:undefined,cls:n?n.cls:undefined,
+      due:a.due,as:WHO[a.assignee]||COORDS[0],st:a.status==='open'?'open':'done',res:a.status==='declined'?'declined':a.status==='done'?'done':undefined,db:a.id});});});return T;};
+  /* write-through: every care-plan decision and saved call outcome becomes an OUTCOME row in the database */
+  const sent=new Set(),apply=(m,r)=>{if(!r||!r.member)return;m.live=r.member.live;m.cp=r.member.cp;m.lastContact=r.member.lastContact;};
+  const push=(m,ev,why)=>{try{const r=CL.post(Object.assign({member_id:m.mask,user:'U-0142'},ev));apply(m,r);
+      log('WRITE','OUTCOME',Object.assign({member_id:m.mask},ev,{outcome_ids:r.outcomes.join(', ')}),why+' · POST /api/portal/event');}
+    catch(e){console.warn('[ccl] write-back failed',e);toast('Not saved to the database: '+e.message);}};
+  const reconcile=()=>D.forEach(m=>{if(!m.live)return;const st=cpx(m.id).st;
+    m.live.needs.forEach(n=>{const v=st[n.k],key=m.id+'|'+n.k+'|'+v;if(!v||n.status!=='open'||sent.has(key))return;sent.add(key);
+      push(m,{kind:'need',need:n.trig,result:v==='declined'?'declined':'done'},'Care-plan need '+n.trig+' '+v);});});
+  (()=>{const _d=draw;draw=function(){reconcile();_d();};})();
+  (()=>{const _s=A.save;A.save=(...a)=>{const m=byId(S.sel),o=ocSt(m.id),was=o.saved;_s(...a);if(was||!o.saved||!m.live)return;
+    push(m,{kind:'call',reached:o.reached==='Reached',response:o.response||o.reached,notes:o.notes||'',consent:['granted','declined'].includes(m.consent.status)?m.consent.status:undefined},'Call outcome');
+    render();};})();
+  window.__portal_live=CL;
+})();}
 /* ===================== v8 · Chronic Care Loop integration ===================== */
 /* ---- 1. Care plan ⇄ Actions: one need = one action. CARE_PLAN_NEED.need_key is carried on the task (task.need). ---- */
 const CLS_L=c=>(CLS.find(x=>x[0]===c)||[c,c])[1];

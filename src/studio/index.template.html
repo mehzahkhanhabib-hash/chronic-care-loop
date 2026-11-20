@@ -418,6 +418,7 @@
 <script src="31e011af-cbf9-4031-8b87-96711ea22125"></script>
 <script src="d38f6341-72f8-404e-a4f3-a839a4489bd2"></script>
 <script src="22e28d42-4366-4ff8-a294-565e1d63009e"></script>
+<script src="4a134934-a886-4cf9-a616-a40c0610a30b"></script>
 </helmet>
 <div style="min-height:100vh;font-variant-numeric:tabular-nums;display:flex;flex-direction:column">
 
@@ -572,15 +573,15 @@ class Component extends DCLogic {
       if (!window.CCC || !window.CCC_MEMBERS) { this.w = setTimeout(go, 40); return; }
       const C = window.CCC, M = C.members();
       const cb = this.blank(); const p = C.parse(C.EXAMPLES[0]); cb.inc = p.inc; cb.exc = p.exc; cb.name = 'Diabetes · above 9 and missing refills';
-      const queued = {}; ['x57', 'x108', 'x84', 'x106', 'x35'].forEach(id => queued[id] = true);
+      const live = !!window.CCL_API, queued = {}; (live ? M.slice(0, 5).map(m => m.id) : ['x57', 'x108', 'x84', 'x106', 'x35']).forEach(id => queued[id] = true);
       const ws = ['cohort', 'intel', 'portal'].includes(this.props.startWorkspace) ? this.props.startWorkspace : 'cohort';
-      this.setState({ ready: true, ws, cb, cohorts: C.COHORTS.slice(), campaigns: C.CAMPAIGNS.slice(), members: M, intelSel: M[0].id, queued, portalSel: 'x57' });
+      this.setState({ ready: true, ws, cb, cohorts: C.COHORTS.slice(), campaigns: C.CAMPAIGNS.slice(), members: M, intelSel: M[0].id, queued, portalSel: live ? M[0].id : 'x57' });
     };
     go();
     /* Bridge to the Care portal (screen 3): queued members and focus go down, saved outcomes come back. */
     this.onMsg = e => { const f = this.portalFrame(); if (!f || e.source !== f.contentWindow) return; const d = e.data || {};
       if (d.type === 'ccl:ready') { this._sent = null; this.syncPortal(true); }
-      if (d.type === 'ccl:writeback' && d.id) { this.setState(s => ({ wb: Object.assign({}, s.wb, { [d.id]: d }), queued: Object.assign({}, s.queued, { [d.id]: false }) })); this.say('Outcome for ' + d.name + ' written back · care intelligence re-scores tonight'); } };
+      if (d.type === 'ccl:writeback' && d.id) { this.setState(s => ({ wb: Object.assign({}, s.wb, { [d.id]: d }), queued: Object.assign({}, s.queued, { [d.id]: false }) })); this.say('Outcome for ' + d.name + ' written back · care intelligence re-scores tonight'); if (window.CCL_API) { try { this.setState({ members: window.CCC.members() }); } catch (x) {} } } };
     window.addEventListener('message', this.onMsg);
     this.tick = setInterval(() => {
       const ps = this.state.ps; const live = Object.keys(ps).filter(k => ps[k].call === 'live');
@@ -626,15 +627,23 @@ class Component extends DCLogic {
   setCe(p) { this.setState(s => ({ ce: Object.assign({}, s.ce, p) })); }
   togIn(arr, v) { return arr.includes(v) ? arr.filter(x => x !== v) : arr.concat(v); }
   campN(c) { const t = c.inc.reduce((s, id) => s + ((this.state.cohorts.find(x => x.id === id) || { n: 0 }).n), 0); return t * (c.inc.length > 1 ? 0.88 : 1); }
+  rescore(c) {   /* live mode: run the nightly engine now and reload the list it produced */
+    const L = window.CCL_API; if (!L) return false;
+    try { if (c && c.id) L.saveCampaign(Object.assign({ start: '2026-11-20' }, c, { status: 'Live' }));
+      const r = L.nightly(), M = window.CCC.members();
+      this.setState({ members: M, intelSel: (M[0] || {}).id });
+      this.say((c && c.id ? c.id + ' handed off · ' : '') + 'care intelligence ran now: ' + r.campaign_members + ' members, ' + r.signals + ' signals, ' + r.care_plans + ' care plans');
+      return true; } catch (e) { console.warn(e); return false; }
+  }
   handoff(k) {
     const c = Object.assign({}, k, { status: 'Live' });
     this.setState(s => ({ campaigns: s.campaigns.filter(x => x.id !== c.id).concat(c), active: c.id, ws: 'intel' }));
-    this.say((c.id || 'Campaign') + ' handed off · care intelligence scores these members tonight at 03:00');
+    if (!this.rescore(c)) this.say((c.id || 'Campaign') + ' handed off · care intelligence scores these members tonight at 03:00');
   }
   sendCamp() {
     const ce = this.state.ce; const k = Object.assign({}, ce, { status: 'Live', start: '23 Nov', weeks: 8 });
     this.setState(s => ({ campaigns: s.campaigns.concat(k), ce: null, active: k.id, ws: 'intel' }));
-    this.say(k.id + ' handed off · care intelligence scores these members tonight at 03:00');
+    if (!this.rescore(k)) this.say(k.id + ' handed off · care intelligence scores these members tonight at 03:00');
   }
   P(id) { const m = this.state.members.find(x => x.id === id); return this.state.ps[id] || { consent: m ? m.consent : 'pending', call: 'idle', secs: 0, out: {}, saved: false, note: '' }; }
   setP(id, p) { this.setState(s => ({ ps: Object.assign({}, s.ps, { [id]: Object.assign({}, this.P(id), p) }) })); }
