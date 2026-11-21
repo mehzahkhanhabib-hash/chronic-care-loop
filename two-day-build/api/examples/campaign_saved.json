@@ -1,0 +1,1 @@
+{"campaign_id": "CMP-0103", "name": "T2D HbA1c 9+", "status": "Live", "priority": 2, "trigger_mode": "list", "trigger_list": "Trig1,Trig6,Trig9", "rules_json": "[{\"f\": \"dx\", \"vs\": [\"E11\"]}, {\"f\": \"lab\", \"l\": \"hba1c\", \"op\": \">=\", \"v\": 9}]", "where_sql": "(m.has_t2d = 1) AND m.last_hba1c_value >= 9.0", "holdout_pct": 10, "members": 4}

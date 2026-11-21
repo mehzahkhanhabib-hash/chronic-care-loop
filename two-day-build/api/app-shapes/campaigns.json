@@ -1,0 +1,27 @@
+{
+ "campaigns": [
+  {
+   "id": "CMP-0101",
+   "name": "Diabetes control",
+   "goal": "Bring HbA1c to goal",
+   "inc": [
+    "COH-0101"
+   ],
+   "exc": [],
+   "start": "2026-11-16",
+   "weeks": 8,
+   "prio": 1,
+   "mode": "automated",
+   "trig": [],
+   "ch": [
+    "Voice"
+   ],
+   "nurses": 8,
+   "calls": 25,
+   "hold": 10,
+   "status": "Live",
+   "reach": 8,
+   "signals": 62
+  }
+ ]
+}

@@ -1,0 +1,59 @@
+{
+ "cohorts": [
+  {
+   "id": "COH-0101",
+   "name": "Diabetes \u00b7 above goal",
+   "base": "daman",
+   "n": 9,
+   "refresh": "Nightly",
+   "owner": "U-0201",
+   "ver": 1,
+   "src": "Builder",
+   "rules": {
+    "logic": "all",
+    "inc": [
+     {
+      "id": "COH-0101-v1-R1",
+      "f": "dx",
+      "op": null,
+      "v": null,
+      "v2": null,
+      "vs": [
+       "E11"
+      ],
+      "l": null
+     },
+     {
+      "id": "COH-0101-v1-R2",
+      "f": "lab",
+      "op": "\u2265",
+      "v": 8,
+      "v2": null,
+      "vs": [],
+      "l": "hba1c"
+     }
+    ],
+    "exc": [
+     {
+      "id": "COH-0101-v1-R3",
+      "f": "optout",
+      "op": null,
+      "v": null,
+      "v2": null,
+      "vs": [],
+      "l": null
+     }
+    ]
+   },
+   "holdout": 1,
+   "versions": [
+    {
+     "v": 1,
+     "date": "2026-11-21",
+     "n": 9,
+     "note": "Saved in builder"
+    }
+   ]
+  }
+ ]
+}

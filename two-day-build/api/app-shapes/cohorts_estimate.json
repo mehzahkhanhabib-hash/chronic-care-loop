@@ -1,0 +1,215 @@
+{
+ "B": 24,
+ "n": 19,
+ "steps": [
+  {
+   "id": 1,
+   "n": 19
+  }
+ ],
+ "alone": {
+  "1": 19
+ },
+ "unsupported": [],
+ "base_note": "every member in the extract",
+ "sql": "SELECT m.member_id FROM member m\nWHERE 1=1 AND (EXISTS (SELECT 1 FROM member_feature f WHERE f.member_id = m.member_id AND f.feature_key = 'x:cohort_t2d_l12m' AND f.value_num = 1))",
+ "params": [],
+ "profile": {
+  "age": [
+   [
+    "18\u201339",
+    0.0
+   ],
+   [
+    "40\u201354",
+    0.15789473684210525
+   ],
+   [
+    "55\u201364",
+    0.3684210526315789
+   ],
+   [
+    "65+",
+    0.47368421052631576
+   ]
+  ],
+  "sex": [
+   [
+    "Women",
+    0.21052631578947367
+   ],
+   [
+    "Men",
+    0.7894736842105263
+   ]
+  ],
+  "plan": [
+   [
+    "Enhanced",
+    0.8421052631578947
+   ],
+   [
+    "Basic",
+    0.10526315789473684
+   ],
+   [
+    "Thiqa",
+    0.0
+   ],
+   [
+    "Other",
+    0.05263157894736842
+   ]
+  ],
+  "region": [
+   [
+    "Not in the extract",
+    1
+   ]
+  ],
+  "net": [
+   [
+    "Any PHG encounter",
+    0.3684210526315789
+   ],
+   [
+    "No PHG encounter",
+    0.631578947368421
+   ]
+  ]
+ },
+ "sample": [
+  {
+   "id": "m129",
+   "name": "Rajesh M.",
+   "ini": "RM",
+   "age": 45,
+   "sex": "M",
+   "facts": [
+    "HbA1c 7.8%",
+    "Enhanced Bronze"
+   ]
+  },
+  {
+   "id": "m133",
+   "name": "Ahmed S.",
+   "ini": "AS",
+   "age": 72,
+   "sex": "M",
+   "facts": [
+    "HbA1c 8.3%",
+    "Enhanced Bronze"
+   ]
+  },
+  {
+   "id": "m147",
+   "name": "Noura H.",
+   "ini": "NH",
+   "age": 72,
+   "sex": "F",
+   "facts": [
+    "HbA1c 5.6%",
+    "Enhanced Silver"
+   ]
+  },
+  {
+   "id": "m150",
+   "name": "Anil N.",
+   "ini": "AN",
+   "age": 65,
+   "sex": "M",
+   "facts": [
+    "HbA1c 11.3%",
+    "Enhanced Sahtak"
+   ]
+  },
+  {
+   "id": "m164",
+   "name": "Ahmed A.",
+   "ini": "AA",
+   "age": 41,
+   "sex": "M",
+   "facts": [
+    "HbA1c 13.0%",
+    "Enhanced Bronze"
+   ]
+  },
+  {
+   "id": "m2",
+   "name": "Imran M.",
+   "ini": "IM",
+   "age": 60,
+   "sex": "M",
+   "facts": [
+    "HbA1c 10.1%",
+    "Enhanced Bronze"
+   ]
+  },
+  {
+   "id": "m26",
+   "name": "Majid A.",
+   "ini": "MA",
+   "age": 65,
+   "sex": "M",
+   "facts": [
+    "HbA1c 11.0%",
+    "Core Silver"
+   ]
+  },
+  {
+   "id": "m3",
+   "name": "Imran S.",
+   "ini": "IS",
+   "age": 50,
+   "sex": "M",
+   "facts": [
+    "HbA1c 6.5%",
+    "Enhanced Bronze"
+   ]
+  },
+  {
+   "id": "m39",
+   "name": "Arjun M.",
+   "ini": "AM",
+   "age": 64,
+   "sex": "M",
+   "facts": [
+    "HbA1c 6.4%",
+    "Premier Premier"
+   ]
+  },
+  {
+   "id": "m4",
+   "name": "Rashid A.",
+   "ini": "RA",
+   "age": 70,
+   "sex": "M",
+   "facts": [
+    "HbA1c 8.3%",
+    "Enhanced Sahtak"
+   ]
+  },
+  {
+   "id": "m44",
+   "name": "Amna A.",
+   "ini": "AA",
+   "age": 66,
+   "sex": "F",
+   "facts": [
+    "HbA1c 5.4%",
+    "Enhanced Bronze"
+   ]
+  },
+  {
+   "id": "m49",
+   "name": "Omar A.",
+   "ini": "OA",
+   "age": 56,
+   "sex": "M",
+   "facts": [
+    "HbA1c 10.2%",
+    "Core Bronze"
+   ]
+  }
+ ]
+}

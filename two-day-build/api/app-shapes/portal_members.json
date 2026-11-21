@@ -1,0 +1,332 @@
+{
+ "members": [
+  {
+   "id": "DMN-m164",
+   "mask": "m164",
+   "name": "Ahmed Al Suwaidi",
+   "source": "extract",
+   "pseudonym": true,
+   "age": 41,
+   "sex": "Male",
+   "plan": "Enhanced Bronze",
+   "nat": "Moroccan",
+   "lang": "Arabic",
+   "conds": [
+    {
+     "code": "E11",
+     "short": "DM",
+     "name": "Type 2 diabetes"
+    }
+   ],
+   "risk": 43,
+   "trigger": {
+    "reason": "Post-discharge care",
+    "detail": "Discharged 77 days ago",
+    "kpi": "Acute event",
+    "nudge": "call",
+    "slaH": 2
+   },
+   "labs": [
+    {
+     "k": "HbA1c",
+     "name": "HbA1c",
+     "unit": "%",
+     "target": 7,
+     "dir": "down",
+     "series": [
+      13.0
+     ],
+     "last": "3 mo ago"
+    }
+   ],
+   "meds": [],
+   "adm12": 2,
+   "er12": 3,
+   "cost12": 29522,
+   "specs": [],
+   "wear": null,
+   "det": null,
+   "status": "enrolled",
+   "next": "Glycaemic treatment review",
+   "phone": "+971 52 \u2022\u2022\u2022 1405",
+   "pref": "Weekdays 12\u20132 pm",
+   "lastContact": "No prior contact",
+   "cp": {
+    "prog": "Diabetes management",
+    "next": "2026-11-27",
+    "adh": null,
+    "goals": [
+     {
+      "k": "HbA1c",
+      "from": 13.0,
+      "now": 13.0,
+      "target": 7,
+      "dir": "down"
+     }
+    ]
+   },
+   "live": {
+    "consent": "granted",
+    "phg": 0.76,
+    "bp": null,
+    "sig": [
+     {
+      "code": "POST_DISCHARGE",
+      "trig": "Trig4",
+      "state": "fired",
+      "evidence": "Discharged 77 days ago",
+      "name": "Post-discharge care",
+      "cls": "acute",
+      "campaign": "CMP-0101"
+     },
+     {
+      "code": "HBA1C_ABOVE_GOAL",
+      "trig": "Trig1",
+      "state": "fired",
+      "evidence": "HbA1c 13.0%",
+      "name": "HbA1c above target",
+      "cls": "unctl",
+      "campaign": "CMP-0101"
+     },
+     {
+      "code": "KIDNEY_DUE",
+      "trig": "Trig5",
+      "state": "fired",
+      "evidence": "eGFR \u2014, UACR \u2014; last eGFR test: 78 days ago",
+      "name": "Kidney check",
+      "cls": "unctl",
+      "campaign": "CMP-0101"
+     },
+     {
+      "code": "REFILL_GAP",
+      "trig": "Trig9",
+      "state": "fired",
+      "evidence": "PDC \u2014 (DM) / \u2014 (BP)",
+      "name": "Medication adherence",
+      "cls": "barrier",
+      "campaign": "CMP-0101"
+     },
+     {
+      "code": "EYE_UNKNOWN",
+      "trig": "Trig12",
+      "state": "fired",
+      "evidence": "Last retinal screen: none on record",
+      "name": "Eye exam due",
+      "cls": "gap",
+      "campaign": "CMP-0101"
+     },
+     {
+      "code": "ANNUAL_LABS",
+      "trig": "Trig11",
+      "state": "fired",
+      "evidence": "Last lipid panel: 205 days ago",
+      "name": "Annual labs",
+      "cls": "gap",
+      "campaign": "CMP-0101"
+     },
+     {
+      "code": "NUTRITION_DUE",
+      "trig": "Trig8",
+      "state": "fired",
+      "evidence": "Last dietitian visit: none on record",
+      "name": "Nutrition and education",
+      "cls": "goal",
+      "campaign": "CMP-0101"
+     }
+    ],
+    "risk": {
+     "C": 5,
+     "M": 1,
+     "K": 0,
+     "U": 3,
+     "A": 1,
+     "R": 10,
+     "tier": 3,
+     "tierL": "High",
+     "safety": "Priority clinical review",
+     "prov": true,
+     "mh": [],
+     "H": 4,
+     "a1": 13.0,
+     "eg": null,
+     "alert": "RED",
+     "priority": "P1",
+     "persona": "2. Recurrent ED/IP",
+     "allocation": "PREVHEALTH",
+     "cadence": "Baseline, W2, M1, M2, M3, M4, M6, M9, M12"
+    },
+    "needs": [
+     {
+      "k": "HBA1C_ABOVE_GOAL",
+      "trig": "Trig1",
+      "need_id": "N-m164-Trig1",
+      "cls": "unctl",
+      "t": "Glycaemic treatment review",
+      "o": "Doctor",
+      "w": "Goal, decision and next test date recorded",
+      "gl": "Trig1 \u00b7 T2D",
+      "ev": "HbA1c 13.0%",
+      "slot": "CURRENT",
+      "status": "open",
+      "due": "2026-11-27",
+      "hold": null,
+      "action": {
+       "id": "A-m164-Trig1",
+       "status": "open",
+       "assignee": "U-0150",
+       "due": "2026-11-27"
+      }
+     },
+     {
+      "k": "ANNUAL_LABS",
+      "trig": "Trig11",
+      "need_id": "N-m164-Trig11",
+      "cls": "gap",
+      "t": "One bundled lab visit",
+      "o": "Coordinator",
+      "w": "Lab claims",
+      "gl": "Trig11 \u00b7 T2D \u00b7 HTN",
+      "ev": "Last lipid panel: 205 days ago",
+      "slot": "NEXT",
+      "status": "open",
+      "due": "2026-12-20",
+      "hold": null,
+      "action": null
+     },
+     {
+      "k": "EYE_UNKNOWN",
+      "trig": "Trig12",
+      "need_id": "N-m164-Trig12",
+      "cls": "gap",
+      "t": "Confirm the last exam or refer",
+      "o": "Nurse",
+      "w": "Report or referral claim",
+      "gl": "Trig12 \u00b7 T2D",
+      "ev": "Last retinal screen: none on record",
+      "slot": "NEXT",
+      "status": "open",
+      "due": "2026-12-20",
+      "hold": null,
+      "action": null
+     },
+     {
+      "k": "POST_DISCHARGE",
+      "trig": "Trig4",
+      "need_id": "N-m164-Trig4",
+      "cls": "acute",
+      "t": "GP follow-up within 72 h; medicine reconciliation",
+      "o": "Coordinator",
+      "w": "GP outpatient claim within 7 days",
+      "gl": "Trig4 \u00b7 T2D \u00b7 HTN",
+      "ev": "Discharged 77 days ago",
+      "slot": "CURRENT",
+      "status": "open",
+      "due": "2026-11-23",
+      "hold": null,
+      "action": {
+       "id": "A-m164-Trig4",
+       "status": "open",
+       "assignee": "U-0150",
+       "due": "2026-11-23"
+      }
+     },
+     {
+      "k": "KIDNEY_DUE",
+      "trig": "Trig5",
+      "need_id": "N-m164-Trig5",
+      "cls": "unctl",
+      "t": "Book eGFR and UACR; nephrology if eGFR < 30",
+      "o": "Coordinator",
+      "w": "Lab claim with a result",
+      "gl": "Trig5 \u00b7 T2D \u00b7 HTN",
+      "ev": "eGFR \u2014, UACR \u2014; last eGFR test: 78 days ago",
+      "slot": "CURRENT",
+      "status": "open",
+      "due": "2026-11-27",
+      "hold": null,
+      "action": {
+       "id": "A-m164-Trig5",
+       "status": "open",
+       "assignee": "U-0150",
+       "due": "2026-11-27"
+      }
+     },
+     {
+      "k": "NUTRITION_DUE",
+      "trig": "Trig8",
+      "need_id": "N-m164-Trig8",
+      "cls": "goal",
+      "t": "Self-management goal, dietitian",
+      "o": "Nurse",
+      "w": "Goal set and reviewed",
+      "gl": "Trig8 \u00b7 T2D",
+      "ev": "Last dietitian visit: none on record",
+      "slot": "FUTURE",
+      "status": "open",
+      "due": "2026-12-04",
+      "hold": null,
+      "action": null
+     },
+     {
+      "k": "REFILL_GAP",
+      "trig": "Trig9",
+      "need_id": "N-m164-Trig9",
+      "cls": "barrier",
+      "t": "Refill and barrier check; pharmacist if 3 or more classes",
+      "o": "Coordinator / pharmacist",
+      "w": "Next fill dispensed within 14 days",
+      "gl": "Trig9 \u00b7 T2D \u00b7 HTN",
+      "ev": "PDC \u2014 (DM) / \u2014 (BP)",
+      "slot": "NEXT",
+      "status": "open",
+      "due": "2026-11-27",
+      "hold": null,
+      "action": null
+     }
+    ],
+    "actions": [
+     {
+      "id": "W-m164-1",
+      "kind": "call",
+      "title": "P1 outreach call",
+      "due": "2026-11-20",
+      "assignee": "U-0150",
+      "status": "open",
+      "need": null,
+      "source": "worklist"
+     },
+     {
+      "id": "A-m164-Trig4",
+      "kind": "care_plan",
+      "title": "GP follow-up within 72 h; medicine reconciliation",
+      "due": "2026-11-23",
+      "assignee": "U-0150",
+      "status": "open",
+      "need": "N-m164-Trig4",
+      "source": "care_plan"
+     },
+     {
+      "id": "A-m164-Trig1",
+      "kind": "care_plan",
+      "title": "Glycaemic treatment review",
+      "due": "2026-11-27",
+      "assignee": "U-0150",
+      "status": "open",
+      "need": "N-m164-Trig1",
+      "source": "care_plan"
+     },
+     {
+      "id": "A-m164-Trig5",
+      "kind": "care_plan",
+      "title": "Book eGFR and UACR; nephrology if eGFR < 30",
+      "due": "2026-11-27",
+      "assignee": "U-0150",
+      "status": "open",
+      "need": "N-m164-Trig5",
+      "source": "care_plan"
+     }
+    ]
+   }
+  }
+ ]
+}

@@ -1,0 +1,283 @@
+<title>Chronic Care Loop 2-Day Build</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: header band with the chain; sticky contents rail; one reading column. Bhawani's view is a module board grouped by programme. */
+:root{
+  --bg:#F5F7FA; --surface:#FFFFFF; --ink:#1D2939; --mut:#5D6B80; --line:#E1E7EF; --sunk:#EEF2F7;
+  --acc:#3F6C9F; --accS:#EAF1F9; --band:#13223A; --bandInk:#E6EDF6; --bandMut:#A9B9CE;
+  --red:#B5545E; --redS:#FBEEF0; --amber:#8A6A3E; --amberS:#F7F0E3; --green:#2F7D72; --greenS:#E6F3F0; --blue:#3F6C9F; --blueS:#EAF1F9; --grey:#6B7686; --greyS:#EEF1F5;
+  --sans:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif; --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0F1724;--surface:#172234;--ink:#E6EDF6;--mut:#9AABC2;--line:#26354B;--sunk:#1B283B;--acc:#8DB3DD;--accS:#1C2D45;--band:#0A1220;--bandInk:#E6EDF6;--bandMut:#93A6BF;--red:#EE9AA3;--redS:#2D1A1F;--amber:#E0B97E;--amberS:#2A2216;--green:#6CC9B9;--greenS:#15292A;--blue:#8DB3DD;--blueS:#1C2D45;--grey:#A3AEBD;--greyS:#1E2939;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0F1724;--surface:#172234;--ink:#E6EDF6;--mut:#9AABC2;--line:#26354B;--sunk:#1B283B;--acc:#8DB3DD;--accS:#1C2D45;--band:#0A1220;--bandInk:#E6EDF6;--bandMut:#93A6BF;--red:#EE9AA3;--redS:#2D1A1F;--amber:#E0B97E;--amberS:#2A2216;--green:#6CC9B9;--greenS:#15292A;--blue:#8DB3DD;--blueS:#1C2D45;--grey:#A3AEBD;--greyS:#1E2939;color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1320px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.band{background:var(--band);color:var(--bandInk);margin-top:calc(-1*env(safe-area-inset-top,0px));padding-top:calc(env(safe-area-inset-top,0px) + 34px);padding-bottom:30px}
+.eyebrow{font:600 12px var(--mono);letter-spacing:.12em;color:#7FC4B4;text-transform:uppercase}
+h1{font-size:clamp(28px,4vw,40px);line-height:1.15;margin:10px 0;letter-spacing:-.015em;text-wrap:balance}
+.lede{max-width:78ch;color:var(--bandMut);margin:0}
+.chain{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:18px;font:600 12.5px var(--mono)}
+.chain span{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:6px;padding:5px 9px}
+.chain i{color:var(--bandMut);font-style:normal}
+.grid{display:grid;grid-template-columns:220px minmax(0,1fr);gap:34px;padding-block:26px 60px}
+nav.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px);align-self:start;font-size:13.5px;display:flex;flex-direction:column;gap:2px}
+nav.toc a{color:var(--ink);text-decoration:none;padding:4px 8px;border-radius:6px}
+nav.toc a:hover{background:var(--sunk)}
+a:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+main{min-width:0}
+main>section{padding-bottom:28px;margin-bottom:28px;border-bottom:1px solid var(--line)}
+main>section:last-child{border-bottom:0}
+h2{font-size:23px;margin:0 0 6px;letter-spacing:-.01em;text-wrap:balance}
+h2 small{display:block;font:600 12px var(--mono);color:var(--acc);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
+h3{font-size:16px;margin:18px 0 6px}
+h4{font:600 12px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin:0 0 8px}
+p{max-width:80ch}
+code{font-family:var(--mono);font-size:.86em;background:var(--sunk);padding:1px 5px;border-radius:4px}
+pre{font:12.5px/1.55 var(--mono);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px;overflow-x:auto;margin:8px 0}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:12px 0}
+.k{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.k b{display:block;font-size:22px;font-variant-numeric:tabular-nums}
+.k span{color:var(--mut);font-size:12.5px}
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--surface);margin-top:8px}
+table{border-collapse:collapse;font-size:13px;min-width:100%;font-variant-numeric:tabular-nums}
+th{background:var(--sunk);text-align:left;font:600 11.5px var(--mono);color:var(--mut);padding:8px 10px;white-space:nowrap;border-bottom:1px solid var(--line)}
+td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.num{text-align:right}
+.chip{display:inline-block;border-radius:999px;padding:1px 9px;font:600 11.5px var(--sans);background:var(--greyS);color:var(--grey);white-space:nowrap}
+.chip.red{background:var(--redS);color:var(--red)}.chip.amber{background:var(--amberS);color:var(--amber)}.chip.green{background:var(--greenS);color:var(--green)}.chip.blue{background:var(--blueS);color:var(--blue)}
+.sumh{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.prog{margin-top:14px}
+.mods{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.mod{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--grey);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.mod.red{border-left-color:var(--red)}.mod.amber{border-left-color:var(--amber)}.mod.green{border-left-color:var(--green)}.mod.blue{border-left-color:var(--blue)}
+.mh{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.mt{color:var(--mut);font-size:12.5px}
+.ml{font:500 13px var(--mono)}
+.mrow{font-size:12.5px;display:flex;gap:6px;flex-wrap:wrap}
+.mrow span{color:var(--mut);min-width:38px}
+.mrow em{color:var(--mut);font-style:normal}
+.bar{display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--sunk);min-width:160px}
+.bar i{display:block;height:100%}
+.bar .green{background:var(--green)}.bar .amber{background:var(--amber)}.bar .red{background:var(--red)}.bar .blue{background:var(--blue)}.bar .grey{background:var(--grey)}.bar .grey2{background:var(--line)}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12.5px;color:var(--mut);margin-top:6px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.devs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.dev{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.dev h3{margin:0 0 2px}
+.dev .role{color:var(--mut);font-size:13px;margin-bottom:8px}
+.dev dl{margin:0;display:grid;gap:8px}
+.dev dt{font:600 11.5px var(--mono);color:var(--acc)}
+.dev dd{margin:0;font-size:13.5px}
+.dev dd .ok{color:var(--green);font-weight:600}
+.note{background:var(--accS);border-radius:8px;padding:12px 14px;font-size:14px;max-width:84ch}
+@media (max-width:980px){.devs{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}nav.toc{position:static;flex-direction:row;flex-wrap:wrap}}
+</style>
+
+<header class="band"><div class="wrap">
+  <div class="eyebrow">Chronic Care Loop · SingleStore · 3 developers · 2 days</div>
+  <h1>The lean build: raw member to trigger to nurse action and follow-up</h1>
+  <p class="lede">One SingleStore schema, seven SQL files and a thin API, driven by the CCC Rulebook. Everything below was run end to end on the 24-member sample, on MySQL 8.4 (the same SQL dialect as SingleStore): 8 automated checks pass, and the SQL fires exactly the same triggers, member by member, as the rulebook engine.</p>
+  <div class="chain"><span>raw extract</span><i>→</i><span>member_signal</span><i>→</i><span>care_plan_need</span><i>→</i><span>action: nudge · call · care plan</span><i>→</i><span>worklist</span><i>→</i><span>outcome</span><i>→</i><span>follow-up action</span><i>↩ next night</i></div>
+</div></header>
+
+<div class="wrap grid">
+  <nav class="toc" aria-label="Contents">
+    <a href="#model">Data model</a><a href="#chain">Raw → trigger → action</a><a href="#worklist">Worklist</a><a href="#followup">Action → follow-up</a>
+    <a href="#bhawani">Bhawani's view</a><a href="#sql">SQL formulas</a><a href="#api">API</a><a href="#devs">3-developer plan</a><a href="#checks">Acceptance checks</a><a href="#demo">Demo</a>
+  </nav>
+  <main>
+    <section id="model">
+      <h2><small>1 · Model</small>8 working tables, 1 staging table, 10 rule tables</h2>
+      <div class="tw"><table><thead><tr><th>Table</th><th>One row per</th><th>Holds</th><th>Written by</th></tr></thead><tbody>
+        <tr><td><code>stg_extract</code></td><td>extract row</td><td>all 341 columns as text, as received</td><td>load</td></tr>
+        <tr><td><code>member</code></td><td>member</td><td>80 typed, cleaned columns the rules read; consent; R, tier, alert, P1–P4</td><td>load, nightly, portal</td></tr>
+        <tr><td><code>campaign</code> · <code>campaign_member</code></td><td>campaign · member×campaign</td><td>builder rules, compiled filter, priority; stable 10% holdout</td><td>builder</td></tr>
+        <tr><td><code>member_signal</code></td><td>member × trigger × day</td><td>fired or cannot-tell, with evidence</td><td>nightly</td></tr>
+        <tr><td><code>care_plan_need</code></td><td>member × trigger</td><td>class, slot (CURRENT / NEXT / FUTURE), status, <b>gap state</b>, due, 90-day hold</td><td>nightly, portal</td></tr>
+        <tr><td><code>action</code></td><td>piece of work</td><td>nudge · call · care_plan · follow_up · retry · escalation; assignee; due; <b>parent_action_id</b></td><td>nightly, portal</td></tr>
+        <tr><td><code>outcome</code></td><td>nurse result</td><td>result, consent, notes, nurse</td><td>portal</td></tr>
+        <tr><td><code>worklist</code></td><td>member × day</td><td>nurse, rank, lead action, today or queued</td><td>nightly</td></tr>
+        <tr><td colspan="4">Rule tables (REFERENCE, copied to every SingleStore node): <code>rule_trigger</code> · <code>rule_priority</code> · <code>rule_tier</code> · <code>rule_cadence</code> · <code>rule_dm_module</code> · <code>rule_followup</code> · <code>nurse</code> · <code>nurse_language</code> · <code>run_config</code> · <code>campaign</code>. SingleStore has no foreign keys, so the SQL keeps integrity itself, and every member table is sharded by <code>member_id</code>.</td></tr>
+      </tbody></table></div>
+      <p>A fresh run on the sample (20 Nov 2026):</p>
+      <div class="kpis"><div class="k"><b>24</b><span>members</span></div><div class="k"><b>21</b><span>members with plan</span></div><div class="k"><b>152</b><span>triggers fired today</span></div><div class="k"><b>144</b><span>open needs</span></div><div class="k"><b>63</b><span>current needs</span></div><div class="k"><b>0</b><span>current needs without action</span></div><div class="k"><b>21</b><span>on todays list</span></div></div>
+    </section>
+
+    <section id="chain">
+      <h2><small>2 · The chain for one member</small>m26: raw data → triggers → care plan → actions</h2>
+      <h3>Raw values (cleaned)</h3><div class="tw"><table class=""><thead><tr><th>HbA1c</th><th>HbA1c test</th><th>SBP</th><th>DBP</th><th>eGFR</th><th>PDC (DM)</th><th>Admissions</th><th>Discharged</th><th>Foot exam</th><th>Dietitian</th></tr></thead><tbody><tr><td>11</td><td>2026-08-03</td><td>116</td><td>81</td><td>—</td><td>0.8423</td><td>1</td><td>2026-04-18</td><td>—</td><td>—</td></tr></tbody></table></div>
+      <p>R = C 5 + M 6 + K 0 + U 0 + A 2 = <b>13</b> → Tier 4 (Very high) · alert <b>AMBER</b> · <b>P1</b></p>
+      <h3>Triggers fired from the rule conditions</h3><div class="tw"><table class=""><thead><tr><th>Trigger</th><th>Name</th><th>Class</th><th>Module</th><th>State</th><th>Evidence</th></tr></thead><tbody><tr><td>Trig3</td><td>Hypoglycaemia</td><td>safety</td><td>DM-HYPO</td><td>fired</td><td>flag_dm_hypoglycaemia_l12m 0</td></tr><tr><td>Trig4</td><td>Post-discharge care</td><td>acute</td><td>SH-TOC</td><td>fired</td><td>last_ip_discharge_date 2026-04-18; ed_visits_l12m 1.00; last_ed_visit_date 2026-05-11</td></tr><tr><td>Trig1</td><td>HbA1c above target</td><td>unctl</td><td>DM-GLY</td><td>fired</td><td>Last_HbA1c_Value 11.00</td></tr><tr><td>Trig2</td><td>BP treatment review</td><td>unctl</td><td>HTN-BP</td><td>fired</td><td>Last_SystolicPressure_Value 116.00; Last_DiastolicPressure_Value 81.00; flag_ckd 0</td></tr><tr><td>Trig5</td><td>Kidney check</td><td>unctl</td><td>SH-KID</td><td>fired</td><td>Last_eGFR_Value none; last_egfr_test_date 2026-08-03; last_urine_albumin_date 2025-02-13</td></tr><tr><td>Trig9</td><td>Medication adherence</td><td>barrier</td><td>SH-MEDS</td><td>fired</td><td>pdc_any_t2d_noninsulin 0.8423; pdc_any_htn none; days_since_t2d_supply_ran_out -94.00; days_since_htn_supply_ran_out 53.00</td></tr><tr><td>Trig6</td><td>HbA1c test due</td><td>gap</td><td>DM-GLY</td><td>fired</td><td>last_hba1c_date2 2026-08-03; Last_HbA1c_Value 11.00</td></tr><tr><td>Trig13</td><td>High-risk foot</td><td>gap</td><td>DM-FOOT</td><td>fired</td><td>last_foot_exam none; flag_dm_foot_ulcer_l12m 0; flag_amputation 0</td></tr><tr><td>Trig11</td><td>Annual labs</td><td>gap</td><td>SH-LABS</td><td>fired</td><td>last_lipid_panel_date 2026-08-03; last_renal_panel_date 2026-08-03</td></tr><tr><td>Trig8</td><td>Nutrition and education</td><td>goal</td><td>DM-EDU</td><td>fired</td><td>last_dietitian_visit none; last_diabeducator_visit none</td></tr></tbody></table></div>
+      <h3>Care plan: needs in rulebook order, one action per CURRENT need</h3><div class="tw"><table class=""><thead><tr><th>Slot</th><th>Trigger</th><th>Need</th><th>Class</th><th>Due</th><th>Action</th><th>Owner</th><th>Done when</th></tr></thead><tbody><tr><td>CURRENT</td><td>Trig3</td><td>Hypoglycaemia</td><td>safety</td><td>2026-11-20</td><td>Same-day clinician review, hypo plan, glucagon check</td><td>Doctor</td><td>Review note and medicine change logged</td></tr><tr><td>CURRENT</td><td>Trig4</td><td>Post-discharge care</td><td>acute</td><td>2026-11-23</td><td>GP follow-up within 72 h; medicine reconciliation</td><td>Coordinator</td><td>GP outpatient claim within 7 days</td></tr><tr><td>CURRENT</td><td>Trig1</td><td>HbA1c above target</td><td>unctl</td><td>2026-11-27</td><td>Glycaemic treatment review</td><td>Doctor</td><td>Goal, decision and next test date recorded</td></tr><tr><td>NEXT</td><td>Trig9</td><td>Medication adherence</td><td>barrier</td><td>2026-11-27</td><td>Refill and barrier check; pharmacist if 3 or more classes</td><td>Coordinator / pharmacist</td><td>Next fill dispensed within 14 days</td></tr><tr><td>NEXT</td><td>Trig5</td><td>Kidney check</td><td>unctl</td><td>2026-11-27</td><td>Book eGFR and UACR; nephrology if eGFR &lt; 30</td><td>Coordinator</td><td>Lab claim with a result</td></tr><tr><td>NEXT</td><td>Trig2</td><td>BP treatment review</td><td>unctl</td><td>2026-11-27</td><td>Home BP recheck and clinician review</td><td>Nurse</td><td>Readings reviewed, next BP date set</td></tr><tr><td>FUTURE</td><td>Trig8</td><td>Nutrition and education</td><td>goal</td><td>2026-12-04</td><td>Self-management goal, dietitian</td><td>Nurse</td><td>Goal set and reviewed</td></tr><tr><td>FUTURE</td><td>Trig6</td><td>HbA1c test due</td><td>gap</td><td>2026-12-20</td><td>Book HbA1c at an in-network lab</td><td>Coordinator</td><td>Lab claim</td></tr><tr><td>FUTURE</td><td>Trig13</td><td>High-risk foot</td><td>gap</td><td>2026-12-20</td><td>Foot exam; podiatry if high risk</td><td>Nurse</td><td>Exam claim</td></tr><tr><td>FUTURE</td><td>Trig11</td><td>Annual labs</td><td>gap</td><td>2026-12-20</td><td>One bundled lab visit</td><td>Coordinator</td><td>Lab claims</td></tr></tbody></table></div>
+    </section>
+
+    <section id="worklist">
+      <h2><small>3 · Orchestration</small>The nurse worklist</h2>
+      <p>Each member with an open CURRENT need gets one contact: a <b>call</b> due by SLA (P1 today, P2 next day, P3 in 3 days) or a <b>digital nudge</b> for P4. No new contact goes out within 14 days of a reached call. The list is ordered <b>safety or RED → tier → campaign priority → due date</b>. Nurses are matched by <b>language</b>, round-robin, within <b>daily capacity</b>; anything over capacity is queued for the next day. Escalations go to the clinical lead instead. Today's split: Omar Khalid 9 · Nadia Rahman 3 · Sara Mansour 9.</p>
+      <h3>Sara Mansour's list for 20 Nov</h3><div class="tw"><table class=""><thead><tr><th>#</th><th>Member</th><th>P</th><th>Alert</th><th>Tier</th><th>Language</th><th>Lead action</th><th>Due</th><th>List</th></tr></thead><tbody><tr><td>1</td><td>m49</td><td>P1</td><td>RED</td><td>3</td><td>Arabic</td><td>P1 call: Post-discharge care</td><td>2026-11-20</td><td>today</td></tr><tr><td>2</td><td>m133</td><td>P1</td><td>AMBER</td><td>4</td><td>Arabic</td><td>P1 call: Hypoglycaemia</td><td>2026-11-20</td><td>today</td></tr><tr><td>3</td><td>m150</td><td>P1</td><td>AMBER</td><td>4</td><td>English</td><td>P1 call: Post-discharge care</td><td>2026-11-20</td><td>today</td></tr><tr><td>4</td><td>m26</td><td>P1</td><td>AMBER</td><td>4</td><td>Arabic</td><td>P1 call: Hypoglycaemia</td><td>2026-11-20</td><td>today</td></tr><tr><td>5</td><td>m2</td><td>P2</td><td>AMBER</td><td>3</td><td>English</td><td>P2 call: HbA1c above target</td><td>2026-11-21</td><td>today</td></tr><tr><td>6</td><td>m75</td><td>P3</td><td>YELLOW</td><td>3</td><td>Arabic</td><td>P3 call: Hypoglycaemia</td><td>2026-11-23</td><td>today</td></tr><tr><td>7</td><td>m82</td><td>P1</td><td>AMBER</td><td>3</td><td>Arabic</td><td>P1 call: Post-discharge care</td><td>2026-11-20</td><td>today</td></tr><tr><td>8</td><td>m44</td><td>P3</td><td>YELLOW</td><td>3</td><td>Arabic</td><td>P3 call: Kidney check</td><td>2026-11-23</td><td>today</td></tr><tr><td>9</td><td>m8</td><td>P3</td><td>YELLOW</td><td>3</td><td>English</td><td>P3 call: HbA1c above target</td><td>2026-11-23</td><td>today</td></tr></tbody></table></div>
+    </section>
+
+    <section id="followup">
+      <h2><small>4 · Write-back</small>How a nurse's action becomes a follow-up</h2>
+      <p>Each portal button calls <code>POST /actions/{id}/outcome</code>. In one transaction, <code>05_followup.sql</code> records the outcome, closes the action, moves the need, creates the follow-up action (linked by <code>parent_action_id</code>), and promotes the next need into CURRENT with its own action.</p>
+      <div class="tw"><table><thead><tr><th>Nurse records</th><th>Need</th><th>Gap</th><th>Follow-up created</th></tr></thead><tbody>
+        <tr><td><span class="chip blue">reached</span> on a call</td><td>–</td><td>–</td><td>Cadence check-in on the tier's cadence (Tier 4 +7 d · 3 +14 · 2 +42 · 1 +90)</td></tr>
+        <tr><td><span class="chip blue">agreed</span></td><td>open</td><td>Scheduled</td><td>Check it happened: {done when}, on the need's due date</td></tr>
+        <tr><td><span class="chip blue">done</span></td><td>done; next need promoted</td><td>Reported</td><td>Verify in claims: {done when} (+14 d)</td></tr>
+        <tr><td><span class="chip blue">declined</span></td><td>held 90 days (G4); next need promoted</td><td>–</td><td>Re-offer at day 90</td></tr>
+        <tr><td><span class="chip blue">not reached</span></td><td>–</td><td>–</td><td>Retry next working day (3 attempts); then P1 → escalation to the clinical lead</td></tr>
+        <tr><td><span class="chip blue">callback</span> · <span class="chip blue">carried</span> · <span class="chip blue">escalated</span></td><td>–</td><td>–</td><td>Callback +1 d · nothing (stays CURRENT) · same-day clinician review</td></tr>
+      </tbody></table></div>
+      <h3>m26 on the call (from the test run)</h3>
+      <div class="tw"><table><thead><tr><th>Outcome</th><th>Nurse note</th><th>Creates</th></tr></thead><tbody><tr><td><span class="chip blue">reached</span></td><td>Spoke in Arabic; consent recorded</td><td>→ <b>follow-up</b> Cadence check-in <em>· due 2026-11-27</em></td></tr><tr><td><span class="chip blue">agreed</span></td><td>GP visit booked for Monday</td><td>→ <b>follow-up</b> Check it happened: Goal, decision and next test date recorded <em>· due 2026-11-27</em></td></tr><tr><td><span class="chip blue">done</span></td><td>Clinician reviewed; plan updated</td><td>→ <b>follow-up</b> Verify in claims: Review note and medicine change logged <em>· due 2026-12-04</em><br>→ <b>care-plan</b> Home BP recheck and clinician review <em>· due 2026-11-27</em></td></tr><tr><td><span class="chip blue">declined</span></td><td>Prefers to wait</td><td>→ <b>follow-up</b> Re-offer: GP follow-up within 72 h; medicine reconciliation <em>· due 2027-02-18</em><br>→ <b>care-plan</b> Book eGFR and UACR; nephrology if eGFR &lt; 30 <em>· due 2026-11-27</em></td></tr></tbody></table></div>
+      <h3>The chain afterwards (<code>v_action_chain</code>)</h3><div class="tw"><table class=""><thead><tr><th>#</th><th>Kind</th><th>Action</th><th>Status</th><th>Due</th><th>Came from</th></tr></thead><tbody><tr><td>22</td><td>care_plan</td><td>Glycaemic treatment review</td><td>done</td><td>2026-11-27</td><td>nightly run</td></tr><tr><td>23</td><td>care_plan</td><td>Same-day clinician review, hypo plan, glucagon check</td><td>done</td><td>2026-11-20</td><td>nightly run</td></tr><tr><td>24</td><td>care_plan</td><td>GP follow-up within 72 h; medicine reconciliation</td><td>declined</td><td>2026-11-23</td><td>nightly run</td></tr><tr><td>71</td><td>call</td><td>P1 call: Hypoglycaemia</td><td>done</td><td>2026-11-20</td><td>nightly run</td></tr><tr><td>95</td><td>follow_up</td><td>Cadence check-in</td><td>open</td><td>2026-11-27</td><td>#71 P1 call: Hypoglycaemia (reached)</td></tr><tr><td>96</td><td>follow_up</td><td>Check it happened: Goal, decision and next test date recorded</td><td>open</td><td>2026-11-27</td><td>#22 Glycaemic treatment review (agreed)</td></tr><tr><td>97</td><td>follow_up</td><td>Verify in claims: Review note and medicine change logged</td><td>open</td><td>2026-12-04</td><td>#23 Same-day clinician review, hypo plan, glucagon check (done)</td></tr><tr><td>98</td><td>care_plan</td><td>Home BP recheck and clinician review</td><td>open</td><td>2026-11-27</td><td>nightly run</td></tr><tr><td>99</td><td>follow_up</td><td>Re-offer: GP follow-up within 72 h; medicine reconciliation</td><td>open</td><td>2027-02-18</td><td>#24 GP follow-up within 72 h; medicine reconciliation (declined)</td></tr><tr><td>100</td><td>care_plan</td><td>Book eGFR and UACR; nephrology if eGFR &lt; 30</td><td>open</td><td>2026-11-27</td><td>nightly run</td></tr></tbody></table></div>
+      <p class="note">A care gap closes only in claims. "Done" moves it to <b>Reported</b>. The next night, if the extract no longer fires the trigger (the lab, visit or refill arrived), it becomes <b>Closed</b> and its "verify in claims" follow-up closes on its own.</p>
+    </section>
+
+    <section id="bhawani">
+      <h2><small>5 · Disease management</small>Bhawani's view of the care plan</h2>
+      <p>The same care plan, organised by programme module instead of by slot. Each module shows its target, the latest value, a status, the needs in it (with their CURRENT / NEXT / FUTURE slot), the gap state, and the next action with its owner and date. Shared modules (kidney, medicines, labs) are asked once for members with both conditions. Source: <code>GET /members/{id}/dm-plan</code> (<code>v_dm_member_module</code> + <code>v_dm_member_summary</code>).</p>
+      <div class="sumh"><div><b>Member m26</b> · 65 · M · speaks Arabic · consent granted</div>
+        <div class="chips"><span class="chip">Diabetes + Hypertension</span><span class="chip red">Tier 4 · Very high</span>
+        <span class="chip amber">AMBER</span><span class="chip">P1</span><span class="chip">R 13</span>
+        <span class="chip">3 current · 8 open needs</span><span class="chip">Next touchpoint 2026-11-27</span></div></div>
+      <div class="prog"><h4>Diabetes</h4><div class="mods"><div class="mod red"><div class="mh"><b>Glycaemic control</b><span class="chip red">Off target</span></div>
+          <div class="mt">HbA1c &lt; 7% (individual goal up to 8%); tested every 6 months</div><div class="ml">HbA1c 11.0% · tested 89 days ago</div><div class="mrow"><span>Needs</span><b>Trig1, Trig6</b> <em>CURRENT, NEXT</em></div><div class="mrow"><span>Gap</span><b>Scheduled, Potential</b></div><div class="mrow"><span>Next</span><b>Check it happened: Goal, decision and next test date recorded</b> <em>Doctor · 2026-11-27</em></div></div><div class="mod blue"><div class="mh"><b>Hypoglycaemia safety</b><span class="chip blue">Awaiting claims</span></div>
+          <div class="mt">No hypoglycaemia; rescue glucagon if on insulin or a sulfonylurea</div><div class="ml">On insulin / SU, no rescue glucagon</div><div class="mrow"><span>Gap</span><b>Reported</b></div><div class="mrow"><span>Next</span><b>Verify in claims: Review note and medicine change logged</b> <em>Doctor · 2026-12-04</em></div></div><div class="mod green"><div class="mh"><b>Eye screening</b><span class="chip green">On track</span></div>
+          <div class="mt">Retinal screen within 24 months</div><div class="ml">Retinal screen 73 days ago</div></div><div class="mod amber"><div class="mh"><b>Foot care</b><span class="chip amber">Due</span></div>
+          <div class="mt">Foot exam within 12 months; podiatry if high risk</div><div class="ml">Foot exam not on record</div><div class="mrow"><span>Needs</span><b>Trig13</b> <em>NEXT</em></div><div class="mrow"><span>Gap</span><b>Potential</b></div></div><div class="mod amber"><div class="mh"><b>Self-management and nutrition</b><span class="chip amber">Due</span></div>
+          <div class="mt">Dietitian or DSMES contact within 12 months; a self-management goal</div><div class="ml">Dietitian never · educator never</div><div class="mrow"><span>Needs</span><b>Trig8</b> <em>FUTURE</em></div><div class="mrow"><span>Gap</span><b>Potential</b></div></div></div></div><div class="prog"><h4>Hypertension</h4><div class="mods"><div class="mod red"><div class="mh"><b>Blood pressure control</b><span class="chip red">Off target</span></div>
+          <div class="mt">BP &lt; 140/90 (&lt; 130/80 with diabetes or CKD); BP ≥ 180/110 same day</div><div class="ml">BP 116/81</div><div class="mrow"><span>Needs</span><b>Trig2</b> <em>CURRENT</em></div><div class="mrow"><span>Gap</span><b>Potential</b></div><div class="mrow"><span>Next</span><b>Home BP recheck and clinician review</b> <em>Nurse · 2026-11-27</em></div></div><div class="mod green"><div class="mh"><b>Potassium monitoring</b><span class="chip green">On track</span></div>
+          <div class="mt">K+ within 12 months on an ACEi, ARB, MRA or thiazide</div><div class="ml">Potassium 89 days ago</div></div></div></div><div class="prog"><h4>Shared · asked once</h4><div class="mods"><div class="mod red"><div class="mh"><b>Kidney protection</b><span class="chip red">Off target</span></div>
+          <div class="mt">eGFR and UACR within 12 months; nephrology if eGFR &lt; 30</div><div class="ml">eGFR — · UACR —</div><div class="mrow"><span>Needs</span><b>Trig5</b> <em>CURRENT</em></div><div class="mrow"><span>Gap</span><b>Potential</b></div><div class="mrow"><span>Next</span><b>Book eGFR and UACR; nephrology if eGFR &lt; 30</b> <em>Coordinator · 2026-11-27</em></div></div><div class="mod amber"><div class="mh"><b>Medicine adherence</b><span class="chip amber">Due</span></div>
+          <div class="mt">PDC ≥ 80%; no supply gap over 30 days</div><div class="ml">Lowest PDC 84%</div><div class="mrow"><span>Needs</span><b>Trig9</b> <em>NEXT</em></div><div class="mrow"><span>Gap</span><b>Potential</b></div></div><div class="mod amber"><div class="mh"><b>Annual labs</b><span class="chip amber">Due</span></div>
+          <div class="mt">Lipids and creatinine within 12 months</div><div class="ml">Lipid panel 89 days ago</div><div class="mrow"><span>Needs</span><b>Trig11</b> <em>FUTURE</em></div><div class="mrow"><span>Gap</span><b>Potential</b></div></div><div class="mod grey"><div class="mh"><b>Transitions of care</b><span class="chip grey">Declined · on hold</span></div>
+          <div class="mt">GP follow-up within 72 h of discharge; medicines reconciled</div><div class="ml">Last discharge 196 days ago</div><div class="mrow"><span>Gap</span><b>Potential</b></div><div class="mrow"><span>Next</span><b>Re-offer: GP follow-up within 72 h; medicine reconciliation</b> <em>Coordinator · 2027-02-18</em></div></div><div class="mod green"><div class="mh"><b>New diagnosis start</b><span class="chip green">On track</span></div>
+          <div class="mt">Baseline assessment and DSMES referral within 90 days of diagnosis</div><div class="ml">First diagnosis 1027 days ago</div></div></div></div>
+      <h3>Programme dashboard: every module across the 24 members (<code>v_dm_programme</code>)</h3>
+      <div class="tw"><table><thead><tr><th>Programme</th><th>Module</th><th>Members</th><th>Status mix</th><th>On track</th><th>Nurse reported</th><th>Closed in claims</th></tr></thead><tbody><tr><td>Diabetes</td><td><b>Glycaemic control</b></td><td class="num">19</td>
+      <td><div class="bar"><i class="green" style="width:21.1%" title="on_track 4"></i><i class="amber" style="width:0.0%" title="due 0"></i><i class="red" style="width:78.9%" title="off_target 15"></i><i class="blue" style="width:0.0%" title="awaiting_claims 0"></i><i class="grey" style="width:0.0%" title="declined_on_hold 0"></i><i class="grey2" style="width:0.0%" title="unknown 0"></i></div></td>
+      <td class="num">21%</td><td class="num">0</td><td class="num">0</td></tr><tr><td>Diabetes</td><td><b>Hypoglycaemia safety</b></td><td class="num">19</td>
+      <td><div class="bar"><i class="green" style="width:78.9%" title="on_track 15"></i><i class="amber" style="width:0.0%" title="due 0"></i><i class="red" style="width:15.8%" title="off_target 3"></i><i class="blue" style="width:5.3%" title="awaiting_claims 1"></i><i class="grey" style="width:0.0%" title="declined_on_hold 0"></i><i class="grey2" style="width:0.0%" title="unknown 0"></i></div></td>
+      <td class="num">79%</td><td class="num">1</td><td class="num">0</td></tr><tr><td>Diabetes</td><td><b>Eye screening</b></td><td class="num">19</td>
+      <td><div class="bar"><i class="green" style="width:73.7%" title="on_track 14"></i><i class="amber" style="width:26.3%" title="due 5"></i><i class="red" style="width:0.0%" title="off_target 0"></i><i class="blue" style="width:0.0%" title="awaiting_claims 0"></i><i class="grey" style="width:0.0%" title="declined_on_hold 0"></i><i class="grey2" style="width:0.0%" title="unknown 0"></i></div></td>
+      <td class="num">74%</td><td class="num">0</td><td class="num">0</td></tr><tr><td>Diabetes</td><td><b>Foot care</b></td><td class="num">19</td>
+      <td><div class="bar"><i class="green" style="width:42.1%" title="on_track 8"></i><i class="amber" style="width:57.9%" title="due 11"></i><i class="red" style="width:0.0%" title="off_target 0"></i><i class="blue" style="width:0.0%" title="awaiting_claims 0"></i><i class="grey" style="width:0.0%" title="declined_on_hold 0"></i><i class="grey2" style="width:0.0%" title="unknown 0"></i></div></td>
+      <td class="num">42%</td><td class="num">0</td><td class="num">0</td></tr><tr><td>Diabetes</td><td><b>Self-management and nutrition</b></td><td class="num">19</td>
+      <td><div class="bar"><i class="green" style="width:5.3%" title="on_track 1"></i><i class="amber" style="width:94.7%" title="due 18"></i><i class="red" style="width:0.0%" title="off_target 0"></i><i class="blue" style="width:0.0%" title="awaiting_claims 0"></i><i class="grey" style="width:0.0%" title="declined_on_hold 0"></i><i class="grey2" style="width:0.0%" title="unknown 0"></i></div></td>
+      <td class="num">5%</td><td class="num">0</td><td class="num">0</td></tr><tr><td>Hypertension</td><td><b>Blood pressure control</b></td><td class="num">16</td>
+      <td><div class="bar"><i class="green" style="width:25.0%" title="on_track 4"></i><i class="amber" style="width:0.0%" title="due 0"></i><i class="red" style="width:31.2%" title="off_target 5"></i><i class="blue" style="width:0.0%" title="awaiting_claims 0"></i><i class="grey" style="width:0.0%" title="declined_on_hold 0"></i><i class="grey2" style="width:43.8%" title="unknown 7"></i></div></td>
+      <td class="num">25%</td><td class="num">0</td><td class="num">0</td></tr><tr><td>Hypertension</td><td><b>Potassium monitoring</b></td><td class="num">16</td>
+      <td><div class="bar"><i class="green" style="width:93.8%" title="on_track 15"></i><i class="amber" style="width:6.2%" title="due 1"></i><i class="red" style="width:0.0%" title="off_target 0"></i><i class="blue" style="width:0.0%" title="awaiting_claims 0"></i><i class="grey" style="width:0.0%" title="declined_on_hold 0"></i><i class="grey2" style="width:0.0%" title="unknown 0"></i></div></td>
+      <td class="num">94%</td><td class="num">0</td><td class="num">0</td></tr><tr><td>Shared</td><td><b>Kidney protection</b></td><td class="num">24</td>
+      <td><div class="bar"><i class="green" style="width:25.0%" title="on_track 6"></i><i class="amber" style="width:0.0%" title="due 0"></i><i class="red" style="width:75.0%" title="off_target 18"></i><i class="blue" style="width:0.0%" title="awaiting_claims 0"></i><i class="grey" style="width:0.0%" title="declined_on_hold 0"></i><i class="grey2" style="width:0.0%" title="unknown 0"></i></div></td>
+      <td class="num">25%</td><td class="num">0</td><td class="num">0</td></tr><tr><td>Shared</td><td><b>Medicine adherence</b></td><td class="num">24</td>
+      <td><div class="bar"><i class="green" style="width:37.5%" title="on_track 9"></i><i class="amber" style="width:62.5%" title="due 15"></i><i class="red" style="width:0.0%" title="off_target 0"></i><i class="blue" style="width:0.0%" title="awaiting_claims 0"></i><i class="grey" style="width:0.0%" title="declined_on_hold 0"></i><i class="grey2" style="width:0.0%" title="unknown 0"></i></div></td>
+      <td class="num">38%</td><td class="num">0</td><td class="num">0</td></tr><tr><td>Shared</td><td><b>Annual labs</b></td><td class="num">24</td>
+      <td><div class="bar"><i class="green" style="width:16.7%" title="on_track 4"></i><i class="amber" style="width:83.3%" title="due 20"></i><i class="red" style="width:0.0%" title="off_target 0"></i><i class="blue" style="width:0.0%" title="awaiting_claims 0"></i><i class="grey" style="width:0.0%" title="declined_on_hold 0"></i><i class="grey2" style="width:0.0%" title="unknown 0"></i></div></td>
+      <td class="num">17%</td><td class="num">0</td><td class="num">0</td></tr><tr><td>Shared</td><td><b>Transitions of care</b></td><td class="num">24</td>
+      <td><div class="bar"><i class="green" style="width:41.7%" title="on_track 10"></i><i class="amber" style="width:0.0%" title="due 0"></i><i class="red" style="width:54.2%" title="off_target 13"></i><i class="blue" style="width:0.0%" title="awaiting_claims 0"></i><i class="grey" style="width:4.2%" title="declined_on_hold 1"></i><i class="grey2" style="width:0.0%" title="unknown 0"></i></div></td>
+      <td class="num">42%</td><td class="num">0</td><td class="num">0</td></tr><tr><td>Shared</td><td><b>New diagnosis start</b></td><td class="num">24</td>
+      <td><div class="bar"><i class="green" style="width:91.7%" title="on_track 22"></i><i class="amber" style="width:8.3%" title="due 2"></i><i class="red" style="width:0.0%" title="off_target 0"></i><i class="blue" style="width:0.0%" title="awaiting_claims 0"></i><i class="grey" style="width:0.0%" title="declined_on_hold 0"></i><i class="grey2" style="width:0.0%" title="unknown 0"></i></div></td>
+      <td class="num">92%</td><td class="num">0</td><td class="num">0</td></tr></tbody></table></div>
+      <div class="legend"><span><i style="background:var(--green)"></i>On track</span><span><i style="background:var(--amber)"></i>Due</span><span><i style="background:var(--red)"></i>Off target</span><span><i style="background:var(--blue)"></i>Awaiting claims</span><span><i style="background:var(--grey)"></i>Declined · on hold</span><span><i style="background:var(--line)"></i>Unknown</span></div>
+      <p>Impact is the last two columns: needs a nurse reported done, against needs closed in claims. The rulebook says nurse clicks alone are not evidence of impact.</p>
+    </section>
+
+    <section id="sql">
+      <h2><small>6 · SQL</small>The formulas that carry the rules</h2>
+<pre>-- G0 cleaning (generated for every column): impossible values and 999 placeholders → NULL
+CASE WHEN CAST(x AS DECIMAL) BETWEEN 60 AND 260 THEN CAST(x AS DECIMAL) END          -- systolic BP
+CASE WHEN x REGEXP '^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}$' THEN STR_TO_DATE(x, '%m/%d/%Y') END
+
+-- Rulebook §2 and §4
+r_total  = clinical_score + comorbid_complication_score + kidney_score + utilization_score + age_sex_score
+tier     = rule_tier WHERE r_total BETWEEN r_min AND r_max
+alert    = RED   (safety flag · DKA · hypo · BP ≥ 180/110 · eGFR &lt; 15)
+         | AMBER (post-discharge · HbA1c ≥ 9 · BP ≥ 160/100 · PDC &lt; 50%) | YELLOW (any trigger) | GREEN
+priority = first rule_priority row for (alert, needs_trigger)   -- AMBER + post-discharge = P1
+
+-- Raw member → trigger (one block per trigger, generated from the rule database)
+WHERE (t.use_variant = 'extract'  AND m.trig1_hba1c_above_target = 1)
+   OR (t.use_variant = 'rulebook' AND m.cohort_t2d_l12m = 1 AND m.last_hba1c_value >= 8)
+
+-- Slots, holdout, worklist
+slot       = CASE WHEN ROW_NUMBER() OVER (PARTITION BY member_id ORDER BY class_order, trigger_order) &lt;= 3 THEN 'CURRENT' … END
+holdout    = CRC32(CONCAT(campaign_id, ':', member_id)) % 100 &lt; 10
+rank_no    = ROW_NUMBER() OVER (ORDER BY urgent DESC, tier DESC, campaign_priority, due_date)
+nurse      = nurse_language WHERE language = member.language AND lang_idx = MOD(lang_rn - 1, n_nurses) + 1
+nurse_rank = ROW_NUMBER() OVER (PARTITION BY nurse_id ORDER BY rank_no)  → 'today' while ≤ daily_capacity</pre>
+      <p>Files: <code>01_schema</code> · <code>02_rules</code> · <code>02b_setup</code> · <code>03_load</code> · <code>04_nightly</code> (8 steps) · <code>05_followup</code> (8 statements) · <code>06_views</code> (7 views). The rule-dependent parts are generated from <code>rules/*.csv</code>, so the SQL can't drift from the signed-off rules.</p>
+    </section>
+
+    <section id="api">
+      <h2><small>7 · API</small>12 endpoints, each one SQL file or one view</h2>
+      <div class="tw"><table><thead><tr><th>Endpoint</th><th>SQL</th><th>Screen</th></tr></thead><tbody>
+        <tr><td><code>POST /cohorts/estimate</code></td><td>compiled COUNT(*)</td><td>Builder · live count</td></tr>
+        <tr><td><code>POST /campaigns</code></td><td>campaign + campaign_member</td><td>Builder · hand-off</td></tr>
+        <tr><td><code>POST /runs/nightly</code></td><td>04_nightly.sql</td><td>scheduler · "run now"</td></tr>
+        <tr><td><code>GET /worklist?nurse=</code></td><td>v_worklist</td><td>Portal · nudge queue</td></tr>
+        <tr><td><code>GET /members/{id}</code></td><td>v_dm_member_summary + signals</td><td>Portal header · Studio ②</td></tr>
+        <tr><td><code>GET /members/{id}/care-plan</code></td><td>v_care_plan</td><td>Portal · care plan</td></tr>
+        <tr><td><code>GET /members/{id}/dm-plan</code></td><td>v_dm_member_module</td><td>Portal · Bhawani's view</td></tr>
+        <tr><td><code>GET /members/{id}/actions</code></td><td>v_action_chain</td><td>Portal · actions and timeline</td></tr>
+        <tr><td><code>POST /actions/{id}/outcome</code></td><td>05_followup.sql</td><td>Portal · every nurse button</td></tr>
+        <tr><td><code>GET /dm/programme</code> · <code>/kpis</code> · <code>/health</code></td><td>v_dm_programme · v_kpis · run_config</td><td>Bhawani's dashboard · analytics</td></tr>
+      </tbody></table></div>
+      <p>The reference implementation is <code>api/server.py</code>: Python with one dependency (pymysql), about 250 lines. Real responses for every endpoint are in <code>api/examples/</code>, and the records the three existing apps render today are in <code>api/app-shapes/</code>.</p>
+    </section>
+
+    <section id="devs">
+      <h2><small>8 · Who does what</small>The 3-developer plan</h2>
+      <div class="devs">
+        <div class="dev"><h3>Dev A · Data and rules</h3><div class="role">SingleStore schema, load, nightly SQL</div><dl>
+          <dt>Day 1 · AM</dt><dd>Run 01, 02 and 02b. Load the extract with 03 (LOAD DATA LOCAL INFILE). <span class="ok">✔ 24 members; m44, m75 and m147 cleaned</span></dd>
+          <dt>Day 1 · PM</dt><dd>Run 06 views, refresh campaign members, run 04. <span class="ok">✔ the acceptance numbers match</span></dd>
+          <dt>Day 2 · AM</dt><dd>Load the full 167-row extract. Schedule the nightly (cron to the API, or a SingleStore PIPELINE). Take the Trig1 6.5% vs 8% decision to the clinical team.</dd>
+          <dt>Day 2 · PM</dt><dd>EXPLAIN the views on your cluster; support the demo.</dd></dl></div>
+        <div class="dev"><h3>Dev B · API and orchestration</h3><div class="role">Thin API, transactions, worklist</div><dl>
+          <dt>Day 1 · AM</dt><dd>Stand up <code>server.py</code> (or port it; the SQL files are the contract). Point it at SingleStore.</dd>
+          <dt>Day 1 · PM</dt><dd><code>POST /actions/{id}/outcome</code> in one transaction. <span class="ok">✔ the m26 chain reproduces</span></dd>
+          <dt>Day 2 · AM</dt><dd>Worklist, member, care-plan and DM endpoints; CORS; a nurse picker in place of login.</dd>
+          <dt>Day 2 · PM</dt><dd>Validate inputs against the rule tables; request logging; rehearse.</dd></dl></div>
+        <div class="dev"><h3>Dev C · Apps and demo</h3><div class="role">Wire the three apps to the API</div><dl>
+          <dt>Day 1 · AM</dt><dd>Portal: nudge queue ← /worklist; care plan ← /care-plan; buttons → POST outcome.</dd>
+          <dt>Day 1 · PM</dt><dd>Bhawani's view: a "By programme" tab (/dm-plan) and a programme page (/dm/programme).</dd>
+          <dt>Day 2 · AM</dt><dd>Builder: estimate and hand-off (POST /campaigns, then /runs/nightly). Studio ②: members from /worklist + /members/{id}.</dd>
+          <dt>Day 2 · PM</dt><dd>Demo rehearsal on the full extract. Fallback to the built-in data if the API is down.</dd></dl></div>
+      </div>
+      <p><b>Checkpoints:</b> end of day 1, the m26 chain works through the API · midday day 2, the portal runs on real data · end of day 2, the demo.</p>
+    </section>
+
+    <section id="checks">
+      <h2><small>9 · Done means</small>Acceptance checks on the sample</h2>
+      <div class="tw"><table><thead><tr><th>Check</th><th>Expected</th></tr></thead><tbody>
+        <tr><td>members loaded</td><td>24</td></tr>
+        <tr><td>signals fired / cannot tell</td><td>152 / 7</td></tr>
+        <tr><td>fired, by trigger</td><td>Trig3 4 · BPU 1 · Trig4 15 · Trig1 17 · Trig2 6 · Trig5 19 · Trig9 16 · Trig6 8 · Trig12 7 · Trig13 13 · Trig7 1 · Trig11 21 · Trig10 2 · Trig8 22</td></tr>
+        <tr><td>members with a care plan · open needs · CURRENT needs</td><td>21 · 144 · 63</td></tr>
+        <tr><td>CURRENT needs without an action</td><td><b>0, always</b></td></tr>
+        <tr><td>on today's worklist</td><td>21</td></tr>
+        <tr><td>re-running the nightly</td><td>adds no rows</td></tr>
+      </tbody></table></div>
+      <p><code>tests/test_kit.py</code> checks all of these, plus that the triggers match the rulebook engine member by member, the follow-up rules, retries and escalation, the 90-day hold, and that a gap closes only when the claim arrives.</p>
+    </section>
+
+    <section id="demo">
+      <h2><small>10 · Show it</small>The 10-minute demo</h2>
+      <ol>
+        <li><b>Builder:</b> "T2D and HbA1c ≥ 9" shows a live count of 6 of 24 → hand off; the nightly runs in seconds.</li>
+        <li><b>Portal nudge queue:</b> RED and P1 first, each with a nurse who speaks the member's language.</li>
+        <li><b>m26:</b> log consent and record <i>reached</i> → a cadence check-in appears for 27 Nov.</li>
+        <li><b>Care plan:</b> hypo review <i>done</i> → Reported, a "Verify in claims" follow-up, and the next need moves up. GP follow-up <i>declined</i> → held to 18 Feb, with a re-offer.</li>
+        <li><b>By programme (Bhawani):</b> off target · due · awaiting claims · on hold.</li>
+        <li><b>Programme dashboard:</b> % on track per module; nurse-reported vs closed in claims.</li>
+      </ol>
+      <p class="note">Out of the 2 days: single sign-on, telephony, the knowledge-graph search in the builder, the builder's full field list, and the warehouse pipeline. Every rule is still marked <i>Draft: needs clinical sign-off</i>. The sample is real, masked member data: keep it inside the approved SingleStore workspace.</p>
+    </section>
+  </main>
+</div>

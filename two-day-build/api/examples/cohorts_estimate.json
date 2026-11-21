@@ -1,0 +1,1 @@
+{"base": 24, "n": 6, "where_sql": "(m.has_t2d = 1) AND m.last_hba1c_value >= 9.0"}
