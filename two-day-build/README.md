@@ -11,6 +11,7 @@ sql/
   04_nightly.sql      triggers → score → needs → slots → actions → nudges/calls → worklist
   05_followup.sql     nurse outcome → follow-up action (POST /actions/{id}/outcome)
   06_views.sql        v_worklist · v_care_plan · v_action_chain · v_rulebook_member · v_member_summary · v_rulebook_programme · v_kpis
+  07_reset_member.sql demo only: forget one member's nurse work, then run the rules again (POST /members/{id}/reset)
 api/
   server.py           thin JSON API (Python + pymysql); every endpoint is one SQL file or one view
   sqlkit.py           runs the .sql files statement by statement

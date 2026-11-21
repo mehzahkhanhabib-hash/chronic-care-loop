@@ -8,12 +8,13 @@ Endpoints (JSON):
   GET  /health
   POST /cohorts/estimate         {"rules": [...]}                          → live count
   POST /campaigns                {"name", "priority", "trigger_mode", "trigger_list", "rules"}  → saves + fills campaign_member
-  POST /runs/nightly                                                       → 04_nightly.sql, returns KPIs
+  POST /runs/rules  (alias /runs/nightly)                                  → 04_nightly.sql: the rules run, on demand in the demo, scheduled later; returns KPIs
   GET  /worklist?nurse=U-0142                                              → today's list (v_worklist)
   GET  /members/{id}                                                       → header: tier, alert, priority, cadence (v_member_summary)
   GET  /members/{id}/care-plan                                             → needs + their actions (v_care_plan)
   GET  /members/{id}/rulebook                                               → the rulebook applied to this member: every rule, state, need, action (v_rulebook_member)
   GET  /members/{id}/actions                                               → action → outcome → follow-up chain (v_action_chain)
+  POST /members/{id}/reset                                                 → demo only: 07_reset_member.sql, then the rules run
   POST /actions/{action_id}/outcome  {"member_id", "result", "reached", "consent", "notes", "nurse_id"}  → 05_followup.sql
   GET  /rulebook/programme                                                 → every rule across all members: fired, open, done, closed in claims (v_rulebook_programme)
   GET  /kpis                                                               → v_kpis
@@ -137,6 +138,12 @@ def actions(con, q, b, mid):
     return rows(con, 'SELECT * FROM v_action_chain WHERE member_id = %s ORDER BY action_id', (mid,))
 
 
+def reset_member(con, q, b, mid):                       # demo only: forget the nurse's work on one member, then run the rules again
+    sqlkit.run_file(con, '07_reset_member.sql', {'member_id': mid})
+    con.commit()
+    return nightly(con, q, b)
+
+
 def outcome(con, q, b, action_id):
     p = {'action_id': int(action_id), 'member_id': b['member_id'], 'result': b['result'], 'reached': b.get('reached'),
          'consent': b.get('consent'), 'notes': b.get('notes'), 'nurse_id': b.get('nurse_id', 'U-0142')}
@@ -155,10 +162,11 @@ def outcome(con, q, b, action_id):
 
 ROUTES = [
     ('GET', r'/health', health), ('POST', r'/cohorts/estimate', estimate), ('POST', r'/campaigns', save_campaign),
-    ('POST', r'/runs/nightly', nightly), ('GET', r'/worklist', worklist),
+    ('POST', r'/runs/nightly', nightly), ('POST', r'/runs/rules', nightly),   # same run: on demand in the demo, scheduled nightly later
+    ('GET', r'/worklist', worklist),
     ('GET', r'/members/(?P<mid>[\w-]+)', member), ('GET', r'/members/(?P<mid>[\w-]+)/care-plan', care_plan),
     ('GET', r'/members/(?P<mid>[\w-]+)/rulebook', rulebook_member), ('GET', r'/members/(?P<mid>[\w-]+)/actions', actions),
-    ('POST', r'/actions/(?P<action_id>\d+)/outcome', outcome),
+    ('POST', r'/actions/(?P<action_id>\d+)/outcome', outcome), ('POST', r'/members/(?P<mid>[\w-]+)/reset', reset_member),
     ('GET', r'/rulebook/programme', lambda con, q, b: rows(con, 'SELECT * FROM v_rulebook_programme ORDER BY class_order, trigger_order')),
     ('GET', r'/kpis', lambda con, q, b: rows(con, 'SELECT * FROM v_kpis')[0]),
     ('GET', r'/rules', lambda con, q, b: {t: rows(con, f'SELECT * FROM {t}') for t in
