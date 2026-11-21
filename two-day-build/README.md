@@ -18,7 +18,7 @@ api/
   examples/           a real response from every endpoint
   app-shapes/         the records the three existing apps render today (for the adapters)
 apps/                 the three apps: care portal, cohort & campaign builder, care studio
-data/                 the 24-row sample extract and the glossary (real, masked rows: keep inside the approved workspace)
+data/                 the 24-row sample, the 248-member snapshot (member_features_250.tsv) and the glossary (real, masked rows: keep inside the approved workspace)
 rules/                the rule database as CSV (source of 02_rules.sql and of the trigger SQL in 04_nightly.sql)
 tests/test_kit.py     end-to-end checks (run against MySQL 8 or SingleStore)
 tools/gen_sql.py      regenerates 01–04 after a rule CSV changes (run it from the repository)
@@ -34,7 +34,7 @@ s2 < sql/01_schema.sql
 s2 ccl < sql/02_rules.sql
 s2 ccl < sql/02b_setup.sql
 s2 ccl < sql/06_views.sql
-cp data/member_features_sample.tsv data/member_features.tsv   # or put the full extract there
+cp data/member_features_250.tsv data/member_features.tsv      # the 248-member snapshot (or the 24-row sample, or a new export via tools/add_ids.py)
 cd data && s2 ccl < ../sql/03_load.sql && cd ..          # reads member_features.tsv from the current folder
 
 pip install pymysql

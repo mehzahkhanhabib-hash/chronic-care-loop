@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Make a raw extract loadable: the kit expects the 341-column layout with mask_id first.
+"""Make a raw extract (CSV or TSV) loadable: the kit expects the 341-column layout with mask_id first.
 A snapshot exported without mask_id (header starts GENDER, AGE, …) gets a pseudonymous id (s1, s2, …) and the
 empty rank_PURECS_per_payable column prepended. Columns are matched by name against data/raw/glossary.tsv.
 
@@ -9,7 +9,10 @@ import csv, os, sys
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 gl = [r['column'] for r in csv.DictReader(open(os.path.join(REPO, 'data/raw/glossary.tsv'), encoding='utf-8'), delimiter='\t')]
 src, dst = sys.argv[1], sys.argv[2]
-rows = list(csv.reader(open(src, encoding='utf-8', newline=''), delimiter='\t'))
+text = open(src, encoding='utf-8-sig', newline='').read()            # utf-8-sig drops a BOM; the file may be CSV or TSV
+delim = '\t' if text.split('\n', 1)[0].count('\t') > text.split('\n', 1)[0].count(',') else ','
+csv.field_size_limit(10**8)
+rows = list(csv.reader(text.splitlines(True), delimiter=delim))
 hdr = rows[0]
 if hdr and hdr[0] == 'mask_id':
     print('already has mask_id; copying'); out = rows

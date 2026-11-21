@@ -15,7 +15,7 @@ sys.path[:0] = [os.path.join(KIT, 'api'), REPO]
 import pymysql  # noqa: E402
 import sqlkit, server  # noqa: E402
 
-SAMPLE = os.path.join(REPO, 'data', 'raw', 'member_features_sample.tsv')
+SAMPLE = os.environ.get('CCL_EXTRACT') or os.path.join(REPO, 'data', 'raw', 'member_features_sample.tsv')   # CCL_EXTRACT=… runs the checks on another file
 
 
 def fresh():

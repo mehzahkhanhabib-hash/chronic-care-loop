@@ -15,7 +15,7 @@ Everything below already exists in this folder and passes its tests on a MySQL s
 | **5. The worklist moves** | Press **Run rules**. Open the nudge queue: the member is back on the nurse's list led by the new follow-up; the need she marked done reads *Awaiting claims*; the declined one is on hold to February | The outcome fed the worklist and is being actioned, in order, by the right nurse | 3 · Worklist orchestration |
 | **6. The whole programme** | Programme page: every rule across all 250 members: fired, open, nurse-reported, closed in claims. Then the builder: build a cohort, hand it off, press Run rules, the queue fills | From one member to the population, and campaigns feed the same loop | 1 and 3 |
 
-Beat 5 is the one that matters. It only works if beats 1–4 are real data on real tables, which is why the three layers below exist.
+Beat 5 is the one that matters. It only works if beats 1–4 are real data on real tables, which is why the three layers below exist. The whole story has already been run on the 248-member snapshot with this kit (numbers in the tables below), so the two days are about SingleStore, the screens and the rehearsals, not about whether it works.
 
 ## The three deliverables
 
@@ -42,12 +42,12 @@ raw extract ─▶ member ─▶ [1 RULE LAYER] rules fire, score, alert, priori
 | **Screen wired** | Portal: rulebook tab. Care Studio: programme page | Portal: member header, 360 values, care plan, timeline, the five buttons | Portal: nudge queue and the **Run rules** button. Builder: live count and hand-off. KPIs |
 | **Must bake in** | `use_variant` switch per rule (extract flag vs rulebook threshold); `cannot_tell` when a value is missing (G8); every rule carries its sign-off status; evidence text on every fired rule | exactly one open care-plan action per CURRENT need (G7); a gap closes **only** in claims; declined = 90-day hold; not reached = 3 attempts, P1 escalates; every follow-up keeps `parent_action_id` | holdout members are never contacted; one contact per member per day; no new contact within 14 days of a reached call; queue order RED/safety → tier → campaign priority → due; language match, then even split up to each nurse's capacity; escalations go to the lead, not the nurse list; a follow-up leads the member's row after a re-run |
 | **Done on the 24-member sample** | 152 fired / 7 cannot tell; per rule: Trig3 4 · BPU 1 · Trig4 15 · Trig1 17 · Trig2 6 · Trig5 19 · Trig9 16 · Trig6 8 · Trig12 7 · Trig13 13 · Trig7 1 · Trig11 21 · Trig10 2 · Trig8 22 | 21 care plans, 63 CURRENT needs, `current_needs_without_action = 0`; the m26 chain (reached → check-in 27 Nov; agreed → check 27 Nov; done → Reported + verify 4 Dec; declined → hold to 18 Feb + re-offer) | 21 on today's list: Omar 9, Sara 9, Nadia 3; nobody from the holdout; re-running adds no rows; after m26's outcomes and a re-run, m26 is back on his nurse's list led by the cadence check-in due 27 Nov; a reset returns every KPI to the baseline |
-| **Done on the 250 snapshot** | same checks; write the counts down at the 10:30 checkpoint as the baseline | same checks, on the demo member you choose | same checks |
+| **Done on the 248-member snapshot** (already run here) | 1,442 fired / 86 cannot tell (all Trig2: no usable BP); per rule: Trig3 23 · BPU 2 · Trig4 90 · Trig1 141 · Trig2 61 · Trig5 187 · Trig9 136 · Trig6 102 · Trig12 65 · Trig13 118 · Trig7 18 · Trig11 195 · Trig10 24 · Trig8 193 | 218 care plans, 632 CURRENT needs, `current_needs_without_action = 0`; demo member **s26** (65, male, Arabic, T2D + HTN, tier 4, P1, 10 rules fired, HbA1c 11.0, no eGFR on record, one admission) | 75 on today's list (25 per nurse, at capacity), 143 queued for the next days; 31 of 248 held out of the main campaign; after s26's outcomes and a re-run he is back on Omar's list led by the cadence check-in; reset returns every KPI to the baseline |
 | **Test** | `tests/test_kit.py::test_triggers_match_reference_engine`, `test_rerun_is_idempotent` | `test_every_current_need_has_one_action`, `test_z_nurse_outcomes_create_follow_ups`, `test_zz_gap_closes_only_in_claims`, `test_load_and_g0_cleaning` | `test_worklist_rules`, `test_holdout_and_exclusions_get_no_needs` |
 
 **Dependencies, in order:** load (Dev B) → rules (Dev A) → needs and actions (Dev B) → contacts and worklist (Dev C). All of it already runs as one script, so nobody waits: each developer runs the whole thing and verifies their own layer.
 
-**Pick the demo member on day 1.** Dev B chooses one member from the 250 who has both conditions, a P1 or P2 priority, at least six rules fired, and a nurse who speaks their language. Write the id in the channel. Every rehearsal uses that member.
+**The demo member is s26.** He is the same person as m26 in `PLAN.html`, so the worked story there is his. 65, male, Arabic-speaking, T2D and HTN, tier 4, P1, 10 rules fired, HbA1c 11.0, no kidney test on record, discharged recently. Omar Khalid gets him on the list. Every rehearsal uses him; `POST /members/s26/reset` between runs. Backups with the same shape: s4, s23 (P1, 10 rules fired).
 
 ---
 
@@ -56,7 +56,7 @@ raw extract ─▶ member ─▶ [1 RULE LAYER] rules fire, score, alert, priori
 ### Hour 0 (together, 09:45–10:30)
 
 1. Dev B creates database `ccl` on SingleStore and runs, in order: `01_schema.sql`, `02_rules.sql`, `02b_setup.sql`, `06_views.sql`.
-2. Dev A prepares the snapshot: `python3 tools/add_ids.py <snapshot>.tsv data/member_features.tsv` (adds the pseudonymous `mask_id` the kit keys on), then Dev B runs `03_load.sql` from the `data/` folder.
+2. The snapshot is already prepared as `data/member_features_250.tsv` (248 members, 341 columns, pseudonymous ids s1 … s248). Dev B copies it to `data/member_features.tsv` and runs `03_load.sql` from the `data/` folder. If a newer export arrives, `python3 tools/add_ids.py <export>.csv data/member_features.tsv` prepares it the same way.
 3. Dev C starts the API (`cd api && S2_DB=ccl python3 server.py --port 8080`) and runs `curl -X POST localhost:8080/runs/rules`.
 4. Everyone runs `SELECT * FROM v_kpis;` and writes the row into the Teams thread. That row is the baseline for the two days.
 
@@ -86,7 +86,7 @@ raw extract ─▶ member ─▶ [1 RULE LAYER] rules fire, score, alert, priori
 > We are showing the GCEO one live story: a real member, the rules that fire for them, a care portal already filled with their plan, a nurse who acts and records it, and a worklist that picks that up and moves the next action. To make that real, the three apps (Cohort & Campaign Builder, Care Studio, Care Coordinator Portal) go onto our SingleStore in two days. The SQL, the API and the tests already exist and pass on a MySQL stand-in. Our job is to run it here, own one layer each, load the 250-member snapshot, wire the screens, and rehearse.
 >
 > **Before 09:30 tomorrow**
-> 1. Get the kit: `CCL-2-Day-Build.zip` (pinned above) or the repo folder `two-day-build/`. Read `DELIVERABLES.md` (the demo story and your layer) and skim `PLAN.md`.
+> 1. Get the kit: `CCL-2-Day-Build.zip` (pinned above) or the repo folder `two-day-build/`. Read `DELIVERABLES.md` (the demo story, your layer, and the numbers the 248-member snapshot already produces) and skim `PLAN.md`.
 > 2. Confirm you can log in to SingleStore and create a database. Install the `mysql` client and `pip install pymysql`.
 > 3. Do **not** load the data anywhere outside the approved SingleStore workspace. The snapshot is real, masked member data.
 >
@@ -128,27 +128,24 @@ raw extract ─▶ member ─▶ [1 RULE LAYER] rules fire, score, alert, priori
 | 2. The rulebook as rows | `mysql ccl < sql/02_rules.sql` | `SELECT trigger_code, class_label, fires_when, action_title FROM rule_trigger ORDER BY class_order, trigger_order;` prints 14 rows in rulebook order, Trig3 first |
 | 3. Nurses and campaigns | `mysql ccl < sql/02b_setup.sql` | `SELECT * FROM nurse;` shows the team; `SELECT * FROM run_config;` shows as-of 2026-10-31, run date 2026-11-20 |
 | 4. Views | `mysql ccl < sql/06_views.sql` | `SHOW FULL TABLES WHERE table_type='VIEW';` lists 7 views |
-| 5. The snapshot | `python3 tools/add_ids.py snapshot.tsv data/member_features.tsv` then `cd data && mysql --local-infile=1 ccl < ../sql/03_load.sql` | the script prints `wrote … 250 members, 341 columns`; `SELECT COUNT(*) FROM member;` returns 250; `SELECT member_id, age, language, last_hba1c_value FROM member LIMIT 5;` shows typed values, no 999s |
+| 5. The snapshot | `cp data/member_features_250.tsv data/member_features.tsv && cd data && mysql --local-infile=1 ccl < ../sql/03_load.sql` | `SELECT COUNT(*) FROM member;` returns 248; `SELECT member_id, age, language, last_hba1c_value FROM member LIMIT 5;` shows typed values, no 999s, no `#VALUE!` |
 | 6. First rules run | `cd api && S2_DB=ccl python3 server.py --port 8080 &` then `curl -X POST localhost:8080/runs/rules` | JSON with the step timings; takes seconds. This is the same button the demo presses. |
-| 7. The baseline row | `curl localhost:8080/kpis` | one JSON object: members 250, triggers_fired_today, members_with_plan, current_needs, **current_needs_without_action: 0**, on_todays_list. Paste it into Teams. |
-| 8. One member, the whole story in curl | `curl localhost:8080/members/s1/rulebook`, `curl localhost:8080/members/s1/care-plan`, `curl localhost:8080/worklist?nurse=U-0150` | the rulebook table for one member (14 rows, state and status per rule); their plan with one action per CURRENT need; a nurse's list, ranked, each row with the lead action and the due date. Beats 1–3 and 5, before anyone has written a line. |
+| 7. The baseline row | `curl localhost:8080/kpis` | one JSON object. Expected: members 248, triggers_fired_today 1442, members_with_plan 218, current_needs 632, **current_needs_without_action 0**, on_todays_list 75, queued_over_capacity 143. Paste it into Teams. |
+| 8. One member, the whole story in curl | `curl localhost:8080/members/s26/rulebook`, `curl localhost:8080/members/s26/care-plan`, `curl localhost:8080/worklist?nurse=U-0150` | the rulebook table for one member (14 rows, state and status per rule); their plan with one action per CURRENT need; a nurse's list, ranked, each row with the lead action and the due date. Beats 1–3 and 5, before anyone has written a line. |
 
 If step 5 fails on a column, that is the first real finding of the day: post the error, Dev B fixes `03_load.sql`, everyone re-runs from step 5.
 
 **10:30.** Split. Each developer opens their column in the Day 1 table and works it. You check in at 13:00 and 17:00 in the channel, nowhere else.
 
 **What to watch for as the lead**
-- The 250-member counts will differ from the 24-member sample. That is expected. What must not differ: `current_needs_without_action` is 0, a plain re-run adds nothing, holdout members have no contact.
+- The 248-member numbers above came from this kit on a MySQL stand-in. SingleStore should reproduce them exactly; if a number differs, that is the finding to chase, not to explain away. What must never differ: `current_needs_without_action` is 0, a plain re-run adds nothing, holdout members have no contact.
 - Dev A's Trig1 decision (6.5% from the extract flag or 8% from the rulebook) needs the clinical lead in the room, not a developer's guess. Get that answer before 13:00.
-- The demo member is chosen once, on day 1, and reset between rehearsals. Do not let the rehearsals drift onto different members.
+- The demo member is s26. Reset him between rehearsals. Do not let the rehearsals drift onto different members.
 - If SingleStore rejects a statement, the fix goes in the SQL file in the repo, not in someone's terminal history.
 - In front of the GCEO, Dev C drives and nobody types a value. Every number on screen came from the extract or from a nurse click.
 
 ---
 
-## About the snapshot you sent
+## About the snapshot
 
-The 250-member snapshot pasted into chat has the same columns as the extract, but two things need handling before it loads:
-
-- **It has no `mask_id` column** (the header starts at GENDER). The kit keys everything on `mask_id`. `tools/add_ids.py` adds a pseudonymous id (`s1 … s250`) and the empty rank column so the file matches the 341-column layout `03_load.sql` expects. If the original export does have an id column, use that file instead and skip the script.
-- **It must arrive as a file, not as pasted text.** Pasting into chat turns tabs into spaces, and facility names and diagnoses contain spaces, so the pasted copy cannot be split back into columns reliably. Put the original `.tsv` in the SingleStore workspace and point step 5 at it.
+The 248-member file (`demo_csv.csv`, comma-separated, 339 columns, no member id) is prepared and included as `data/member_features_250.tsv`: `tools/add_ids.py` added a pseudonymous `mask_id` (s1 … s248) and the empty rank column so it matches the 341-column layout the loader expects, and it loads with `03_load.sql` unchanged. The kit was run on it end to end here: load, rules, plans, worklist, the s26 nurse chain, re-run and reset. Two data notes for Dev B: 167 of 248 have no usable blood pressure (so 86 members read *cannot tell* on the BP treatment-review rule, which the nurse asks about once), and the two `#VALUE!` cells in the priority column load as NULL. The file is real, masked member data: it stays inside the approved SingleStore workspace and the private repo.

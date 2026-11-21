@@ -286,21 +286,25 @@ WHERE COALESCE(w.has_open_contact, 0) = 0 AND COALESCE(w.reached_14d, 0) = 0;
 
 -- ── Step 8 · Worklist orchestration (rulebook §4) ──
 -- Order: safety or RED first → tier 4…1 → campaign priority → most overdue. One row per member, led by
--- their most urgent open nurse action. Nurses are matched by language, round-robin, within daily capacity;
+-- their most urgent open nurse action. A member stays with the nurse who already holds their open actions
+-- (continuity); new members are matched by language, round-robin. Each nurse's list is cut at daily capacity;
 -- anything over capacity is 'queued' and rolls to the next day.
 TRUNCATE TABLE worklist;
 INSERT INTO worklist (work_date, member_id, nurse_id, rank_no, nurse_rank, action_id, priority, alert, tier, reason, due_by, status)
 SELECT z.run_date, z.member_id, z.nurse_id, z.rank_no, z.nurse_rank, z.action_id, z.contact_priority, z.alert, z.tier, z.title, z.due_date,
        CASE WHEN z.nurse_rank <= z.daily_capacity THEN 'today' ELSE 'queued' END
 FROM (
-  SELECT rc.run_date, q.*, nl.nurse_id, nu.daily_capacity,
-         ROW_NUMBER() OVER (PARTITION BY nl.nurse_id ORDER BY q.rank_no) AS nurse_rank      -- capacity counts across all of a nurse's languages
+  SELECT y.*, nu.daily_capacity,
+         ROW_NUMBER() OVER (PARTITION BY y.nurse_id ORDER BY y.rank_no) AS nurse_rank      -- capacity counts across all of a nurse's languages
+  FROM (
+  SELECT rc.run_date, q.*, COALESCE(q.assignee, nl.nurse_id) AS nurse_id                   -- keep the nurse who already has the member
   FROM (
     SELECT l.*,
            ROW_NUMBER() OVER (ORDER BY l.urgent DESC, l.tier DESC, l.owner_priority, l.due_date, l.r_total DESC, l.member_id) AS rank_no,
            ROW_NUMBER() OVER (PARTITION BY l.lang ORDER BY l.urgent DESC, l.tier DESC, l.owner_priority, l.due_date, l.r_total DESC, l.member_id) AS lang_rn
     FROM (
       SELECT a.member_id, a.action_id, a.title, a.due_date, m.contact_priority, m.alert, m.tier, m.r_total, w.owner_priority,
+             CASE WHEN a.assignee IN (SELECT nurse_id FROM nurse WHERE daily_capacity > 0) THEN a.assignee END AS assignee,
              CASE WHEN m.alert = 'RED' OR m.priority_clinical_review = 1 THEN 1 ELSE 0 END AS urgent,
              CASE WHEN m.language IN (SELECT language FROM nurse_language) THEN m.language ELSE 'English' END AS lang,
              ROW_NUMBER() OVER (PARTITION BY a.member_id
@@ -315,7 +319,8 @@ FROM (
   JOIN run_config rc
   JOIN (SELECT language, COUNT(*) AS n_nurses FROM nurse_language GROUP BY language) lc ON lc.language = q.lang
   JOIN nurse_language nl ON nl.language = q.lang AND nl.lang_idx = MOD(q.lang_rn - 1, lc.n_nurses) + 1   -- language first, then round-robin
-  JOIN nurse nu ON nu.nurse_id = nl.nurse_id
+  ) y
+  JOIN nurse nu ON nu.nurse_id = y.nurse_id
 ) z;
 
 -- the member's open actions go to the nurse who has them on the list
