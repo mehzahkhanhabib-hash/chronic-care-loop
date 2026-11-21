@@ -41,24 +41,6 @@ SQLTYPE = {'flag': 'TINYINT', 'num': 'DECIMAL(10,2)', 'share': 'DECIMAL(6,4)', '
 ARAB = ['EMIRATI', 'EGYPTIAN', 'JORDANIAN', 'LEBANESE', 'MAURITANIAN', 'MOROCCAN', 'PALESTINIAN', 'SUDANESE', 'SYRIAN', 'IRAQI', 'YEMENI', 'OMANI',
         'SAUDI', 'TUNISIAN', 'ALGERIAN', 'BAHRAINI', 'KUWAITI', 'QATARI', 'LIBYAN']
 
-# Bhawani's disease-management modules: each trigger belongs to one module of the programme
-DM_MODULES = [  # code, programme, name, sort, target, metric shown, applies when
-    ('DM-GLY', 'Diabetes', 'Glycaemic control', 1, 'HbA1c < 7% (individual goal up to 8%); tested every 6 months', 'HbA1c', 'has_t2d'),
-    ('DM-HYPO', 'Diabetes', 'Hypoglycaemia safety', 2, 'No hypoglycaemia; rescue glucagon if on insulin or a sulfonylurea', 'Hypo events', 'has_t2d'),
-    ('DM-EYE', 'Diabetes', 'Eye screening', 3, 'Retinal screen within 24 months', 'Last retinal screen', 'has_t2d'),
-    ('DM-FOOT', 'Diabetes', 'Foot care', 4, 'Foot exam within 12 months; podiatry if high risk', 'Last foot exam', 'has_t2d'),
-    ('DM-EDU', 'Diabetes', 'Self-management and nutrition', 5, 'Dietitian or DSMES contact within 12 months; a self-management goal', 'Last dietitian visit', 'has_t2d'),
-    ('HTN-BP', 'Hypertension', 'Blood pressure control', 6, 'BP < 140/90 (< 130/80 with diabetes or CKD); BP ≥ 180/110 same day', 'Latest BP', 'has_htn'),
-    ('HTN-K', 'Hypertension', 'Potassium monitoring', 7, 'K+ within 12 months on an ACEi, ARB, MRA or thiazide', 'Last potassium test', 'has_htn'),
-    ('SH-KID', 'Shared', 'Kidney protection', 8, 'eGFR and UACR within 12 months; nephrology if eGFR < 30', 'eGFR / UACR', 'either'),
-    ('SH-MEDS', 'Shared', 'Medicine adherence', 9, 'PDC ≥ 80%; no supply gap over 30 days', 'Lowest PDC', 'either'),
-    ('SH-LABS', 'Shared', 'Annual labs', 10, 'Lipids and creatinine within 12 months', 'Last lipid panel', 'either'),
-    ('SH-TOC', 'Shared', 'Transitions of care', 11, 'GP follow-up within 72 h of discharge; medicines reconciled', 'Last discharge', 'either'),
-    ('SH-START', 'Shared', 'New diagnosis start', 12, 'Baseline assessment and DSMES referral within 90 days of diagnosis', 'First diagnosis', 'either'),
-]
-MODULE_OF = {'Trig1': 'DM-GLY', 'Trig6': 'DM-GLY', 'Trig3': 'DM-HYPO', 'Trig12': 'DM-EYE', 'Trig13': 'DM-FOOT', 'Trig8': 'DM-EDU', 'Trig2': 'HTN-BP',
-             'BPU': 'HTN-BP', 'Trig7': 'HTN-K', 'Trig5': 'SH-KID', 'Trig9': 'SH-MEDS', 'Trig11': 'SH-LABS', 'Trig4': 'SH-TOC', 'Trig10': 'SH-START'}
-
 # Nurse action → follow-up (rulebook §5 write-back, made explicit)
 FOLLOWUP = [  # outcome, action_status, need_status, gap_state, hold_days, followup_kind, followup_title, followup_due_days, max_attempts, promote_next, note
     ('reached', 'done', None, None, None, 'follow_up', 'Cadence check-in', None, None, 0, 'Call completed. Next touchpoint on the tier cadence (Tier 4: 7 days, 3: 14, 2: 42, 1: 90).'),
@@ -129,18 +111,19 @@ def main():
     act = {r['trigger_code']: r for r in rd('rule_action')}
     cls = {r['class']: r for r in rd('rule_need_class')}
     out = ['-- Rule data: the CCC Rulebook (T2D and Hypertension, 20 Nov 2026). Generated from rules/*.csv by tools/gen_sql.py.\n',
-           'DELETE FROM rule_trigger;\n' + ins('rule_trigger', ['trigger_code', 'name', 'pathway', 'dm_module', 'class', 'class_order', 'trigger_order', 'due_days',
-                                                                 'action_title', 'owner_role', 'channel', 'done_when', 'evidence', 'use_variant', 'status'],
-                                              [(c, t['name'], t['pathway'], MODULE_OF[c], t['class'], int(cls[t['class']]['sort_order']), int(t['sort_order']),
-                                                int(cls[t['class']]['due_days']), act[c]['title'], act[c]['owner_role'], act[c]['channel'], act[c]['done_when'],
-                                                act[c]['evidence'], t['use_variant'], t['status']) for c, t in sorted(trig.items(), key=lambda x: int(x[1]['sort_order']))]),
+           'DELETE FROM rule_trigger;\n' + ins('rule_trigger', ['trigger_code', 'name', 'pathway', 'class', 'class_label', 'class_order', 'trigger_order', 'due_days',
+                                                                 'raw_data', 'fires_when', 'extract_flag', 'action_code', 'action_title', 'owner_role', 'channel', 'done_when', 'evidence',
+                                                                 'escalate_to', 'use_variant', 'status'],
+                                              [(c, t['name'], t['pathway'], t['class'], cls[t['class']]['label'], int(cls[t['class']]['sort_order']), int(t['sort_order']),
+                                                int(cls[t['class']]['due_days']), t['raw_data_rulebook'], t['fires_when_rulebook'], t['extract_flag'] or None,
+                                                act[c]['action_code'], act[c]['title'], act[c]['owner_role'], act[c]['channel'], act[c]['done_when'],
+                                                act[c]['evidence'], act[c]['escalate_to'] or None, t['use_variant'], t['status']) for c, t in sorted(trig.items(), key=lambda x: int(x[1]['sort_order']))]),
            'DELETE FROM rule_priority;\n' + ins('rule_priority', ['priority', 'alert', 'needs_trigger', 'sla_days', 'channel', 'match_order'],
                                                 [(r['priority'], r['alert'], r['also_requires_trigger'] or Blank(''), r['sla_days'] or None, r['channel'], i + 1)
                                                  for i, r in enumerate(rd('rule_contact_priority'))]),
            'DELETE FROM rule_tier;\n' + ins('rule_tier', ['tier', 'label', 'r_min', 'r_max'], [(int(r['tier']), r['label'], int(r['r_min']), int(r['r_max'])) for r in rd('rule_tier')]),
            'DELETE FROM rule_cadence;\n' + ins('rule_cadence', ['tier', 'step', 'day_offset'],
                                                [(int(r['tier']), i + 1, int(d)) for r in rd('rule_tier') for i, d in enumerate(r['cadence_days'].split(','))]),
-           'DELETE FROM rule_dm_module;\n' + ins('rule_dm_module', ['module_code', 'programme', 'name', 'sort_order', 'target', 'metric', 'applies_when'], DM_MODULES),
            'DELETE FROM rule_followup;\n' + ins('rule_followup', ['outcome', 'action_status', 'need_status', 'gap_state', 'hold_days', 'followup_kind', 'followup_title',
                                                                    'followup_due_days', 'max_attempts', 'promote_next', 'note'], FOLLOWUP)]
     open(os.path.join(SQL, '02_rules.sql'), 'w', encoding='utf-8').write('\n'.join(out))

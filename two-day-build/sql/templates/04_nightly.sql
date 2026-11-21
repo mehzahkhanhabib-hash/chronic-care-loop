@@ -74,8 +74,8 @@ SET n.status = 'open', n.gap_state = 'Potential', n.hold_until = NULL, n.closed_
 WHERE n.status = 'declined' AND n.hold_until <= rc.run_date;
 
 -- 4b. new needs (existing ones keep their status: G9)
-INSERT INTO care_plan_need (member_id, trigger_code, dm_module, class, class_order, trigger_order, slot, status, gap_state, due_date, evidence, opened_on)
-SELECT s.member_id, s.trigger_code, t.dm_module, t.class, t.class_order, t.trigger_order, 'FUTURE', 'open', 'Potential',
+INSERT INTO care_plan_need (member_id, trigger_code, class, class_order, trigger_order, slot, status, gap_state, due_date, evidence, opened_on)
+SELECT s.member_id, s.trigger_code, t.class, t.class_order, t.trigger_order, 'FUTURE', 'open', 'Potential',
        DATE_ADD(rc.run_date, INTERVAL t.due_days DAY), s.evidence, rc.run_date
 FROM member_signal s
 JOIN run_config rc ON s.run_date = rc.run_date

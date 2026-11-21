@@ -23,7 +23,7 @@ LEFT JOIN nurse nu ON nu.nurse_id = w.nurse_id;
 -- ── Care plan: each need with its one care-plan action and the last thing that happened ──
 DROP VIEW IF EXISTS v_care_plan;
 CREATE VIEW v_care_plan AS
-SELECT n.member_id, n.trigger_code, t.name AS need, t.dm_module, n.class, n.slot, n.status AS need_status, n.gap_state,
+SELECT n.member_id, n.trigger_code, t.name AS need, n.class, t.class_label, n.slot, n.status AS need_status, n.gap_state,
        n.due_date, n.hold_until, n.evidence, t.action_title, t.owner_role, t.done_when,
        a.action_id, a.kind AS action_kind, a.title AS action_title_now, a.status AS action_status, a.assignee, a.due_date AS action_due,
        o.result AS last_outcome, o.recorded_at AS last_outcome_at,
@@ -48,100 +48,71 @@ LEFT JOIN action p ON p.member_id = a.member_id AND p.action_id = a.parent_actio
 LEFT JOIN outcome po ON po.member_id = a.member_id AND po.action_id = a.parent_action_id
      AND po.outcome_id = (SELECT MAX(o2.outcome_id) FROM outcome o2 WHERE o2.member_id = a.member_id AND o2.action_id = a.parent_action_id);
 
--- ── Bhawani's disease-management view: one row per member per programme module ──
--- status: Off target (an open safety / acute / uncontrolled need) · Due (an open barrier, gap or goal need)
---         Awaiting claims (nurse reported it done; the claim hasn't arrived) · Declined · on hold (90 days, G4) · Unknown (a value the rule needs is missing) · On track (no open need)
-DROP VIEW IF EXISTS v_dm_member_module;
-CREATE VIEW v_dm_member_module AS
-SELECT m.member_id, d.programme, d.module_code, d.name AS module, d.sort_order, d.target, d.metric,
-       CASE d.module_code
-         WHEN 'DM-GLY'   THEN CONCAT('HbA1c ', COALESCE(CONCAT(CAST(ROUND(m.last_hba1c_value, 1) AS CHAR), '%'), 'not on record'),
-                                     ' · tested ', COALESCE(CONCAT(DATEDIFF(rc.as_of, m.last_hba1c_date2), ' days ago'), 'never'))
-         WHEN 'DM-HYPO'  THEN CASE WHEN m.flag_dm_hypoglycaemia_l12m = 1 THEN 'Hypoglycaemia in the last 12 months'
-                                   WHEN m.flag_no_glucagon_last12months = 1 THEN 'On insulin / SU, no rescue glucagon'
-                                   ELSE 'No event recorded' END
-         WHEN 'DM-EYE'   THEN CONCAT('Retinal screen ', COALESCE(CONCAT(DATEDIFF(rc.as_of, m.last_retinal_screen_date), ' days ago'), 'not on record'))
-         WHEN 'DM-FOOT'  THEN CONCAT('Foot exam ', COALESCE(CONCAT(DATEDIFF(rc.as_of, m.last_foot_exam), ' days ago'), 'not on record'))
-         WHEN 'DM-EDU'   THEN CONCAT('Dietitian ', COALESCE(CONCAT(DATEDIFF(rc.as_of, m.last_dietitian_visit), ' days ago'), 'never'),
-                                     ' · educator ', COALESCE(CONCAT(DATEDIFF(rc.as_of, m.last_diabeducator_visit), ' days ago'), 'never'))
-         WHEN 'HTN-BP'   THEN COALESCE(CONCAT('BP ', CAST(ROUND(m.last_systolicpressure_value) AS CHAR), '/', CAST(ROUND(m.last_diastolicpressure_value) AS CHAR)), 'No usable BP reading')
-         WHEN 'HTN-K'    THEN CONCAT('Potassium ', COALESCE(CONCAT(DATEDIFF(rc.as_of, m.last_potassium_date), ' days ago'), 'not on record'))
-         WHEN 'SH-KID'   THEN CONCAT('eGFR ', COALESCE(CAST(ROUND(m.last_egfr_value) AS CHAR), '—'), ' · UACR ', COALESCE(CAST(ROUND(m.last_uacr_value) AS CHAR), '—'))
-         WHEN 'SH-MEDS'  THEN CONCAT('Lowest PDC ', COALESCE(CONCAT(CAST(ROUND(100 * LEAST(COALESCE(m.pdc_any_t2d_noninsulin, 1), COALESCE(m.pdc_any_htn, 1))) AS CHAR), '%'), '—'))
-         WHEN 'SH-LABS'  THEN CONCAT('Lipid panel ', COALESCE(CONCAT(DATEDIFF(rc.as_of, m.last_lipid_panel_date), ' days ago'), 'not on record'))
-         WHEN 'SH-TOC'   THEN CONCAT('Last discharge ', COALESCE(CONCAT(DATEDIFF(rc.as_of, m.last_ip_discharge_date), ' days ago'), 'none'))
-         WHEN 'SH-START' THEN CONCAT('First diagnosis ', COALESCE(CONCAT(DATEDIFF(rc.as_of, LEAST(COALESCE(m.first_e11_date, m.first_htn_date), COALESCE(m.first_htn_date, m.first_e11_date))), ' days ago'), '—'))
-       END AS latest,
-       CASE WHEN COALESCE(nx.n_red, 0) > 0 THEN 'Off target'
-            WHEN COALESCE(nx.n_open, 0) > 0 THEN 'Due'
-            WHEN COALESCE(nx.n_reported, 0) > 0 THEN 'Awaiting claims'
-            WHEN COALESCE(nx.n_declined, 0) > 0 THEN 'Declined · on hold'
-            WHEN COALESCE(ct.n_unknown, 0) > 0 THEN 'Unknown'
-            ELSE 'On track' END AS status,
-       nx.open_needs, nx.slots, nx.gap_states, nx.next_due,
-       ax.next_action, ax.next_action_due, ax.owner
+-- ── The rulebook applied to one member: one row per rule (rule_trigger) the member is in scope for ──
+-- Reads left to right exactly as the rulebook does: raw data → fires when → fired? → need (slot, status, gap) → next best action → done when.
+-- state:  fired · cannot tell (a needed value is missing, G8) · not fired
+-- status: Open · Awaiting claims (nurse reported done, claim not yet seen) · Declined · on hold (90 days, G4) · Closed in claims · Unknown · Not triggered
+DROP VIEW IF EXISTS v_rulebook_member;
+CREATE VIEW v_rulebook_member AS
+SELECT m.member_id, t.trigger_code, t.name AS rule_name, t.pathway, t.class, t.class_label, t.class_order, t.trigger_order,
+       t.raw_data, t.fires_when, t.use_variant,
+       COALESCE(s.state, 'not fired') AS state, s.evidence,
+       n.slot, n.status AS need_status, n.gap_state, n.due_date AS need_due, n.hold_until,
+       CASE WHEN n.status = 'open' AND n.class IN ('safety', 'acute', 'unctl') THEN 'Open · off target'
+            WHEN n.status = 'open'                                               THEN 'Open'
+            WHEN n.gap_state = 'Reported'                                        THEN 'Awaiting claims'
+            WHEN n.status = 'declined'                                           THEN 'Declined · on hold'
+            WHEN n.gap_state = 'Closed'                                          THEN 'Closed in claims'
+            WHEN s.state = 'cannot_tell'                                         THEN 'Unknown'
+            ELSE 'Not triggered' END AS status,
+       t.action_code, t.action_title AS next_best_action, t.owner_role, t.channel, t.done_when, t.escalate_to,
+       a.action_id, a.kind AS action_kind, a.title AS action_now, a.status AS action_status, a.due_date AS action_due, a.assignee,
+       t.status AS rule_status
 FROM member m
 JOIN run_config rc
-JOIN rule_dm_module d
-  ON (d.applies_when = 'has_t2d' AND m.has_t2d = 1) OR (d.applies_when = 'has_htn' AND m.has_htn = 1)
-  OR (d.applies_when = 'either' AND (m.has_t2d = 1 OR m.has_htn = 1))
-LEFT JOIN (SELECT member_id, dm_module,
-                  SUM(status = 'open' AND class IN ('safety', 'acute', 'unctl')) AS n_red,
-                  SUM(status = 'open') AS n_open,
-                  SUM(gap_state = 'Reported') AS n_reported,
-                  SUM(status = 'declined') AS n_declined,
-                  GROUP_CONCAT(CASE WHEN status = 'open' THEN trigger_code END ORDER BY class_order SEPARATOR ', ') AS open_needs,
-                  GROUP_CONCAT(CASE WHEN status = 'open' THEN slot END ORDER BY class_order SEPARATOR ', ') AS slots,
-                  GROUP_CONCAT(gap_state ORDER BY class_order SEPARATOR ', ') AS gap_states,
-                  MIN(CASE WHEN status = 'open' THEN due_date END) AS next_due
-             FROM care_plan_need GROUP BY member_id, dm_module) nx
-  ON nx.member_id = m.member_id AND nx.dm_module = d.module_code
-LEFT JOIN (SELECT s.member_id, t.dm_module, COUNT(*) AS n_unknown
-             FROM member_signal s JOIN run_config rc2 ON rc2.run_date = s.run_date JOIN rule_trigger t ON t.trigger_code = s.trigger_code
-            WHERE s.state = 'cannot_tell' GROUP BY s.member_id, t.dm_module) ct
-  ON ct.member_id = m.member_id AND ct.dm_module = d.module_code
-LEFT JOIN (SELECT a.member_id, t.dm_module,
-                  SUBSTRING_INDEX(GROUP_CONCAT(a.title ORDER BY a.due_date SEPARATOR '||'), '||', 1) AS next_action,
-                  MIN(a.due_date) AS next_action_due,
-                  SUBSTRING_INDEX(GROUP_CONCAT(COALESCE(a.owner_role, '') ORDER BY a.due_date SEPARATOR '||'), '||', 1) AS owner
-             FROM action a JOIN rule_trigger t ON t.trigger_code = a.trigger_code
-            WHERE a.status = 'open' GROUP BY a.member_id, t.dm_module) ax
-  ON ax.member_id = m.member_id AND ax.dm_module = d.module_code;
+JOIN rule_trigger t
+  ON (t.pathway = 'T2D' AND m.has_t2d = 1) OR (t.pathway = 'HTN' AND m.has_htn = 1)
+  OR (t.pathway NOT IN ('T2D', 'HTN') AND (m.has_t2d = 1 OR m.has_htn = 1))
+LEFT JOIN member_signal s ON s.member_id = m.member_id AND s.trigger_code = t.trigger_code AND s.run_date = rc.run_date
+LEFT JOIN care_plan_need n ON n.member_id = m.member_id AND n.trigger_code = t.trigger_code
+LEFT JOIN action a ON a.member_id = m.member_id AND a.trigger_code = t.trigger_code AND a.status = 'open'
+     AND a.action_id = (SELECT MAX(a2.action_id) FROM action a2
+                         WHERE a2.member_id = m.member_id AND a2.trigger_code = t.trigger_code AND a2.status = 'open' AND a2.kind IN ('care_plan', 'follow_up'));
 
--- ── One line per member: the programme header Bhawani and the nurse see above the modules ──
-DROP VIEW IF EXISTS v_dm_member_summary;
-CREATE VIEW v_dm_member_summary AS
+-- ── One line per member: the header above the rulebook and the care plan ──
+DROP VIEW IF EXISTS v_member_summary;
+CREATE VIEW v_member_summary AS
 SELECT m.member_id, m.age, m.gender, m.language, m.consent,
-       CASE WHEN m.has_t2d = 1 AND m.has_htn = 1 THEN 'Diabetes + Hypertension' WHEN m.has_t2d = 1 THEN 'Diabetes' ELSE 'Hypertension' END AS programme,
+       CASE WHEN m.has_t2d = 1 AND m.has_htn = 1 THEN 'T2D + HTN' WHEN m.has_t2d = 1 THEN 'T2D' ELSE 'HTN' END AS pathway,
        m.r_total, m.tier, t.label AS tier_label, m.alert, m.contact_priority,
        m.clinical_score AS c, m.comorbid_complication_score AS mm, m.kidney_score AS k, m.utilization_score AS u, m.age_sex_score AS a,
        base.baseline,
        (SELECT MIN(DATE_ADD(base.baseline, INTERVAL c.day_offset DAY)) FROM rule_cadence c
          WHERE c.tier = m.tier AND DATE_ADD(base.baseline, INTERVAL c.day_offset DAY) > rc.run_date) AS next_touchpoint,
        (SELECT COUNT(*) FROM care_plan_need n WHERE n.member_id = m.member_id AND n.slot = 'CURRENT') AS current_needs,
-       (SELECT COUNT(*) FROM care_plan_need n WHERE n.member_id = m.member_id AND n.status = 'open') AS open_needs
+       (SELECT COUNT(*) FROM care_plan_need n WHERE n.member_id = m.member_id AND n.status = 'open') AS open_needs,
+       (SELECT COUNT(*) FROM member_signal s WHERE s.member_id = m.member_id AND s.run_date = rc.run_date AND s.state = 'fired') AS rules_fired
 FROM member m
 JOIN run_config rc
 LEFT JOIN rule_tier t ON t.tier = m.tier
 LEFT JOIN (SELECT member_id, MIN(opened_on) AS baseline FROM care_plan_need GROUP BY member_id) base ON base.member_id = m.member_id;
 
--- ── Bhawani's programme dashboard: every module across all members ──
-DROP VIEW IF EXISTS v_dm_programme;
-CREATE VIEW v_dm_programme AS
-SELECT v.programme, v.module_code, v.module, v.sort_order, v.target,
-       COUNT(*) AS members,
-       SUM(v.status = 'On track') AS on_track,
-       SUM(v.status = 'Due') AS due,
-       SUM(v.status = 'Off target') AS off_target,
-       SUM(v.status = 'Awaiting claims') AS awaiting_claims,
-       SUM(v.status = 'Declined · on hold') AS declined_on_hold,
-       SUM(v.status = 'Unknown') AS unknown,
-       ROUND(100 * SUM(v.status = 'On track') / COUNT(*)) AS pct_on_track,
-       COALESCE(g.reported, 0) AS reported_by_nurse, COALESCE(g.closed, 0) AS closed_in_claims
-FROM v_dm_member_module v
-LEFT JOIN (SELECT dm_module, SUM(gap_state = 'Reported') AS reported, SUM(gap_state = 'Closed') AS closed
-             FROM care_plan_need GROUP BY dm_module) g ON g.dm_module = v.module_code
-GROUP BY v.programme, v.module_code, v.module, v.sort_order, v.target, g.reported, g.closed;
+-- ── The rulebook across all members: one row per rule. Nurse-reported vs closed in claims is the measure of impact. ──
+DROP VIEW IF EXISTS v_rulebook_programme;
+CREATE VIEW v_rulebook_programme AS
+SELECT v.trigger_code, v.rule_name, v.pathway, v.class, v.class_label, v.class_order, v.trigger_order, v.fires_when, v.next_best_action, v.owner_role, v.done_when,
+       COUNT(*) AS in_scope,
+       SUM(v.state = 'fired') AS fired,
+       SUM(v.state = 'cannot_tell') AS cannot_tell,
+       SUM(v.need_status = 'open') AS open_needs,
+       SUM(v.slot = 'CURRENT') AS in_current,
+       SUM(v.gap_state = 'Reported') AS reported_by_nurse,
+       SUM(v.gap_state = 'Closed') AS closed_in_claims,
+       SUM(v.need_status = 'declined') AS declined,
+       ROUND(100 * SUM(v.state = 'fired') / COUNT(*)) AS pct_fired,
+       v.rule_status
+FROM v_rulebook_member v
+GROUP BY v.trigger_code, v.rule_name, v.pathway, v.class, v.class_label, v.class_order, v.trigger_order, v.fires_when, v.next_best_action, v.owner_role, v.done_when, v.rule_status;
 
 -- ── Is the loop closing? ──
 DROP VIEW IF EXISTS v_kpis;

@@ -1,21 +1,21 @@
 -- Rule data: the CCC Rulebook (T2D and Hypertension, 20 Nov 2026). Generated from rules/*.csv by tools/gen_sql.py.
 
 DELETE FROM rule_trigger;
-INSERT INTO rule_trigger (trigger_code, name, pathway, dm_module, class, class_order, trigger_order, due_days, action_title, owner_role, channel, done_when, evidence, use_variant, status) VALUES
-  ('Trig3', 'Hypoglycaemia', 'T2D', 'DM-HYPO', 'safety', 1, 1, 0, 'Same-day clinician review, hypo plan, glucagon check', 'Doctor', 'Call', 'Review note and medicine change logged', 'Clinician note; glucagon fill', 'extract', 'Draft: needs clinical sign-off (rulebook §8)'),
-  ('BPU', 'BP urgent', 'HTN', 'HTN-BP', 'safety', 1, 2, 0, 'Stop the script and escalate the same day', 'Nurse → doctor', 'Call', 'Escalation closed', 'Escalation outcome', 'rulebook', 'Draft: needs clinical sign-off (rulebook §8)'),
-  ('Trig4', 'Post-discharge care', 'T2D · HTN', 'SH-TOC', 'acute', 2, 3, 3, 'GP follow-up within 72 h; medicine reconciliation', 'Coordinator', 'Call', 'GP outpatient claim within 7 days', 'GP outpatient claim', 'extract', 'Draft: needs clinical sign-off (rulebook §8)'),
-  ('Trig1', 'HbA1c above target', 'T2D', 'DM-GLY', 'unctl', 3, 4, 7, 'Glycaemic treatment review', 'Doctor', 'Call', 'Goal, decision and next test date recorded', 'Outpatient claim + recorded goal', 'extract', 'Draft: needs clinical sign-off (rulebook §8). Extract flag fires at 6.5%: decide which variant to use'),
-  ('Trig2', 'BP treatment review', 'HTN', 'HTN-BP', 'unctl', 3, 5, 7, 'Home BP recheck and clinician review', 'Nurse', 'Call', 'Readings reviewed, next BP date set', 'BP observation', 'extract', 'Draft: needs clinical sign-off (rulebook §8)'),
-  ('Trig5', 'Kidney check', 'T2D · HTN', 'SH-KID', 'unctl', 3, 6, 7, 'Book eGFR and UACR; nephrology if eGFR < 30', 'Coordinator', 'Call', 'Lab claim with a result', 'eGFR / UACR lab claim', 'extract', 'Draft: needs clinical sign-off (rulebook §8)'),
-  ('Trig9', 'Medication adherence', 'T2D · HTN', 'SH-MEDS', 'barrier', 4, 7, 7, 'Refill and barrier check; pharmacist if 3 or more classes', 'Coordinator / pharmacist', 'Call', 'Next fill dispensed within 14 days', 'Pharmacy fill', 'extract', 'Draft: needs clinical sign-off (rulebook §8)'),
-  ('Trig6', 'HbA1c test due', 'T2D', 'DM-GLY', 'gap', 5, 8, 30, 'Book HbA1c at an in-network lab', 'Coordinator', 'Call or WhatsApp', 'Lab claim', 'HbA1c lab claim', 'extract', 'Draft: needs clinical sign-off (rulebook §8)'),
-  ('Trig12', 'Eye exam due', 'T2D', 'DM-EYE', 'gap', 5, 9, 30, 'Confirm the last exam or refer', 'Nurse', 'Call', 'Report or referral claim', 'Retinal CPT 92250/92227 or referral', 'extract', 'Draft: needs clinical sign-off (rulebook §8)'),
-  ('Trig13', 'High-risk foot', 'T2D', 'DM-FOOT', 'gap', 5, 10, 30, 'Foot exam; podiatry if high risk', 'Nurse', 'Call', 'Exam claim', 'Foot CPT 2028F/G0245', 'extract', 'Draft: needs clinical sign-off (rulebook §8)'),
-  ('Trig7', 'Potassium due', 'HTN', 'HTN-K', 'gap', 5, 11, 30, 'Add K+ to the next lab order', 'Coordinator', 'Call or WhatsApp', 'Lab claim', 'Potassium lab claim', 'extract', 'Draft: needs clinical sign-off (rulebook §8)'),
-  ('Trig11', 'Annual labs', 'T2D · HTN', 'SH-LABS', 'gap', 5, 12, 30, 'One bundled lab visit', 'Coordinator', 'Call or WhatsApp', 'Lab claims', 'Lipid and creatinine lab claims', 'extract', 'Draft: needs clinical sign-off (rulebook §8)'),
-  ('Trig10', 'New diagnosis', 'T2D · HTN', 'SH-START', 'goal', 6, 13, 14, 'Baseline assessment and DSMES referral', 'Nurse', 'Call', 'Assessment documented', 'Assessment note; DSMES referral', 'extract', 'Draft: needs clinical sign-off (rulebook §8)'),
-  ('Trig8', 'Nutrition and education', 'T2D', 'DM-EDU', 'goal', 6, 14, 14, 'Self-management goal, dietitian', 'Nurse', 'Call', 'Goal set and reviewed', 'Dietitian / DSMES claim', 'extract', 'Draft: needs clinical sign-off (rulebook §8)');
+INSERT INTO rule_trigger (trigger_code, name, pathway, class, class_label, class_order, trigger_order, due_days, raw_data, fires_when, extract_flag, action_code, action_title, owner_role, channel, done_when, evidence, escalate_to, use_variant, status) VALUES
+  ('Trig3', 'Hypoglycaemia', 'T2D', 'safety', 'Safety', 1, 1, 0, 'ICD E16.0–E16.2, E11.64; CGM < 3.9 mmol/L', 'Any event in 12 months', 'Trig3_hypoglycemia_tx', 'ACT-HYPO', 'Same-day clinician review, hypo plan, glucagon check', 'Doctor', 'Call', 'Review note and medicine change logged', 'Clinician note; glucagon fill', 'Clinical lead', 'extract', 'Draft: needs clinical sign-off (rulebook §8)'),
+  ('BPU', 'BP urgent', 'HTN', 'safety', 'Safety', 1, 2, 0, 'Home or claim BP', 'BP ≥ 180/110', NULL, 'ACT-BPU', 'Stop the script and escalate the same day', 'Nurse → doctor', 'Call', 'Escalation closed', 'Escalation outcome', 'Clinical lead', 'rulebook', 'Draft: needs clinical sign-off (rulebook §8)'),
+  ('Trig4', 'Post-discharge care', 'T2D · HTN', 'acute', 'Acute event', 2, 3, 3, 'IP or ED encounter, discharge date', 'Discharge in the last 14 days, or 2 or more ED visits in 90 days', 'Trig4_post_discharge_care', 'ACT-POSTDC', 'GP follow-up within 72 h; medicine reconciliation', 'Coordinator', 'Call', 'GP outpatient claim within 7 days', 'GP outpatient claim', NULL, 'extract', 'Draft: needs clinical sign-off (rulebook §8)'),
+  ('Trig1', 'HbA1c above target', 'T2D', 'unctl', 'Uncontrolled', 3, 4, 7, 'LOINC 4548-4', 'Last value ≥ individual goal (around 8%)', 'Trig1_HbA1c_above_target', 'ACT-A1C-REV', 'Glycaemic treatment review', 'Doctor', 'Call', 'Goal, decision and next test date recorded', 'Outpatient claim + recorded goal', NULL, 'extract', 'Draft: needs clinical sign-off (rulebook §8). Extract flag fires at 6.5%: decide which variant to use'),
+  ('Trig2', 'BP treatment review', 'HTN', 'unctl', 'Uncontrolled', 3, 5, 7, 'SBP/DBP observations', '≥ 130/80 (DM or CKD) or ≥ 140/90', 'Trig2_HTN_tx_review', 'ACT-BP-REV', 'Home BP recheck and clinician review', 'Nurse', 'Call', 'Readings reviewed, next BP date set', 'BP observation', NULL, 'extract', 'Draft: needs clinical sign-off (rulebook §8)'),
+  ('Trig5', 'Kidney check', 'T2D · HTN', 'unctl', 'Uncontrolled', 3, 6, 7, 'eGFR 69405-9, UACR 9318-7', 'eGFR < 60, or no eGFR/UACR in 12 months', 'Trig5_Kidney_check', 'ACT-KIDNEY', 'Book eGFR and UACR; nephrology if eGFR < 30', 'Coordinator', 'Call', 'Lab claim with a result', 'eGFR / UACR lab claim', NULL, 'extract', 'Draft: needs clinical sign-off (rulebook §8)'),
+  ('Trig9', 'Medication adherence', 'T2D · HTN', 'barrier', 'Barrier', 4, 7, 7, 'Pharmacy fills, days supply', 'PDC < 80% over 180 days, or a gap of more than 30 days', 'Trig9_medication_adherence', 'ACT-ADH', 'Refill and barrier check; pharmacist if 3 or more classes', 'Coordinator / pharmacist', 'Call', 'Next fill dispensed within 14 days', 'Pharmacy fill', NULL, 'extract', 'Draft: needs clinical sign-off (rulebook §8)'),
+  ('Trig6', 'HbA1c test due', 'T2D', 'gap', 'Verified gap', 5, 8, 30, 'Last HbA1c date', '> 6 months (or > 3 months if off target)', 'Trig6_HbA1c_due', 'ACT-A1C-LAB', 'Book HbA1c at an in-network lab', 'Coordinator', 'Call or WhatsApp', 'Lab claim', 'HbA1c lab claim', NULL, 'extract', 'Draft: needs clinical sign-off (rulebook §8)'),
+  ('Trig12', 'Eye exam due', 'T2D', 'gap', 'Verified gap', 5, 9, 30, 'Retinal CPT 92250/92227', 'None in 24 months', 'Trig12_eyeexam_due', 'ACT-EYE', 'Confirm the last exam or refer', 'Nurse', 'Call', 'Report or referral claim', 'Retinal CPT 92250/92227 or referral', NULL, 'extract', 'Draft: needs clinical sign-off (rulebook §8)'),
+  ('Trig13', 'High-risk foot', 'T2D', 'gap', 'Verified gap', 5, 10, 30, 'Foot CPT 2028F/G0245; ulcer, neuropathy, PAD', 'No exam in 12 months, or a high-risk code', 'Trig13_highriskfoot_monitor', 'ACT-FOOT', 'Foot exam; podiatry if high risk', 'Nurse', 'Call', 'Exam claim', 'Foot CPT 2028F/G0245', NULL, 'extract', 'Draft: needs clinical sign-off (rulebook §8)'),
+  ('Trig7', 'Potassium due', 'HTN', 'gap', 'Verified gap', 5, 11, 30, 'K+ result, ACE/ARB/diuretic fills', 'On an RAAS inhibitor or diuretic with no K+ in 12 months', 'Trig7_Renal_Potassium_due', 'ACT-K', 'Add K+ to the next lab order', 'Coordinator', 'Call or WhatsApp', 'Lab claim', 'Potassium lab claim', NULL, 'extract', 'Draft: needs clinical sign-off (rulebook §8)'),
+  ('Trig11', 'Annual labs', 'T2D · HTN', 'gap', 'Verified gap', 5, 12, 30, 'Lipids, creatinine', 'None in 12 months', 'Trig11_annual_labs_due', 'ACT-LABS', 'One bundled lab visit', 'Coordinator', 'Call or WhatsApp', 'Lab claims', 'Lipid and creatinine lab claims', NULL, 'extract', 'Draft: needs clinical sign-off (rulebook §8)'),
+  ('Trig10', 'New diagnosis', 'T2D · HTN', 'goal', 'Patient goal', 6, 13, 14, 'First E11 / I10 claim', 'First code in the last 90 days', 'Trig10_new_diagnosis', 'ACT-NEWDX', 'Baseline assessment and DSMES referral', 'Nurse', 'Call', 'Assessment documented', 'Assessment note; DSMES referral', NULL, 'extract', 'Draft: needs clinical sign-off (rulebook §8)'),
+  ('Trig8', 'Nutrition and education', 'T2D', 'goal', 'Patient goal', 6, 14, 14, 'No dietitian or DSMES claim', 'None in 12 months', 'Trig8_nutrition_due', 'ACT-DSMES', 'Self-management goal, dietitian', 'Nurse', 'Call', 'Goal set and reviewed', 'Dietitian / DSMES claim', NULL, 'extract', 'Draft: needs clinical sign-off (rulebook §8)');
 
 DELETE FROM rule_priority;
 INSERT INTO rule_priority (priority, alert, needs_trigger, sla_days, channel, match_order) VALUES
@@ -63,21 +63,6 @@ INSERT INTO rule_cadence (tier, step, day_offset) VALUES
   (4, 7, 84),
   (4, 8, 112),
   (4, 9, 180);
-
-DELETE FROM rule_dm_module;
-INSERT INTO rule_dm_module (module_code, programme, name, sort_order, target, metric, applies_when) VALUES
-  ('DM-GLY', 'Diabetes', 'Glycaemic control', 1, 'HbA1c < 7% (individual goal up to 8%); tested every 6 months', 'HbA1c', 'has_t2d'),
-  ('DM-HYPO', 'Diabetes', 'Hypoglycaemia safety', 2, 'No hypoglycaemia; rescue glucagon if on insulin or a sulfonylurea', 'Hypo events', 'has_t2d'),
-  ('DM-EYE', 'Diabetes', 'Eye screening', 3, 'Retinal screen within 24 months', 'Last retinal screen', 'has_t2d'),
-  ('DM-FOOT', 'Diabetes', 'Foot care', 4, 'Foot exam within 12 months; podiatry if high risk', 'Last foot exam', 'has_t2d'),
-  ('DM-EDU', 'Diabetes', 'Self-management and nutrition', 5, 'Dietitian or DSMES contact within 12 months; a self-management goal', 'Last dietitian visit', 'has_t2d'),
-  ('HTN-BP', 'Hypertension', 'Blood pressure control', 6, 'BP < 140/90 (< 130/80 with diabetes or CKD); BP ≥ 180/110 same day', 'Latest BP', 'has_htn'),
-  ('HTN-K', 'Hypertension', 'Potassium monitoring', 7, 'K+ within 12 months on an ACEi, ARB, MRA or thiazide', 'Last potassium test', 'has_htn'),
-  ('SH-KID', 'Shared', 'Kidney protection', 8, 'eGFR and UACR within 12 months; nephrology if eGFR < 30', 'eGFR / UACR', 'either'),
-  ('SH-MEDS', 'Shared', 'Medicine adherence', 9, 'PDC ≥ 80%; no supply gap over 30 days', 'Lowest PDC', 'either'),
-  ('SH-LABS', 'Shared', 'Annual labs', 10, 'Lipids and creatinine within 12 months', 'Last lipid panel', 'either'),
-  ('SH-TOC', 'Shared', 'Transitions of care', 11, 'GP follow-up within 72 h of discharge; medicines reconciled', 'Last discharge', 'either'),
-  ('SH-START', 'Shared', 'New diagnosis start', 12, 'Baseline assessment and DSMES referral within 90 days of diagnosis', 'First diagnosis', 'either');
 
 DELETE FROM rule_followup;
 INSERT INTO rule_followup (outcome, action_status, need_status, gap_state, hold_days, followup_kind, followup_title, followup_due_days, max_attempts, promote_next, note) VALUES

@@ -1,6 +1,6 @@
 # Chronic Care Loop · 2-day build kit (SingleStore)
 
-Start with **`PLAN.md`**: it explains the model, the nurse rules, the worklist, the follow-ups, Bhawani's view, the API and the 3-developer plan.
+Start with **`PLAN.md`**: it explains the model, the nurse rules, the worklist, the follow-ups, the rulebook view, the API and the 3-developer plan.
 
 ```
 sql/
@@ -10,7 +10,7 @@ sql/
   03_load.sql         raw TSV → stg_extract → typed, cleaned member (G0)
   04_nightly.sql      triggers → score → needs → slots → actions → nudges/calls → worklist
   05_followup.sql     nurse outcome → follow-up action (POST /actions/{id}/outcome)
-  06_views.sql        v_worklist · v_care_plan · v_action_chain · v_dm_member_module · v_dm_member_summary · v_dm_programme · v_kpis
+  06_views.sql        v_worklist · v_care_plan · v_action_chain · v_rulebook_member · v_member_summary · v_rulebook_programme · v_kpis
 api/
   server.py           thin JSON API (Python + pymysql); every endpoint is one SQL file or one view
   sqlkit.py           runs the .sql files statement by statement

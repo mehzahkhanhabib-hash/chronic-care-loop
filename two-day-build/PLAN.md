@@ -4,7 +4,7 @@
 
 **raw member data → triggers → care-plan needs → nudge / call → nurse worklist → nurse outcome → follow-up action → next night**
 
-It follows the CCC Rulebook (T2D and hypertension), and Bhawani gets her disease-management view of each care plan and of the whole programme.
+It follows the CCC Rulebook (T2D and hypertension) rule for rule: the rulebook is a table, every screen reads from it, and the "rulebook view" shows each rule applied to a member and across the programme.
 
 Everything here was tested end to end on MySQL 8.4, which uses the same SQL dialect as SingleStore. The tests used the 24-member sample of the extract. Eight automated checks pass, including one that shows the SQL fires exactly the same triggers, member by member, as the reference rules engine.
 
@@ -23,7 +23,7 @@ member_features.tsv ──LOAD DATA──▶ stg_extract (341 text cols)
                                                     ▲                                  │
                          05_followup.sql            │                                  ▼
                  outcome ──▶ follow-up action ──────┘              Care portal (nurse)
-                                                                   Bhawani's DM view (06_views.sql)
+                                                                   Rulebook view (06_views.sql)
 ```
 
 - **All logic is SQL**, in seven files you run in order. No ORM and no rules engine to build.
@@ -46,10 +46,9 @@ member_features.tsv ──LOAD DATA──▶ stg_extract (341 text cols)
 
 **Rule tables** (REFERENCE, so SingleStore copies them to every node and joins are free):
 
-- `rule_trigger`: trigger → next best action, owner, done-when, class, module
+- `rule_trigger`: one row per rulebook rule: raw data, fires-when, class, next best action, owner, done-when, escalation, sign-off status
 - `rule_priority`: alert → P1–P4 and SLA
 - `rule_tier`, `rule_cadence`: tier bands and contact cadence
-- `rule_dm_module`: Bhawani's programme modules
 - `rule_followup`: outcome → follow-up
 - `nurse`, `nurse_language`: the care team and the languages each nurse speaks
 - `run_config`: the as-of date and the run date
@@ -176,34 +175,22 @@ The portal calls one endpoint, `POST /actions/{id}/outcome {result, consent, not
 
 The chain is visible with `GET /members/m26/actions` (`v_action_chain`: action → because of outcome → came from).
 
-## 7. Bhawani's disease-management care plan (`v_dm_member_module`, `v_dm_programme`)
+## 7. The rulebook view (`v_rulebook_member`, `v_rulebook_programme`)
 
-The same care plan, organised by **programme module** instead of by slot. Each module shows its target, the latest value, a status, the needs in it (and their slots), the gap state, and the next action with its owner and due date.
+There is no separate "disease-management view". The rulebook itself is the view. `rule_trigger` holds one row per rule, with the columns the rulebook document has: raw data, fires when, class, next best action, owner, done when, escalation, and the sign-off status. The nightly run writes which rules fired per member; the view joins the two.
 
-**Modules:**
-- **Diabetes:** glycaemic control · hypoglycaemia safety · eye · foot · self-management
-- **Hypertension:** BP control · potassium monitoring
-- **Shared** (asked once): kidney · medicine adherence · annual labs · transitions of care · new diagnosis
+**Per member** (`GET /members/{id}/rulebook`): one row per rule the member is in scope for (T2D rules for T2D members, HTN rules for HTN members, shared rules for both), in rulebook order (safety → acute → uncontrolled → barrier → gap → goal). Columns, left to right, exactly as the rulebook reads:
 
-**Status:**
-- **Off target**: an open safety, acute or uncontrolled need
-- **Due**: an open barrier, gap or goal need
-- **Awaiting claims**: the nurse reported it done
-- **Declined · on hold**
-- **Unknown**: a needed value is missing
-- **On track**
+| Rule | Raw data | Fires when | State | Evidence | Need (slot · status · gap) | Next best action · owner | Done when | Action now · due |
+|---|---|---|---|---|---|---|---|---|
 
-**m26 after the call:**
-- **Glycaemic control: Off target.** HbA1c 11.0%. The review is agreed; the check is due 27 Nov.
-- **Hypoglycaemia safety: Awaiting claims.** On insulin or a sulfonylurea with no rescue glucagon. Verify in claims by 4 Dec.
-- **Blood pressure: Off target.** BP 116/81, but the treatment-review trigger fired: no ACEi/ARB with kidney disease or CAD. Home BP recheck is due 27 Nov.
-- **Kidney: Off target.** No eGFR or UACR on record. Book the labs by 27 Nov.
-- **Foot, self-management, adherence and annual labs: Due** (NEXT and FUTURE).
-- **Transitions of care: Declined · on hold** until 18 Feb.
+Status per rule: **Open · off target** (safety / acute / uncontrolled) · **Open** · **Awaiting claims** (nurse reported done) · **Declined · on hold** · **Closed in claims** · **Unknown** (a value the rule needs is missing) · **Not triggered**.
 
-**Programme dashboard (all 24 members):**
-- **% on track per module:** glycaemic control 21%, BP 25%, kidney 25%, self-management 5%.
-- **Nurse-reported vs closed in claims, per module:** this is the measure of impact. The rulebook is explicit that a nurse's "done" clicks alone are not evidence of impact.
+**m26 after the call:** Trig3 hypoglycaemia *Awaiting claims* (verify by 4 Dec) · Trig4 post-discharge *Declined · on hold* to 18 Feb · Trig1 HbA1c, Trig2 BP treatment review and Trig5 kidney check *Open · off target* in CURRENT, each with its action due 27 Nov · Trig9, Trig6, Trig13 *Open* in NEXT · Trig11, Trig8 *Open* in FUTURE · BPU, Trig12, Trig7, Trig10 *Not triggered*.
+
+**Programme** (`GET /rulebook/programme`): one row per rule across all members: in scope, fired, cannot tell, open needs, in CURRENT, **reported by nurse**, **closed in claims**, declined, and the rule's sign-off status. Nurse-reported against closed-in-claims is the measure of impact; the rulebook is explicit that a nurse's "done" click is not evidence on its own.
+
+To change a rule, change its row in `rules/*.csv`, run `tools/gen_sql.py`, and re-run `02_rules.sql` and `04_nightly.sql`. Nothing else moves.
 
 ## 8. The API (`api/server.py`, about 250 lines)
 
@@ -214,12 +201,12 @@ The same care plan, organised by **programme module** instead of by slot. Each m
 | POST | `/campaigns` | `campaign` + `campaign_member` (holdout) | Builder: hand-off |
 | POST | `/runs/nightly` | `04_nightly.sql` | scheduler; "run now" after hand-off |
 | GET | `/worklist?nurse=` | `v_worklist` | Portal: nudge queue |
-| GET | `/members/{id}` | `v_dm_member_summary` + signals | Portal header; Studio ② care intelligence |
+| GET | `/members/{id}` | `v_member_summary` + signals | Portal header; Studio ② care intelligence |
 | GET | `/members/{id}/care-plan` | `v_care_plan` | Portal: care plan (CURRENT / NEXT / FUTURE) |
-| GET | `/members/{id}/dm-plan` | `v_dm_member_module` | Portal: Bhawani's module view |
+| GET | `/members/{id}/rulebook` | `v_rulebook_member` | Portal: the rulebook tab |
 | GET | `/members/{id}/actions` | `v_action_chain` | Portal: actions and timeline |
 | POST | `/actions/{id}/outcome` | `05_followup.sql` | Portal: every nurse button |
-| GET | `/dm/programme` | `v_dm_programme` | Bhawani's dashboard |
+| GET | `/rulebook/programme` | `v_rulebook_programme` | Programme page: every rule across members |
 | GET | `/kpis` | `v_kpis` | analytics |
 
 Real responses for every endpoint are in `api/examples/`. The record shapes today's apps render are in `api/app-shapes/`.
@@ -275,7 +262,7 @@ Real responses for every endpoint are in `api/examples/`. The record shapes toda
   - Done / Declined / Not reached / Agreed buttons → `POST /actions/{id}/outcome`
 
 **Day 1 PM**
-- Add **Bhawani's view**: a "By programme" tab on the care plan (`/dm-plan`) and a programme page (`/dm/programme`).
+- Add the **rulebook tab** on the member page (`/members/{id}/rulebook`) and the **programme page** (`/rulebook/programme`).
 
 **Day 2 AM**
 - **Builder:** estimate → `/cohorts/estimate`; hand-off → `POST /campaigns` then `POST /runs/nightly`.
@@ -311,8 +298,8 @@ Real responses for every endpoint are in `api/examples/`. The record shapes toda
 2. **Portal, nudge queue.** RED P1 members first, each with a nurse who speaks their language.
 3. **Open m26.** P1 call, consent pending. Log consent and record *reached*: a cadence check-in appears for 27 Nov.
 4. **Care plan.** Mark the hypo review **done**: it becomes *Reported*, a *Verify in claims* follow-up appears, and the next need moves into CURRENT. Decline the GP follow-up: it's held to 18 Feb with a re-offer.
-5. **By programme (Bhawani).** The same plan by module: off target, due, awaiting claims, on hold.
-6. **Programme dashboard.** % on track per module, and nurse-reported vs closed in claims.
+5. **Rulebook tab.** The same member, rule by rule: raw data → fires when → fired → need → next best action → done when.
+6. **Programme page.** Every rule across all members: in scope, fired, open, nurse-reported, closed in claims.
 
 ## 12. Out of scope for the two days, and risks
 

@@ -11,7 +11,7 @@
 -- Relationships:
 --   member 1─* member_signal · member 1─* care_plan_need · care_plan_need 1─1 action(kind='care_plan', open)
 --   action 1─* outcome · action 1─* action (parent_action_id: the follow-up chain) · member 1─1 worklist (per day)
---   care_plan_need.trigger_code → rule_trigger · rule_trigger.dm_module → rule_dm_module
+--   care_plan_need.trigger_code → rule_trigger (one row per rulebook rule)
 -- ════════════════════════════════════════════════════════════════════════════════════
 CREATE DATABASE IF NOT EXISTS ccl;
 USE ccl;
@@ -26,16 +26,21 @@ CREATE REFERENCE TABLE IF NOT EXISTS rule_trigger (       -- rulebook §3: trigg
   trigger_code   VARCHAR(10) PRIMARY KEY,   -- Trig1 … Trig13, BPU
   name           VARCHAR(60) NOT NULL,
   pathway        VARCHAR(20) NOT NULL,
-  dm_module      VARCHAR(10) NOT NULL,      -- Bhawani's disease-management module
   class          VARCHAR(10) NOT NULL,      -- safety | acute | unctl | barrier | gap | goal
+  class_label    VARCHAR(20) NOT NULL,
   class_order    INT NOT NULL,              -- care-plan order (safety first)
   trigger_order  INT NOT NULL,
   due_days       INT NOT NULL,              -- a new need is due this many days after it opens
+  raw_data       VARCHAR(200),              -- rulebook §3: the raw data the rule reads
+  fires_when     VARCHAR(200),              -- rulebook §3: the condition, in words (the SQL is in 04_nightly.sql)
+  extract_flag   VARCHAR(60),               -- the extract column that carries the same flag, if any
+  action_code    VARCHAR(12) NOT NULL,      -- ACT-… (rules/rule_action.csv)
   action_title   VARCHAR(120) NOT NULL,     -- the next best action
   owner_role     VARCHAR(40) NOT NULL,
   channel        VARCHAR(30) NOT NULL,
   done_when      VARCHAR(120) NOT NULL,     -- verified in claims
   evidence       VARCHAR(120),
+  escalate_to    VARCHAR(40),
   use_variant    VARCHAR(10) NOT NULL,      -- extract (the Trig flag) | rulebook (the thresholds)
   status         VARCHAR(120)               -- clinical sign-off state
 );
@@ -53,15 +58,6 @@ CREATE REFERENCE TABLE IF NOT EXISTS rule_tier (
 );
 CREATE REFERENCE TABLE IF NOT EXISTS rule_cadence (       -- contact cadence by tier (days after baseline)
   tier INT NOT NULL, step INT NOT NULL, day_offset INT NOT NULL, PRIMARY KEY (tier, step)
-);
-CREATE REFERENCE TABLE IF NOT EXISTS rule_dm_module (     -- Bhawani's disease-management programme
-  module_code   VARCHAR(10) PRIMARY KEY,
-  programme     VARCHAR(20) NOT NULL,       -- Diabetes | Hypertension | Shared
-  name          VARCHAR(60) NOT NULL,
-  sort_order    INT NOT NULL,
-  target        VARCHAR(160) NOT NULL,
-  metric        VARCHAR(40) NOT NULL,
-  applies_when  VARCHAR(10) NOT NULL        -- has_t2d | has_htn | either
 );
 CREATE REFERENCE TABLE IF NOT EXISTS rule_followup (      -- rulebook §5: nurse outcome → what happens next
   outcome            VARCHAR(20) PRIMARY KEY,
@@ -560,7 +556,6 @@ CREATE ROWSTORE TABLE IF NOT EXISTS member_signal (     -- raw member → trigge
 CREATE ROWSTORE TABLE IF NOT EXISTS care_plan_need (   -- trigger → care-plan need (one per member per trigger)
   member_id      VARCHAR(20) NOT NULL,
   trigger_code   VARCHAR(10) NOT NULL,
-  dm_module      VARCHAR(10) NOT NULL,
   class          VARCHAR(10) NOT NULL,
   class_order    INT NOT NULL,
   trigger_order  INT NOT NULL,

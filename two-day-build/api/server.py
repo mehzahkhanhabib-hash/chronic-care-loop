@@ -10,12 +10,12 @@ Endpoints (JSON):
   POST /campaigns                {"name", "priority", "trigger_mode", "trigger_list", "rules"}  → saves + fills campaign_member
   POST /runs/nightly                                                       → 04_nightly.sql, returns KPIs
   GET  /worklist?nurse=U-0142                                              → today's list (v_worklist)
-  GET  /members/{id}                                                       → header: tier, alert, priority, cadence (v_dm_member_summary)
+  GET  /members/{id}                                                       → header: tier, alert, priority, cadence (v_member_summary)
   GET  /members/{id}/care-plan                                             → needs + their actions (v_care_plan)
-  GET  /members/{id}/dm-plan                                               → Bhawani's view, by programme module (v_dm_member_module)
+  GET  /members/{id}/rulebook                                               → the rulebook applied to this member: every rule, state, need, action (v_rulebook_member)
   GET  /members/{id}/actions                                               → action → outcome → follow-up chain (v_action_chain)
   POST /actions/{action_id}/outcome  {"member_id", "result", "reached", "consent", "notes", "nurse_id"}  → 05_followup.sql
-  GET  /dm/programme                                                       → Bhawani's programme dashboard (v_dm_programme)
+  GET  /rulebook/programme                                                 → every rule across all members: fired, open, done, closed in claims (v_rulebook_programme)
   GET  /kpis                                                               → v_kpis
   GET  /rules                                                              → every rule table
 """
@@ -118,7 +118,7 @@ def worklist(con, q, b):
 
 
 def member(con, q, b, mid):
-    s = rows(con, 'SELECT * FROM v_dm_member_summary WHERE member_id = %s', (mid,))
+    s = rows(con, 'SELECT * FROM v_member_summary WHERE member_id = %s', (mid,))
     if not s:
         raise KeyError(mid)
     return dict(s[0], signals=rows(con, 'SELECT s.trigger_code, t.name, s.state, s.evidence FROM member_signal s JOIN run_config rc ON rc.run_date = s.run_date '
@@ -129,8 +129,8 @@ def care_plan(con, q, b, mid):
     return rows(con, "SELECT * FROM v_care_plan WHERE member_id = %s ORDER BY FIELD(slot, 'CURRENT', 'NEXT', 'FUTURE', 'CLOSED'), due_date", (mid,))
 
 
-def dm_plan(con, q, b, mid):
-    return {'summary': member(con, q, b, mid), 'modules': rows(con, 'SELECT * FROM v_dm_member_module WHERE member_id = %s ORDER BY sort_order', (mid,))}
+def rulebook_member(con, q, b, mid):
+    return {'summary': member(con, q, b, mid), 'rules': rows(con, 'SELECT * FROM v_rulebook_member WHERE member_id = %s ORDER BY class_order, trigger_order', (mid,))}
 
 
 def actions(con, q, b, mid):
@@ -157,12 +157,12 @@ ROUTES = [
     ('GET', r'/health', health), ('POST', r'/cohorts/estimate', estimate), ('POST', r'/campaigns', save_campaign),
     ('POST', r'/runs/nightly', nightly), ('GET', r'/worklist', worklist),
     ('GET', r'/members/(?P<mid>[\w-]+)', member), ('GET', r'/members/(?P<mid>[\w-]+)/care-plan', care_plan),
-    ('GET', r'/members/(?P<mid>[\w-]+)/dm-plan', dm_plan), ('GET', r'/members/(?P<mid>[\w-]+)/actions', actions),
+    ('GET', r'/members/(?P<mid>[\w-]+)/rulebook', rulebook_member), ('GET', r'/members/(?P<mid>[\w-]+)/actions', actions),
     ('POST', r'/actions/(?P<action_id>\d+)/outcome', outcome),
-    ('GET', r'/dm/programme', lambda con, q, b: rows(con, 'SELECT * FROM v_dm_programme ORDER BY sort_order')),
+    ('GET', r'/rulebook/programme', lambda con, q, b: rows(con, 'SELECT * FROM v_rulebook_programme ORDER BY class_order, trigger_order')),
     ('GET', r'/kpis', lambda con, q, b: rows(con, 'SELECT * FROM v_kpis')[0]),
     ('GET', r'/rules', lambda con, q, b: {t: rows(con, f'SELECT * FROM {t}') for t in
-                                         ('rule_trigger', 'rule_priority', 'rule_tier', 'rule_cadence', 'rule_dm_module', 'rule_followup')}),
+                                         ('rule_trigger', 'rule_priority', 'rule_tier', 'rule_cadence', 'rule_followup')}),
 ]
 
 
