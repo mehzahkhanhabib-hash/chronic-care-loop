@@ -1,7 +1,16 @@
 #!/usr/bin/env python3
-"""DELIVERABLES.md → DELIVERABLES.html (one reading column, contents rail, copyable Teams post). Run from two-day-build/."""
-import re, html
-md = open('DELIVERABLES.md', encoding='utf-8').read()
+"""Markdown → page (one reading column, contents rail, copyable Teams post, screenshots). Run from two-day-build/.
+    python3 tools/make_deliverables_page.py                       # DELIVERABLES.md → DELIVERABLES.html
+    python3 tools/make_deliverables_page.py DEVELOPER_GUIDE.md DEVELOPER_GUIDE.html "Developer Guide" "eyebrow" "Heading" "Intro sentence"
+"""
+import re, html, sys
+A = sys.argv[1:]
+SRC, OUT = (A[0], A[1]) if len(A) >= 2 else ('DELIVERABLES.md', 'DELIVERABLES.html')
+TITLE = A[2] if len(A) > 2 else 'GCEO Demo Build Plan'
+EYEBROW = A[3] if len(A) > 3 else 'Chronic Care Loop · SingleStore · 2 days · 3 developers · GCEO demo'
+HEAD = A[4] if len(A) > 4 else 'The GCEO demo: member 360, rules, care portal, nurse action, worklist'
+INTRO = A[5] if len(A) > 5 else 'One live story on real data, the three layers that carry it, the two-day plan, the Teams post to send tonight, and the kickoff script for tomorrow morning. Everything referenced is in the kit folder <code>two-day-build/</code>.'
+md = open(SRC, encoding='utf-8').read()
 def inline(t):
     t = html.escape(t, quote=False)
     t = re.sub(r'`([^`]+)`', r'<code>\1</code>', t)
@@ -44,6 +53,9 @@ while i < len(lines):
         out.append('<div class="post"><div class="postbar"><span>Teams · ready to paste</span><button type="button" id="copy-post">Copy post</button></div><blockquote id="post-text">'
                    + ''.join(body) + '</blockquote><textarea id="post-raw" hidden>' + html.escape('\n'.join(q)) + '</textarea></div>')
         i = j; continue
+    im = re.match(r'^!\[(.*?)\]\((.*?)\)\s*$', l)
+    if im:
+        flush_p(); out.append(f'<figure><img src="{html.escape(im.group(2))}" alt="{html.escape(im.group(1))}" loading="lazy"><figcaption>{inline(im.group(1))}</figcaption></figure>'); i += 1; continue
     m = re.match(r'^(#{1,3}) (.*)', l)
     if m:
         flush_p(); lv = len(m.group(1)); txt = m.group(2)
@@ -62,7 +74,7 @@ while i < len(lines):
     buf.append(l); i += 1
 flush_p(); out.append('</section>')
 nav = ''.join(f'<a href="#{s}">{html.escape(t)}</a>' for s, t in toc)
-page = '''<title>GCEO Demo Build Plan</title>
+page = '<title>' + html.escape(TITLE) + '''</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <style>
@@ -99,12 +111,13 @@ ul,ol{margin:6px 0 6px 22px;padding:0}li{margin:4px 0}
 .post{background:var(--surface);border:1px solid var(--line);border-radius:10px;margin:12px 0}
 .postbar{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid var(--line);font:600 11px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--mut)}
 .postbar button{font:600 12px var(--sans);color:var(--acc);background:var(--accS);border:0;border-radius:6px;padding:6px 10px;cursor:pointer}.postbar button:focus-visible{outline:2px solid var(--acc)}
+figure{margin:14px 0;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}figure img{display:block;width:100%;height:auto}figcaption{font-size:12.5px;color:var(--mut);padding:8px 12px;border-top:1px solid var(--line)}
 blockquote{margin:0;padding:12px 18px 14px}blockquote p{margin:7px 0}blockquote .li{margin:3px 0 3px 14px}
 @media (max-width:820px){.wrap{grid-template-columns:1fr}nav{position:static;flex-direction:row;flex-wrap:wrap}nav a{border-left:0;border-bottom:2px solid var(--line)}}
 </style>
-<div class="band"><div class="in"><small>Chronic Care Loop · SingleStore · 2 days · 3 developers · GCEO demo</small>
-<h1>The GCEO demo: member 360, rules, care portal, nurse action, worklist</h1>
-<p>One live story on real data, the three layers that carry it, the two-day plan, the Teams post to send tonight, and the kickoff script for tomorrow morning. Everything referenced is in the kit folder <code>two-day-build/</code>.</p></div></div>
+<div class="band"><div class="in"><small>''' + html.escape(EYEBROW) + '''</small>
+<h1>''' + html.escape(HEAD) + '''</h1>
+<p>''' + INTRO + '''</p></div></div>
 <div class="wrap"><nav aria-label="Contents">''' + nav + '''</nav><main>
 ''' + '\n'.join(out) + '''
 </main></div>
@@ -114,5 +127,5 @@ b.addEventListener('click',function(){var txt=t.value;function done(ok){b.textCo
 function sel(){var r=document.createRange();r.selectNodeContents(document.getElementById('post-text'));var s=getSelection();s.removeAllRanges();s.addRange(r);done(false)}
 if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(function(){done(true)},sel)}else sel();});})();
 </script>'''
-open('DELIVERABLES.html', 'w', encoding='utf-8').write(page)
+open(OUT, 'w', encoding='utf-8').write(page)
 print('ok', len(page) // 1024, 'KB', len(toc), 'sections')
