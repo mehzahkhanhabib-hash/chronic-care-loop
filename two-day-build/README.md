@@ -1,6 +1,6 @@
 # Chronic Care Loop · 2-day build kit (SingleStore)
 
-Start with **`DEVELOPER_GUIDE.md`** (how to get the code, one member through every screen, who builds what, how to work on one SingleStore), then **`DELIVERABLES.md`** (the demo story and the hour-by-hour plan), then **`MAPPING.md`** (every screen element → table.column, and the data model), then **`WORKBOOKS.html`** (the two spec workbooks shown visually: rule database → run → views → portal → write-backs, with one member worked through), then **`PLAN.md`**: it explains the model, the nurse rules, the worklist, the follow-ups, the rulebook view, the API and the 3-developer plan.
+Start with **`DEVELOPER_GUIDE.md`** (how to get the code, one member through every screen, who builds what, how to work on one SingleStore), then **`DELIVERABLES.md`** (the demo story and the hour-by-hour plan), then **`MAPPING.md`** (every screen element → table.column, and the data model), then **`LINEAGE.html`** (interactive: each screen element → the tables and views it reads or writes; click a table for its kind, writer and exact columns; regenerate with `python3 tools/make_lineage_page.py`), then **`WORKBOOKS.html`** (the two spec workbooks shown visually: rule database → run → views → portal → write-backs, with one member worked through), then **`PLAN.md`**: it explains the model, the nurse rules, the worklist, the follow-ups, the rulebook view, the API and the 3-developer plan.
 
 ```
 sql/
@@ -24,6 +24,7 @@ tests/test_kit.py     end-to-end checks (run against MySQL 8 or SingleStore)
 guide/                screenshots used by DEVELOPER_GUIDE.html and WORKBOOKS.html
 mapping/              ui_to_column.csv: the screen → column mapping as a table
 tools/gen_sql.py      regenerates 01–04 after a rule CSV changes (run it from the repository)
+tools/make_lineage_page.py  regenerates LINEAGE.html from 01_schema.sql, 06_views.sql and mapping/ui_to_column.csv
 ```
 
 ## Run it on SingleStore
