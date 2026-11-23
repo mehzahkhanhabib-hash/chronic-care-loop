@@ -1,0 +1,378 @@
+column,sql_name,group,type,new_in_this_file,read_by_rule
+mask_id,member_id,Identity,text,,builder / Member 360 only
+GENDER,gender,Who they are,text,,rule_risk_band:A; rule_builder_field_group:Who they are
+AGE,age,Who they are,int,,rule_risk_band:A; rule_builder_field_group:Who they are
+NATIONALITY,nationality,Who they are,text,,rule_guardrail:G10; rule_builder_field_group:Who they are
+policy_group,policy_group,Who they are,text,,rule_builder_field_group:Who they are
+policy_type,policy_type,Who they are,text,,rule_builder_field_group:Who they are
+cohort_t2d_l12m,cohort_t2d_l12m,Pathway,flag,,rule_trigger:pathway; rule_builder_field_group:Health
+cohort_htn_l12m,cohort_htn_l12m,Pathway,flag,,rule_risk_band:C; rule_trigger:pathway; rule_builder_field_group:Health
+t2d_identified_by,t2d_identified_by,Pathway,text,,rule_trigger:pathway
+htn_identified_by,htn_identified_by,Pathway,text,,rule_risk_band:C; rule_trigger:pathway
+t2d_category,t2d_category,Pathway,text,,rule_trigger:pathway
+htn_category,htn_category,Pathway,text,,rule_trigger:pathway
+GWP,gwp,Who they are,num,,rule_builder_field_group:Who they are
+Risk Premium,risk_premium,Who they are,num,,rule_builder_field_group:Who they are
+Exclusion_nonactiveaccounts,exclusion_nonactiveaccounts,Exclusions and gates,flag,new in this file,rule_guardrail:G1c
+Exclusion_op_consultations_encounter,exclusion_op_consultations_encounter,Exclusions and gates,flag,new in this file,rule_guardrail:G1c
+Exclusion_alreadyenrolled,exclusion_alreadyenrolled,Exclusions and gates,flag,new in this file,rule_guardrail:G1c
+Exclusion,exclusion,Exclusions and gates,flag,,rule_guardrail:G1c; rule_builder_field_group:Other
+P1_Complication,p1_complication,Persona and targeting,flag,,rule_loop_step:Cohort
+P2_Recurrent_ED_IP,p2_recurrent_ed_ip,Persona and targeting,flag,,rule_loop_step:Cohort
+P3_slipping,p3_slipping,Persona and targeting,flag,,rule_loop_step:Cohort
+P5_newlydiagnosed,p5_newlydiagnosed,Persona and targeting,flag,,rule_loop_step:Cohort
+P3_offradar,p3_offradar,Persona and targeting,flag,,rule_loop_step:Cohort
+P4_uncontrolled,p4_uncontrolled,Persona and targeting,flag,,rule_loop_step:Cohort
+Persona,persona,Persona and targeting,text,,rule_loop_step:Cohort
+Trig1_HbA1c_above_target,trig1_hba1c_above_target,Trigger flags (extract-computed),flag,,rule_trigger:Trig1
+Trig2a_NoACEiARB_KidneyOrCAD,trig2a_noaceiarb_kidneyorcad,Trigger flags (extract-computed),flag,,rule_trigger:Trig2
+Trig2b_ACEi_plus_ARB,trig2b_acei_plus_arb,Trigger flags (extract-computed),flag,,rule_trigger:Trig2
+Trig2_HTN_tx_review,trig2_htn_tx_review,Trigger flags (extract-computed),flag,,rule_trigger:Trig2
+Trig3a_hypoglycemia_rev,trig3a_hypoglycemia_rev,Trigger flags (extract-computed),flag,,rule_trigger:Trig3
+Trig3b_glucagon_not_dispensed,trig3b_glucagon_not_dispensed,Trigger flags (extract-computed),flag,,rule_trigger:Trig3
+Trig3_hypoglycemia_tx,trig3_hypoglycemia_tx,Trigger flags (extract-computed),flag,,rule_trigger:Trig3
+Trig4a_NoFollowup_post_discharge,trig4a_nofollowup_post_discharge,Trigger flags (extract-computed),flag,,rule_trigger:Trig4
+Trig4b_postdischarge_medsgap,trig4b_postdischarge_medsgap,Trigger flags (extract-computed),flag,,rule_trigger:Trig4
+Trig4_post_discharge_care,trig4_post_discharge_care,Trigger flags (extract-computed),flag,,rule_trigger:Trig4; rule_alert:AMBER; rule_contact_priority:P1–P4
+Trig5a_Kidney_screen_due,trig5a_kidney_screen_due,Trigger flags (extract-computed),flag,,rule_trigger:Trig5
+Trig5b_CKD_monitoring,trig5b_ckd_monitoring,Trigger flags (extract-computed),flag,,rule_trigger:Trig5
+Trig5c_Neph_due,trig5c_neph_due,Trigger flags (extract-computed),flag,,rule_trigger:Trig5
+Trig5_Kidney_check,trig5_kidney_check,Trigger flags (extract-computed),flag,,rule_trigger:Trig5; rule_alert:YELLOW
+Trig6_HbA1c_due,trig6_hba1c_due,Trigger flags (extract-computed),flag,,rule_trigger:Trig6; rule_alert:YELLOW
+Trig7_Renal_Potassium_due,trig7_renal_potassium_due,Trigger flags (extract-computed),flag,,rule_trigger:Trig7; rule_alert:YELLOW
+Trig8_nutrition_due,trig8_nutrition_due,Trigger flags (extract-computed),flag,,rule_trigger:Trig8
+Trig9_medication_adherence,trig9_medication_adherence,Trigger flags (extract-computed),flag,,rule_trigger:Trig9
+Trig10_new_diagnosis,trig10_new_diagnosis,Trigger flags (extract-computed),flag,,rule_trigger:Trig10
+Trig11_annual_labs_due,trig11_annual_labs_due,Trigger flags (extract-computed),flag,,rule_trigger:Trig11; rule_alert:YELLOW
+Trig12_eyeexam_due,trig12_eyeexam_due,Trigger flags (extract-computed),flag,,rule_trigger:Trig12; rule_alert:YELLOW
+Trig13_highriskfoot_monitor,trig13_highriskfoot_monitor,Trigger flags (extract-computed),flag,,rule_trigger:Trig13; rule_alert:YELLOW
+# of triggers,n_triggers,Risk score (extract-computed),int,,rule_trigger:all
+HbA1c_score,hba1c_score,Risk score (extract-computed),int,,rule_risk_band:C
+Clinical_score,clinical_score,Risk score (extract-computed),int,,rule_risk_band:C
+Comorbid_complication_score,comorbid_complication_score,Risk score (extract-computed),int,,rule_risk_band:M
+eGFR + UACR points,egfr_uacr_points,Risk score (extract-computed),int,,rule_risk_band:K
+Kidney_score,kidney_score,Risk score (extract-computed),int,,rule_risk_band:K
+Utilization_score,utilization_score,Risk score (extract-computed),int,,rule_risk_band:U
+Age_sex_score,age_sex_score,Risk score (extract-computed),int,,rule_risk_band:A
+Total_risk_Score,total_risk_score,Risk score (extract-computed),int,,rule_tier:R; rule_queue_order:1–4
+Risk_tier,risk_tier,Risk score (extract-computed),text,,rule_tier:tier
+Cohort_allocation,cohort_allocation,Persona and targeting,text,,rule_loop_step:Cohort
+Initial_target_cohort,initial_target_cohort,Persona and targeting,flag,new in this file,rule_loop_step:Cohort
+Priority_clinical_review,priority_clinical_review,Risk score (extract-computed),flag,,rule_safety_flag:safety; rule_alert:RED; rule_queue_order:1–4
+Last_HbA1c_Value,last_hba1c_value,Labs and readings,num,,rule_risk_band:C; rule_trigger:Trig1; rule_trigger:Trig6; rule_alert:AMBER; rule_builder_field_group:Tests & results
+Last_HbA1c_Date,last_hba1c_date,Labs and readings,date,,rule_trigger:Trig1; rule_trigger:Trig6
+Last_SystolicPressure_Value,last_systolicpressure_value,Labs and readings,int,,rule_trigger:BPU; rule_trigger:Trig2; rule_alert:RED; rule_alert:AMBER; rule_guardrail:G0; rule_builder_field_group:Tests & results
+Last_SystolicPressure_Date,last_systolicpressure_date,Labs and readings,date,,rule_trigger:BPU
+Last_DiastolicPressure_Value,last_diastolicpressure_value,Labs and readings,int,,rule_trigger:BPU; rule_trigger:Trig2; rule_alert:RED; rule_alert:AMBER; rule_guardrail:G0; rule_builder_field_group:Tests & results
+Last_DiastolicPressure_Date,last_diastolicpressure_date,Labs and readings,date,,builder / Member 360 only
+Last_MeasuredBMI_Value,last_measuredbmi_value,Labs and readings,num,,rule_risk_band:M; rule_guardrail:G0; rule_builder_field_group:Tests & results
+Last_MeasuredBMI_Date,last_measuredbmi_date,Labs and readings,date,,builder / Member 360 only
+Last_eGFR_Value,last_egfr_value,Labs and readings,int,,rule_risk_band:K; rule_trigger:Trig5; rule_alert:RED; rule_alert:AMBER; rule_builder_field_group:Tests & results
+Last_eGFR_Date,last_egfr_date,Labs and readings,date,,rule_risk_band:K
+last_fastingplasmaglucose_value,last_fastingplasmaglucose_value,Labs and readings,num,,rule_builder_field_group:Tests & results
+last_fastingplasmaglucose_date,last_fastingplasmaglucose_date,Labs and readings,date,,builder / Member 360 only
+last_2hourplasmaglucose_value,last_2hourplasmaglucose_value,Labs and readings,empty,,builder / Member 360 only
+last_2hourplasmaglucose_date,last_2hourplasmaglucose_date,Labs and readings,empty,,builder / Member 360 only
+last_randomplasmaglucose_value,last_randomplasmaglucose_value,Labs and readings,num,,builder / Member 360 only
+last_randomplasmaglucose_date,last_randomplasmaglucose_date,Labs and readings,date,,builder / Member 360 only
+last_hba1c_date2,last_hba1c_date2,Labs and readings,date,,rule_trigger:Trig1; rule_trigger:Trig6
+last_lipid_panel_date,last_lipid_panel_date,Labs and readings,date,,rule_trigger:Trig11
+last_urine_albumin_date,last_urine_albumin_date,Labs and readings,date,,rule_trigger:Trig5
+last_renal_panel_date,last_renal_panel_date,Labs and readings,date,,rule_trigger:Trig5; rule_trigger:Trig11
+last_egfr_test_date,last_egfr_test_date,Labs and readings,date,,rule_trigger:Trig5
+last_retinal_screen_date,last_retinal_screen_date,Labs and readings,date,,rule_trigger:Trig12; rule_builder_field_group:Other
+last_liver_function_date,last_liver_function_date,Labs and readings,date,,rule_trigger:Trig11
+last_cbc_date,last_cbc_date,Labs and readings,date,,rule_trigger:Trig11
+last_vitb12_date,last_vitb12_date,Labs and readings,date,,builder / Member 360 only
+last_potassium_date,last_potassium_date,Labs and readings,date,,rule_trigger:Trig7
+last_endocrinology_visit,last_endocrinology_visit,Visits by specialty,date,,builder / Member 360 only
+last_podiatry_visit,last_podiatry_visit,Visits by specialty,date,,rule_trigger:Trig13
+last_foot_exam,last_foot_exam,Visits by specialty,date,,rule_trigger:Trig13; rule_builder_field_group:Other
+last_ophthalmology_visit,last_ophthalmology_visit,Visits by specialty,date,,rule_trigger:Trig12
+last_cardiology_visit,last_cardiology_visit,Visits by specialty,date,,builder / Member 360 only
+last_nephrology_visit,last_nephrology_visit,Visits by specialty,date,,rule_trigger:Trig5
+last_dietitian_visit,last_dietitian_visit,Visits by specialty,date,,rule_trigger:Trig8
+last_diabeducator_visit,last_diabeducator_visit,Visits by specialty,date,,rule_trigger:Trig8
+first_e11_date,first_e11_date,Diagnosis dates,date,,rule_trigger:Trig10; rule_builder_field_group:Health
+first_htn_date,first_htn_date,Diagnosis dates,date,,rule_trigger:Trig10; rule_builder_field_group:Health
+first_dyslipidemia_date,first_dyslipidemia_date,Diagnosis dates,date,,rule_risk_band:M; rule_builder_field_group:Health
+flag_ckd,flag_ckd,Conditions and complications,flag,,builder / Member 360 only
+last_ckd_date,last_ckd_date,Conditions and complications,date,,builder / Member 360 only
+flag_hypertensive_kidney_disease,flag_hypertensive_kidney_disease,Conditions and complications,flag,,builder / Member 360 only
+last_hypertensive_kidney_disease_date,last_hypertensive_kidney_disease_date,Conditions and complications,date,,builder / Member 360 only
+flag_kidney_failure,flag_kidney_failure,Conditions and complications,flag,,builder / Member 360 only
+last_kidney_failure_date,last_kidney_failure_date,Conditions and complications,date,,builder / Member 360 only
+flag_acute_kidney_injury,flag_acute_kidney_injury,Conditions and complications,flag,,builder / Member 360 only
+last_acute_kidney_injury_date,last_acute_kidney_injury_date,Conditions and complications,date,,builder / Member 360 only
+flag_any_kidney_disease,flag_any_kidney_disease,Conditions and complications,flag,,builder / Member 360 only
+last_any_kidney_disease_date,last_any_kidney_disease_date,Conditions and complications,date,,builder / Member 360 only
+flag_dialysis,flag_dialysis,Conditions and complications,flag,,builder / Member 360 only
+last_dialysis_date,last_dialysis_date,Conditions and complications,empty,,builder / Member 360 only
+flag_stroke,flag_stroke,Conditions and complications,flag,,builder / Member 360 only
+last_stroke_date,last_stroke_date,Conditions and complications,date,,builder / Member 360 only
+flag_heart_failure,flag_heart_failure,Conditions and complications,flag,,builder / Member 360 only
+last_heart_failure_date,last_heart_failure_date,Conditions and complications,date,,builder / Member 360 only
+flag_mi,flag_mi,Conditions and complications,flag,,builder / Member 360 only
+last_mi_date,last_mi_date,Conditions and complications,date,,builder / Member 360 only
+flag_other_cvd,flag_other_cvd,Conditions and complications,flag,,builder / Member 360 only
+last_other_cvd_date,last_other_cvd_date,Conditions and complications,date,,builder / Member 360 only
+dm_complications,dm_complications,Conditions and complications,text,,rule_risk_band:M; rule_builder_field_group:Health
+dm_complication_count,dm_complication_count,Conditions and complications,int,,rule_risk_band:M; rule_builder_field_group:Health
+flag_dm_kidney,flag_dm_kidney,Conditions and complications,flag,,builder / Member 360 only
+last_dm_kidney_date,last_dm_kidney_date,Conditions and complications,date,,builder / Member 360 only
+flag_dm_eye,flag_dm_eye,Conditions and complications,flag,,builder / Member 360 only
+last_dm_eye_date,last_dm_eye_date,Conditions and complications,date,,builder / Member 360 only
+flag_dm_neuropathy,flag_dm_neuropathy,Conditions and complications,flag,,builder / Member 360 only
+last_dm_neuropathy_date,last_dm_neuropathy_date,Conditions and complications,date,,builder / Member 360 only
+flag_dm_circulatory,flag_dm_circulatory,Conditions and complications,flag,,builder / Member 360 only
+last_dm_circulatory_date,last_dm_circulatory_date,Conditions and complications,date,,builder / Member 360 only
+flag_dm_foot,flag_dm_foot,Conditions and complications,flag,,builder / Member 360 only
+last_dm_foot_date,last_dm_foot_date,Conditions and complications,date,,builder / Member 360 only
+flag_amputation,flag_amputation,Conditions and complications,flag,,builder / Member 360 only
+last_amputation_date,last_amputation_date,Conditions and complications,empty,,builder / Member 360 only
+flag_dm_hypoglycaemia,flag_dm_hypoglycaemia,Conditions and complications,flag,,builder / Member 360 only
+last_dm_hypoglycaemia_date,last_dm_hypoglycaemia_date,Conditions and complications,date,,builder / Member 360 only
+flag_dm_hyperglycaemic_crisis,flag_dm_hyperglycaemic_crisis,Conditions and complications,flag,,builder / Member 360 only
+last_dm_hyperglycaemic_crisis_date,last_dm_hyperglycaemic_crisis_date,Conditions and complications,date,,builder / Member 360 only
+flag_sepsis,flag_sepsis,Conditions and complications,flag,,builder / Member 360 only
+last_sepsis_date,last_sepsis_date,Conditions and complications,date,,builder / Member 360 only
+flag_ischemic_heart_disease,flag_ischemic_heart_disease,Conditions and complications,flag,,builder / Member 360 only
+last_ischemic_heart_disease_date,last_ischemic_heart_disease_date,Conditions and complications,date,,builder / Member 360 only
+flag_dm_hypoglycaemia_last90days,flag_dm_hypoglycaemia_last90days,Conditions and complications,flag,,rule_risk_band:C; rule_trigger:Trig3
+flag_EDorIP_with_hypoglycaemia_last90days,flag_edorip_with_hypoglycaemia_last90days,Conditions and complications,flag,,rule_safety_flag:safety; rule_trigger:Trig3
+flag_hypo_hyper_glycemia_last6months,flag_hypo_hyper_glycemia_last6months,Conditions and complications,flag,,rule_trigger:Trig3
+flag_oncology_l12m,flag_oncology_l12m,Exclusions and gates,flag,,rule_guardrail:G1c
+flag_oncology_l24m,flag_oncology_l24m,Exclusions and gates,flag,,rule_guardrail:G1c
+last_oncology_claim_date,last_oncology_claim_date,Conditions and complications,date,,builder / Member 360 only
+oncology_dx_codes,oncology_dx_codes,Exclusions and gates,text,,builder / Member 360 only
+flag_benign_neoplasm_l12m,flag_benign_neoplasm_l12m,Exclusions and gates,flag,,builder / Member 360 only
+flag_excl_palliative_hospice_ltc_l12m,flag_excl_palliative_hospice_ltc_l12m,Exclusions and gates,flag,,rule_guardrail:G1c
+excl_palliative_hospice_ltc_reason,excl_palliative_hospice_ltc_reason,Exclusions and gates,empty,,builder / Member 360 only
+flag_dialysis_l12m,flag_dialysis_l12m,Conditions and complications,flag,,rule_risk_band:K; rule_guardrail:G1c
+flag_av_access_procedure_l12m,flag_av_access_procedure_l12m,Exclusions and gates,flag,,builder / Member 360 only
+last_av_access_date_l12m,last_av_access_date_l12m,Exclusions and gates,empty,,builder / Member 360 only
+flag_excl_transplant_l24m,flag_excl_transplant_l24m,Exclusions and gates,flag,,rule_guardrail:G1c
+excl_transplant_reason,excl_transplant_reason,Exclusions and gates,empty,,builder / Member 360 only
+flag_excl_adv_neuro_congenital_l12m,flag_excl_adv_neuro_congenital_l12m,Exclusions and gates,flag,,rule_guardrail:G1c
+excl_adv_neuro_congenital_reason,excl_adv_neuro_congenital_reason,Exclusions and gates,empty,,builder / Member 360 only
+flag_excl_psych_sud_dementia_l12m,flag_excl_psych_sud_dementia_l12m,Exclusions and gates,flag,,rule_guardrail:G1c
+excl_psych_sud_dementia_reason,excl_psych_sud_dementia_reason,Exclusions and gates,empty,,builder / Member 360 only
+flag_excl_ventilator_tpn_homenursing_l12m,flag_excl_ventilator_tpn_homenursing_l12m,Exclusions and gates,flag,,rule_guardrail:G1c
+excl_ventilator_tpn_homenursing_reason,excl_ventilator_tpn_homenursing_reason,Exclusions and gates,empty,,builder / Member 360 only
+home_nursing_days_l12m,home_nursing_days_l12m,Exclusions and gates,flag,,rule_guardrail:G1c
+flag_excl_pregnant_postpartum,flag_excl_pregnant_postpartum,Exclusions and gates,flag,,rule_guardrail:G1c
+excl_pregnancy_status,excl_pregnancy_status,Exclusions and gates,empty,,builder / Member 360 only
+max_episode_share_since2024,max_episode_share_since2024,Exclusions and gates,num,,builder / Member 360 only
+max_episode_type,max_episode_type,Exclusions and gates,text,new in this file,builder / Member 360 only
+max_episode_dmhtn_related,max_episode_dmhtn_related,Exclusions and gates,flag,new in this file,builder / Member 360 only
+flag_excl_single_episode_gt60pct,flag_excl_single_episode_gt60pct,Exclusions and gates,flag,,rule_guardrail:G1c
+specialty_rx_share_since2024,specialty_rx_share_since2024,Exclusions and gates,num,,builder / Member 360 only
+flag_excl_specialty_rx_gt60pct,flag_excl_specialty_rx_gt60pct,Exclusions and gates,flag,,rule_guardrail:G1c
+specialty_rx_areas,specialty_rx_areas,Exclusions and gates,text,,builder / Member 360 only
+gp_claims_6m,gp_claims_6m,Visits and admissions,int,,rule_builder_field_group:Visits & admissions
+specialist_claims_6m,specialist_claims_6m,Visits and admissions,int,,rule_builder_field_group:Visits & admissions
+last_ip_admit_date,last_ip_admit_date,Conditions and complications,date,,rule_trigger:Trig4
+last_ip_discharge_date,last_ip_discharge_date,Conditions and complications,date,,rule_trigger:Trig4
+second_last_ip_discharge_date,second_last_ip_discharge_date,Visits and admissions,date,,rule_trigger:Trig4
+last_ip_facility,last_ip_facility,Visits and admissions,text,,rule_event_type:MEMBER_FEATURE
+last_ip_dx,last_ip_dx,Visits and admissions,text,,rule_event_type:MEMBER_FEATURE
+last_ip_dx_desc,last_ip_dx_desc,Visits and admissions,text,,rule_event_type:MEMBER_FEATURE
+last_ip_drg_desc,last_ip_drg_desc,Visits and admissions,text,,rule_event_type:MEMBER_FEATURE
+last_ip_discharge_type,last_ip_discharge_type,Visits and admissions,text,,rule_trigger:Trig4
+last_visit_date,last_visit_date,Conditions and complications,date,,rule_builder_field_group:Visits & admissions
+first_visit_after_discharge,first_visit_after_discharge,Visits and admissions,date,,rule_trigger:Trig4
+days_discharge_to_first_visit,days_discharge_to_first_visit,Visits and admissions,int,,rule_trigger:Trig4
+flag_no_visit_after_discharge,flag_no_visit_after_discharge,Conditions and complications,flag,,rule_trigger:Trig4
+flag_missing_T2Drefill_post_last_discharge,flag_missing_t2drefill_post_last_discharge,Conditions and complications,flag,,rule_trigger:Trig4
+flag_missing_HTNrefill_post_last_discharge,flag_missing_htnrefill_post_last_discharge,Conditions and complications,flag,,rule_trigger:Trig4
+last_ed_visit_date,last_ed_visit_date,Conditions and complications,date,,rule_trigger:Trig4
+last_ed_facility,last_ed_facility,Visits and admissions,text,,rule_event_type:MEMBER_FEATURE
+last_ed_dx,last_ed_dx,Visits and admissions,text,,rule_event_type:MEMBER_FEATURE
+last_ed_dx_desc,last_ed_dx_desc,Visits and admissions,text,,rule_event_type:MEMBER_FEATURE
+active_drug_class_count,active_drug_class_count,Medicines and adherence,int,,rule_trigger:Trig9; rule_builder_field_group:Medicines
+active_drug_classes,active_drug_classes,Medicines and adherence,text,,rule_builder_field_group:Medicines
+flag_active_ACEinhibitor,flag_active_aceinhibitor,Conditions and complications,flag,,rule_trigger:Trig2; rule_trigger:Trig7
+flag_active_ARBinhibitor,flag_active_arbinhibitor,Conditions and complications,flag,,rule_trigger:Trig2; rule_trigger:Trig7
+flag_active_insulin,flag_active_insulin,Conditions and complications,flag,,rule_trigger:Trig3
+flag_active_sulfonylurea,flag_active_sulfonylurea,Conditions and complications,flag,,rule_trigger:Trig3
+flag_overlap_ACE_ARB_more_than_30days,flag_overlap_ace_arb_more_than_30days,Conditions and complications,flag,,rule_trigger:Trig2
+flag_glucagon_last12months,flag_glucagon_last12months,Conditions and complications,flag,,rule_trigger:Trig3
+flag_no_glucagon_last12months,flag_no_glucagon_last12months,Conditions and complications,flag,,rule_trigger:Trig3
+distinct_medicines_90d,distinct_medicines_90d,Medicines and adherence,int,,rule_builder_field_group:Medicines
+t2d_drug_classes_l12m,t2d_drug_classes_l12m,Medicines and adherence,text,,rule_builder_field_group:Medicines
+pdc_metformin,pdc_metformin,Medicines and adherence,num,,rule_trigger:Trig9
+pdc_sglt2,pdc_sglt2,Medicines and adherence,num,,rule_trigger:Trig9
+pdc_dpp4,pdc_dpp4,Medicines and adherence,num,,rule_trigger:Trig9
+pdc_glp1,pdc_glp1,Medicines and adherence,num,,rule_trigger:Trig9
+pdc_sulfonylurea,pdc_sulfonylurea,Medicines and adherence,num,,rule_trigger:Trig9
+pdc_tzd,pdc_tzd,Medicines and adherence,num,,rule_trigger:Trig9
+pdc_any_t2d_noninsulin,pdc_any_t2d_noninsulin,Medicines and adherence,num,,rule_trigger:Trig9; rule_alert:AMBER
+first_t2d_fill_date,first_t2d_fill_date,Medicines and adherence,date,,builder / Member 360 only
+latest_new_t2d_class_start_date,latest_new_t2d_class_start_date,Medicines and adherence,date,,rule_trigger:Trig10
+last_t2d_fill_date,last_t2d_fill_date,Conditions and complications,date,,rule_trigger:Trig9
+days_since_last_t2d_fill,days_since_last_t2d_fill,Medicines and adherence,int,,builder / Member 360 only
+days_since_t2d_supply_ran_out,days_since_t2d_supply_ran_out,Medicines and adherence,int,,rule_trigger:Trig9
+flag_t2d_rx_gap_over_30d,flag_t2d_rx_gap_over_30d,Conditions and complications,flag,,rule_trigger:Trig9
+htn_drug_classes_l12m,htn_drug_classes_l12m,Medicines and adherence,text,,rule_trigger:Trig2; rule_trigger:Trig7; rule_builder_field_group:Medicines
+pdc_acei,pdc_acei,Medicines and adherence,num,,rule_trigger:Trig9
+pdc_arb,pdc_arb,Medicines and adherence,num,,rule_trigger:Trig9
+pdc_ccb,pdc_ccb,Medicines and adherence,num,,rule_trigger:Trig9
+pdc_beta_blocker,pdc_beta_blocker,Medicines and adherence,num,,rule_trigger:Trig9
+pdc_thiazide,pdc_thiazide,Medicines and adherence,num,,rule_trigger:Trig9; rule_trigger:Trig7
+pdc_mra,pdc_mra,Medicines and adherence,num,,rule_trigger:Trig9; rule_trigger:Trig7
+pdc_any_htn,pdc_any_htn,Medicines and adherence,num,,rule_trigger:Trig9; rule_alert:AMBER
+first_htn_fill_date,first_htn_fill_date,Medicines and adherence,date,,builder / Member 360 only
+latest_new_htn_class_start_date,latest_new_htn_class_start_date,Medicines and adherence,date,,rule_trigger:Trig10
+first_ACE_ARB_MRA_thiazide_fill_date,first_ace_arb_mra_thiazide_fill_date,Medicines and adherence,date,,rule_trigger:Trig7
+last_htn_fill_date,last_htn_fill_date,Conditions and complications,date,,rule_trigger:Trig9
+days_since_last_htn_fill,days_since_last_htn_fill,Medicines and adherence,int,,builder / Member 360 only
+days_since_htn_supply_ran_out,days_since_htn_supply_ran_out,Medicines and adherence,int,,rule_trigger:Trig9
+flag_htn_rx_gap_over_30d,flag_htn_rx_gap_over_30d,Conditions and complications,flag,,rule_trigger:Trig9
+er_visits_6m,er_visits_6m,Visits and admissions,int,,rule_risk_band:U; rule_trigger:Trig4; rule_builder_field_group:Visits & admissions
+ip_admissions_6m,ip_admissions_6m,Visits and admissions,int,,rule_risk_band:U; rule_builder_field_group:Visits & admissions
+ed_visits_l12m,ed_visits_l12m,Visits and admissions,int,,rule_risk_band:U; rule_trigger:Trig4; rule_builder_field_group:Visits & admissions
+ip_admissions_l12m,ip_admissions_l12m,Visits and admissions,int,,rule_risk_band:U; rule_builder_field_group:Visits & admissions
+l12m_payable_allcause,l12m_payable_allcause,Cost and network,num,new in this file,rule_builder_field_group:Other
+l12m_payable_T2D,l12m_payable_t2d,Cost and network,num,,builder / Member 360 only
+l12m_payable_non_phg_T2D,l12m_payable_non_phg_t2d,Cost and network,num,,builder / Member 360 only
+l12m_share_non_phg_T2D,l12m_share_non_phg_t2d,Cost and network,num,,builder / Member 360 only
+l12m_payable_HTN,l12m_payable_htn,Cost and network,num,,builder / Member 360 only
+l12m_payable_non_phg_HTN,l12m_payable_non_phg_htn,Cost and network,num,,builder / Member 360 only
+l12m_share_non_phg_HTN,l12m_share_non_phg_htn,Cost and network,num,,builder / Member 360 only
+encounters_l12m,encounters_l12m,Visits and admissions,int,,rule_builder_field_group:Visits & admissions
+encounters_l12m_op,encounters_l12m_op,Visits and admissions,int,,rule_builder_field_group:Visits & admissions
+encounters_l12m_ed,encounters_l12m_ed,Visits and admissions,int,,rule_builder_field_group:Visits & admissions
+encounters_l12m_ip,encounters_l12m_ip,Visits and admissions,int,,rule_builder_field_group:Visits & admissions
+providers_l12m,providers_l12m,Cost and network,int,,builder / Member 360 only
+phg_share_l12m_encounters,phg_share_l12m_encounters,Visits and admissions,num,,rule_builder_field_group:Other
+mediclinic_share_l12m_encounters,mediclinic_share_l12m_encounters,Visits and admissions,num,,builder / Member 360 only
+nmc_share_l12m_encounters,nmc_share_l12m_encounters,Visits and admissions,num,,builder / Member 360 only
+burjeel_share_l12m_encounters,burjeel_share_l12m_encounters,Visits and admissions,num,,builder / Member 360 only
+mubadala_share_l12m_encounters,mubadala_share_l12m_encounters,Visits and admissions,num,,builder / Member 360 only
+others_share_l12m_encounters,others_share_l12m_encounters,Visits and admissions,num,,builder / Member 360 only
+top_groupownerlevel_l12m_encounters,top_groupownerlevel_l12m_encounters,Visits and admissions,text,,builder / Member 360 only
+top_groupownerlevel_l12m_encounter_share,top_groupownerlevel_l12m_encounter_share,Visits and admissions,num,,builder / Member 360 only
+top_groupownerlevel_l12m_op_encounters,top_groupownerlevel_l12m_op_encounters,Visits and admissions,text,,builder / Member 360 only
+top_groupownerlevel_l12m_op_encounter_share,top_groupownerlevel_l12m_op_encounter_share,Visits and admissions,num,,builder / Member 360 only
+encounters_l12m_op_consultations,encounters_l12m_op_consultations,Visits and admissions,int,new in this file,builder / Member 360 only
+top_groupownerlevel_l12m_op_encounter_consultations_share,top_groupownerlevel_l12m_op_encounter_consultations_share,Visits and admissions,num,new in this file,builder / Member 360 only
+top_groupownerlevel_l12m_op_consultations,top_groupownerlevel_l12m_op_consultations,Cost and network,text,new in this file,builder / Member 360 only
+l12m_payable_op,l12m_payable_op,Cost and network,num,new in this file,builder / Member 360 only
+l12m_payable_ip,l12m_payable_ip,Cost and network,num,new in this file,builder / Member 360 only
+l12m_payable_ed,l12m_payable_ed,Cost and network,num,new in this file,builder / Member 360 only
+l12m_payable_T2D_op,l12m_payable_t2d_op,Cost and network,num,,builder / Member 360 only
+l12m_payable_T2D_ip,l12m_payable_t2d_ip,Cost and network,num,,builder / Member 360 only
+l12m_payable_T2D_ed,l12m_payable_t2d_ed,Cost and network,num,,builder / Member 360 only
+l12m_payable_HTN_op,l12m_payable_htn_op,Cost and network,num,,builder / Member 360 only
+l12m_payable_HTN_ip,l12m_payable_htn_ip,Cost and network,num,,builder / Member 360 only
+l12m_payable_HTN_ed,l12m_payable_htn_ed,Cost and network,num,,builder / Member 360 only
+l12m_drugs_payable,l12m_drugs_payable,Medicines and adherence,num,new in this file,builder / Member 360 only
+l12m_consultation_payable,l12m_consultation_payable,Cost and network,num,new in this file,builder / Member 360 only
+l12m_labandpath_payable,l12m_labandpath_payable,Cost and network,num,new in this file,builder / Member 360 only
+l12m_DRG_payable,l12m_drg_payable,Cost and network,num,new in this file,builder / Member 360 only
+l12m_procedures_payable,l12m_procedures_payable,Cost and network,num,new in this file,builder / Member 360 only
+l12m_others_payable,l12m_others_payable,Cost and network,num,new in this file,builder / Member 360 only
+l12m_T2D_drugs_payable,l12m_t2d_drugs_payable,Medicines and adherence,num,,builder / Member 360 only
+l12m_T2D_consultation_payable,l12m_t2d_consultation_payable,Cost and network,num,,builder / Member 360 only
+l12m_T2D_labandpath_payable,l12m_t2d_labandpath_payable,Cost and network,num,,builder / Member 360 only
+l12m_T2D_DRG_payable,l12m_t2d_drg_payable,Cost and network,num,,builder / Member 360 only
+l12m_T2D_procedures_payable,l12m_t2d_procedures_payable,Cost and network,num,,builder / Member 360 only
+l12m_T2D_others_payable,l12m_t2d_others_payable,Cost and network,num,,builder / Member 360 only
+l12m_HTN_drugs_payable,l12m_htn_drugs_payable,Medicines and adherence,num,,builder / Member 360 only
+l12m_HTN_consultation_payable,l12m_htn_consultation_payable,Cost and network,num,,builder / Member 360 only
+l12m_HTN_labandpath_payable,l12m_htn_labandpath_payable,Cost and network,num,,builder / Member 360 only
+l12m_HTN_DRG_payable,l12m_htn_drg_payable,Cost and network,flag,,builder / Member 360 only
+l12m_HTN_procedures_payable,l12m_htn_procedures_payable,Cost and network,num,,builder / Member 360 only
+l12m_HTN_others_payable,l12m_htn_others_payable,Cost and network,num,,builder / Member 360 only
+last_claim_date,last_claim_date,Conditions and complications,date,,rule_event_type:MEMBER_FEATURE
+last_claim_costblocks,last_claim_costblocks,Last claim (display),text,,rule_event_type:MEMBER_FEATURE
+last_claim_facilities,last_claim_facilities,Last claim (display),text,,rule_event_type:MEMBER_FEATURE
+last_claim_specialties,last_claim_specialties,Last claim (display),text,,rule_event_type:MEMBER_FEATURE
+last_claim_dx_codes,last_claim_dx_codes,Last claim (display),text,,rule_event_type:MEMBER_FEATURE
+last_claim_dx_desc,last_claim_dx_desc,Last claim (display),text,,rule_event_type:MEMBER_FEATURE
+last_claim_medicines,last_claim_medicines,Medicines and adherence,text,,rule_event_type:MEMBER_FEATURE
+last_claim_activities,last_claim_activities,Last claim (display),text,,rule_event_type:MEMBER_FEATURE
+last_claim_payable,last_claim_payable,Cost and network,num,,rule_event_type:MEMBER_FEATURE
+flag_current_smoker_l12m,flag_current_smoker_l12m,Conditions and complications,flag,,rule_risk_band:M
+last_smoking_evidence_date,last_smoking_evidence_date,Labs and readings,date,,rule_risk_band:M
+flag_former_smoker_code,flag_former_smoker_code,Conditions and complications,flag,,rule_risk_band:M
+flag_ckd_l12m,flag_ckd_l12m,Conditions and complications,flag,,rule_risk_band:K; rule_trigger:Trig2; rule_trigger:Trig5
+flag_hypertensive_kidney_disease_l12m,flag_hypertensive_kidney_disease_l12m,Conditions and complications,flag,,builder / Member 360 only
+flag_kidney_failure_l12m,flag_kidney_failure_l12m,Conditions and complications,flag,,rule_risk_band:K
+flag_acute_kidney_injury_l12m,flag_acute_kidney_injury_l12m,Conditions and complications,flag,,builder / Member 360 only
+flag_any_kidney_disease_l12m,flag_any_kidney_disease_l12m,Conditions and complications,flag,,rule_risk_band:K
+flag_stroke_l12m,flag_stroke_l12m,Conditions and complications,flag,,rule_risk_band:M
+flag_heart_failure_l12m,flag_heart_failure_l12m,Conditions and complications,flag,,rule_risk_band:M
+flag_mi_l12m,flag_mi_l12m,Conditions and complications,flag,,rule_risk_band:M
+flag_other_cvd_l12m,flag_other_cvd_l12m,Conditions and complications,flag,,builder / Member 360 only
+flag_dm_kidney_l12m,flag_dm_kidney_l12m,Conditions and complications,flag,,builder / Member 360 only
+flag_dm_eye_l12m,flag_dm_eye_l12m,Conditions and complications,flag,,rule_risk_band:M
+flag_dm_neuropathy_l12m,flag_dm_neuropathy_l12m,Conditions and complications,flag,,rule_risk_band:M
+flag_dm_circulatory_l12m,flag_dm_circulatory_l12m,Conditions and complications,flag,,rule_risk_band:M
+flag_dm_foot_l12m,flag_dm_foot_l12m,Conditions and complications,flag,,rule_risk_band:M; rule_trigger:Trig13
+flag_amputation_l12m,flag_amputation_l12m,Conditions and complications,flag,,rule_risk_band:M; rule_trigger:Trig13
+flag_dm_hypoglycaemia_l12m,flag_dm_hypoglycaemia_l12m,Conditions and complications,flag,,rule_risk_band:C; rule_safety_flag:safety; rule_trigger:Trig3; rule_alert:RED
+flag_dm_hyperglycaemic_crisis_l12m,flag_dm_hyperglycaemic_crisis_l12m,Conditions and complications,flag,,rule_risk_band:C
+flag_sepsis_l12m,flag_sepsis_l12m,Conditions and complications,flag,,builder / Member 360 only
+flag_ischemic_heart_disease_l12m,flag_ischemic_heart_disease_l12m,Conditions and complications,flag,,rule_risk_band:M
+flag_dyslipidemia_l12m,flag_dyslipidemia_l12m,Conditions and complications,flag,,rule_risk_band:M
+flag_obesity,flag_obesity,Conditions and complications,flag,,rule_risk_band:M
+flag_cad_mi_l12m,flag_cad_mi_l12m,Conditions and complications,flag,,rule_risk_band:M; rule_trigger:Trig2
+flag_stroke_tia_l12m,flag_stroke_tia_l12m,Conditions and complications,flag,,rule_risk_band:M
+flag_pad_l12m,flag_pad_l12m,Conditions and complications,flag,,rule_risk_band:M; rule_trigger:Trig13
+flag_dm_retinopathy_l12m,flag_dm_retinopathy_l12m,Conditions and complications,flag,,rule_risk_band:M
+flag_peripheral_neuropathy_l12m,flag_peripheral_neuropathy_l12m,Conditions and complications,flag,,rule_risk_band:M; rule_trigger:Trig13
+flag_dm_foot_ulcer_l12m,flag_dm_foot_ulcer_l12m,Conditions and complications,flag,,rule_risk_band:M; rule_trigger:Trig13
+flag_major_amputation_l12m,flag_major_amputation_l12m,Conditions and complications,flag,,rule_risk_band:M
+flag_dka_l12m,flag_dka_l12m,Conditions and complications,flag,,rule_risk_band:C; rule_safety_flag:safety; rule_alert:RED
+Last_UACR_Value,last_uacr_value,Labs and readings,num,,rule_risk_band:K; rule_trigger:Trig5; rule_builder_field_group:Tests & results
+Last_UACR_Date,last_uacr_date,Labs and readings,date,,rule_risk_band:K; rule_trigger:Trig5
+ckd_stage_l12m,ckd_stage_l12m,Conditions and complications,text,,rule_risk_band:K; rule_trigger:Trig5
+l12m_payable_DiaborHTNrelated,l12m_payable_diaborhtnrelated,Cost and network,num,,rule_builder_field_group:Other
+l12m_payable_DiaborHTNrelated_drugs_inside_network,l12m_payable_diaborhtnrelated_drugs_inside_network,Medicines and adherence,num,new in this file,builder / Member 360 only
+l12m_payable_DiaborHTNrelated_inside,l12m_payable_diaborhtnrelated_inside,Cost and network,num,new in this file,rule_builder_field_group:Other
+l12m_payable_DiaborHTNrelated_outside,l12m_payable_diaborhtnrelated_outside,Cost and network,num,new in this file,rule_builder_field_group:Other
+l12m_payable_DiaborHTNrelated_drugs_outside_network,l12m_payable_diaborhtnrelated_drugs_outside_network,Medicines and adherence,num,new in this file,builder / Member 360 only
+l12m_payable_DiaborHTNrelated_consultation_inside_network,l12m_payable_diaborhtnrelated_consultation_inside_network,Cost and network,num,new in this file,builder / Member 360 only
+l12m_payable_DiaborHTNrelated_consultation_outside_network,l12m_payable_diaborhtnrelated_consultation_outside_network,Cost and network,num,new in this file,builder / Member 360 only
+l12m_payable_DiaborHTNrelated_labandpath_inside_network,l12m_payable_diaborhtnrelated_labandpath_inside_network,Cost and network,num,new in this file,builder / Member 360 only
+l12m_payable_DiaborHTNrelated_labandpath_outside_network,l12m_payable_diaborhtnrelated_labandpath_outside_network,Cost and network,num,new in this file,builder / Member 360 only
+l12m_payable_DiaborHTNrelated_DRG_inside_network,l12m_payable_diaborhtnrelated_drg_inside_network,Cost and network,num,new in this file,builder / Member 360 only
+l12m_payable_DiaborHTNrelated_DRG_outside_network,l12m_payable_diaborhtnrelated_drg_outside_network,Cost and network,num,new in this file,builder / Member 360 only
+l12m_payable_DiaborHTNrelated_procedures_inside_network,l12m_payable_diaborhtnrelated_procedures_inside_network,Cost and network,num,new in this file,builder / Member 360 only
+l12m_payable_DiaborHTNrelated_procedures_outside_network,l12m_payable_diaborhtnrelated_procedures_outside_network,Cost and network,num,new in this file,builder / Member 360 only
+l12m_payable_DiaborHTNrelated_others_inside_network,l12m_payable_diaborhtnrelated_others_inside_network,Cost and network,num,new in this file,builder / Member 360 only
+l12m_payable_DiaborHTNrelated_others_outside_network,l12m_payable_diaborhtnrelated_others_outside_network,Cost and network,num,new in this file,builder / Member 360 only
+payable_last24months_DiaborHTNrelated,payable_last24months_diaborhtnrelated,Cost and network,num,,builder / Member 360 only
+payable_since2024_DiaborHTNrelated,payable_since2024_diaborhtnrelated,Cost and network,num,,builder / Member 360 only
+l12m_payable_DiaborHTNrelated_op,l12m_payable_diaborhtnrelated_op,Cost and network,num,,builder / Member 360 only
+l12m_payable_DiaborHTNrelated_ip,l12m_payable_diaborhtnrelated_ip,Cost and network,num,,builder / Member 360 only
+l12m_payable_DiaborHTNrelated_ed,l12m_payable_diaborhtnrelated_ed,Cost and network,num,,builder / Member 360 only
+l12m_payable_DiaborHTNrelated_drugs,l12m_payable_diaborhtnrelated_drugs,Medicines and adherence,num,,builder / Member 360 only
+l12m_payable_DiaborHTNrelated_consultation,l12m_payable_diaborhtnrelated_consultation,Cost and network,num,,builder / Member 360 only
+l12m_payable_DiaborHTNrelated_labandpath,l12m_payable_diaborhtnrelated_labandpath,Cost and network,num,,builder / Member 360 only
+l12m_payable_DiaborHTNrelated_DRG,l12m_payable_diaborhtnrelated_drg,Cost and network,num,,builder / Member 360 only
+l12m_payable_DiaborHTNrelated_procedures,l12m_payable_diaborhtnrelated_procedures,Cost and network,num,,builder / Member 360 only
+l12m_payable_DiaborHTNrelated_others,l12m_payable_diaborhtnrelated_others,Cost and network,num,,builder / Member 360 only
+l12m_payable_DiaborHTNrelated_PHG,l12m_payable_diaborhtnrelated_phg,Cost and network,num,,builder / Member 360 only
+l12m_payable_DiaborHTNrelated_Mediclinic,l12m_payable_diaborhtnrelated_mediclinic,Cost and network,num,,builder / Member 360 only
+l12m_payable_DiaborHTNrelated_NMC,l12m_payable_diaborhtnrelated_nmc,Cost and network,num,,builder / Member 360 only
+l12m_payable_DiaborHTNrelated_Burjeel,l12m_payable_diaborhtnrelated_burjeel,Cost and network,num,,builder / Member 360 only
+l12m_payable_DiaborHTNrelated_Mubadala,l12m_payable_diaborhtnrelated_mubadala,Cost and network,num,,builder / Member 360 only
+l12m_payable_DiaborHTNrelated_OtherProviders,l12m_payable_diaborhtnrelated_otherproviders,Cost and network,num,,builder / Member 360 only
+l12m_encounters_DiaborHTNrelated,l12m_encounters_diaborhtnrelated,Visits and admissions,int,,builder / Member 360 only
+l12m_encounters_op_DiaborHTNrelated,l12m_encounters_op_diaborhtnrelated,Visits and admissions,int,,builder / Member 360 only
+l12m_encounters_ed_DiaborHTNrelated,l12m_encounters_ed_diaborhtnrelated,Visits and admissions,int,,builder / Member 360 only
+l12m_encounters_ip_DiaborHTNrelated,l12m_encounters_ip_diaborhtnrelated,Visits and admissions,int,,builder / Member 360 only
+top_groupownerlevel_l12m_op_DiaborHTNrelated_encounters,top_groupownerlevel_l12m_op_diaborhtnrelated_encounters,Visits and admissions,text,,builder / Member 360 only
+top_groupownerlevel_l12m_op_DiaborHTNrelated_encounter_share,top_groupownerlevel_l12m_op_diaborhtnrelated_encounter_share,Visits and admissions,num,,builder / Member 360 only
+providers_l12m_DiaborHTNrelated,providers_l12m_diaborhtnrelated,Cost and network,int,,builder / Member 360 only
+l12m_ED_visits_DiaborHTNrelated,l12m_ed_visits_diaborhtnrelated,Visits and admissions,int,,builder / Member 360 only
+l12m_IP_admissions_DiaborHTNrelated,l12m_ip_admissions_diaborhtnrelated,Visits and admissions,int,,builder / Member 360 only
+l12m_encounters_DiaborHTNrelated_PHG,l12m_encounters_diaborhtnrelated_phg,Visits and admissions,int,new in this file,builder / Member 360 only
+l12m_encounters_DiaborHTNrelated_Mediclinic,l12m_encounters_diaborhtnrelated_mediclinic,Visits and admissions,int,new in this file,builder / Member 360 only
+l12m_encounters_DiaborHTNrelated_NMC,l12m_encounters_diaborhtnrelated_nmc,Visits and admissions,int,new in this file,builder / Member 360 only
+l12m_encounters_DiaborHTNrelated_Burjeel,l12m_encounters_diaborhtnrelated_burjeel,Visits and admissions,int,new in this file,builder / Member 360 only
+l12m_encounters_DiaborHTNrelated_Mubadala,l12m_encounters_diaborhtnrelated_mubadala,Visits and admissions,int,new in this file,builder / Member 360 only
+l12m_encounters_DiaborHTNrelated_OtherProviders,l12m_encounters_diaborhtnrelated_otherproviders,Visits and admissions,int,new in this file,builder / Member 360 only
+l12m_encounters_DiaborHTNrelated_total,l12m_encounters_diaborhtnrelated_total,Visits and admissions,int,new in this file,builder / Member 360 only

@@ -115,3 +115,15 @@ The 14 tables the engine reads are listed above. The other 13 carry the rest of 
 | `rule_documentation.csv` | §5 the six items of step J |
 | `rule_event_type.csv` | §1 and §6 the twelve event types |
 | `rule_open_decision.csv` | §8 the five open decisions |
+
+## Sourced from the 250-member longitudinal file (377 columns)
+
+| File | What it is |
+|------|------------|
+| `rule_source_column.csv` | Every rulebook input (risk bands, triggers, alerts, tier, safety flag, gates, builder groups) → the column(s) in `250_members_longitudinal_data.xlsx` that feed it |
+| `column_catalogue_250.csv` | All 377 columns: SQL name, group, inferred type, whether new against the 341-column layout, and which rule reads it (210 are read by a rule; the rest serve the builder and Member 360) |
+| `CCC_Rulebook_Tables_250_longitudinal.xlsx` | The two tables above plus the rulebook tables with their source columns joined in: risk bands, triggers in class order, alerts, tiers and safety flag, gates |
+| `../two-day-build/sql/01b_member_longitudinal.sql` | The 377 columns as a typed SingleStore table (`member_longitudinal`), tested on MySQL |
+| `../data/raw/member_features_250_longitudinal.tsv` | The file in the loader's text format (dates m/d/yyyy, NULL as text), real masked data: keep inside the approved workspace |
+
+Two things the file changes: `plan_name` is gone (the builder's Plan field has to use `policy_type` or come back in the next export), and `Risk_tier` is reverse-numbered against the rulebook (its "1. Very High" is rulebook tier 4), so the tier is re-derived from `Total_risk_Score` with `rule_tier` bands.
