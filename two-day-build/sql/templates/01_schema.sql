@@ -59,6 +59,25 @@ CREATE REFERENCE TABLE IF NOT EXISTS rule_tier (
 CREATE REFERENCE TABLE IF NOT EXISTS rule_cadence (       -- contact cadence by tier (days after baseline)
   tier INT NOT NULL, step INT NOT NULL, day_offset INT NOT NULL, PRIMARY KEY (tier, step)
 );
+CREATE REFERENCE TABLE IF NOT EXISTS rule_field (       -- the extract field catalogue (rules/rule_field.csv): what each column is and who reads it
+  field          VARCHAR(80) PRIMARY KEY,   -- column name in the extract
+  sql_name       VARCHAR(80) NOT NULL,      -- column name in member
+  type           VARCHAR(10) NOT NULL,      -- flag | num | share | date | money | text
+  field_group    VARCHAR(40) NOT NULL,
+  is_loaded      TINYINT NOT NULL,          -- 1 = loaded into member
+  in_layout      VARCHAR(40),               -- which extract layouts carry it, e.g. '341,377'
+  read_by_rules  TEXT,                      -- rule_table:rule_key list (from rule_input)
+  description    TEXT
+);
+CREATE REFERENCE TABLE IF NOT EXISTS rule_input (       -- rulebook input → extract field (rules/rule_input.csv): the mapping the team edits
+  rule_table     VARCHAR(40) NOT NULL,      -- rule_risk_band, rule_trigger, rule_alert, rule_guardrail, …
+  rule_key       VARCHAR(40) NOT NULL,      -- C/M/K/U/A, Trig1 … BPU, RED … GREEN, G0 …
+  input          VARCHAR(160) NOT NULL,     -- the rulebook's words for the input
+  field          VARCHAR(80) NOT NULL,      -- → rule_field.field
+  role           VARCHAR(20) NOT NULL,      -- extract_flag | raw | score_input | score | safety | alert | gate | builder | targeting | display | derived
+  note           TEXT,
+  PRIMARY KEY (rule_table, rule_key, input, field)
+);
 CREATE REFERENCE TABLE IF NOT EXISTS rule_followup (      -- rulebook §5: nurse outcome → what happens next
   outcome            VARCHAR(20) PRIMARY KEY,
   action_status      VARCHAR(10),           -- the action the nurse worked

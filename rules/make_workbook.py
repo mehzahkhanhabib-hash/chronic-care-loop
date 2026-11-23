@@ -34,7 +34,9 @@ INDEX = [
  ('rule_event_type', '§1 and §6', 'The twelve event types the loop writes', 'kit table per event'),
  ('rule_guardrail', '§8 Guardrails', 'G0–G10 and where each is enforced', '04_nightly.sql, 05_followup.sql, portal'),
  ('rule_open_decision', '§8 Open decisions', 'The five open decisions', 'clinical lead / data platform'),
- ('rule_source_column', 'all sections', 'Every rulebook input → the column(s) in the 250-member longitudinal file that feed it', 'member_longitudinal'),
+ ('rule_layout', 'extract layouts', 'The extract layouts the kit can load (341-column claims extract, 377-column longitudinal), with their sample file', 'gen_sql.py CCL_LAYOUT'),
+ ('rule_field', 'field catalogue', 'Every extract field ever seen: SQL name, type, group, which layouts carry it, loaded or not, which rules read it, description', 'member (its columns), stg_extract, rule_field'),
+ ('rule_input', 'all sections', 'Every rulebook input → the field that feeds it, with its role (extract flag, raw, score input, alert, gate, builder, display)', 'rule_input, v_rule_input'),
 ]
 assert {n for n, *_ in INDEX} == {os.path.basename(p)[:-4] for p in glob.glob('rule_*.csv')}, 'INDEX and rules/*.csv are out of sync'
 H = Font(bold=True, color='FFFFFF'); HF = PatternFill('solid', fgColor='13223A'); WR = Alignment(wrap_text=True, vertical='top')

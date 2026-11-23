@@ -3,7 +3,8 @@
 
   python3 two-day-build/tools/gen_sql.py
 
-Reads:  rules/*.csv (the rule database), data/raw/glossary.tsv + the sample extract (column types)
+Reads:  rules/*.csv (the rule database, incl. rule_field / rule_input / rule_layout), the layout's sample extract (column types)
+        CCL_LAYOUT=341 (default) or 377 picks the extract layout
 Writes: sql/01_schema.sql, sql/02_rules.sql, sql/03_load.sql, sql/04_nightly.sql (from sql/templates/*)
 Re-run it after a rule CSV changes; the hand-written files (05, 06, 90) never need regenerating.
 """
@@ -22,22 +23,16 @@ def rd(name):
     return list(csv.DictReader(open(os.path.join(RULES, name + '.csv'), encoding='utf-8')))
 
 
-# ───────── the member table: only the extract columns the loop reads ─────────
-MEMBER_COLS = """mask_id GENDER AGE NATIONALITY plan_name Exclusion Persona Clinical_score Comorbid_complication_score Kidney_score Utilization_score Age_sex_score
-Total_risk_Score Priority_clinical_review cohort_t2d_l12m cohort_htn_l12m flag_ckd flag_dyslipidemia_l12m flag_obesity flag_ischemic_heart_disease flag_heart_failure
-flag_stroke flag_dm_neuropathy flag_dm_retinopathy_l12m flag_pad_l12m flag_dm_foot_ulcer_l12m flag_amputation flag_dka_l12m flag_dm_hypoglycaemia_l12m
-flag_dm_hypoglycaemia_last90days flag_no_glucagon_last12months flag_active_insulin flag_active_ACEinhibitor flag_active_ARBinhibitor Last_HbA1c_Value Last_HbA1c_Date
-last_hba1c_date2 Last_SystolicPressure_Value Last_DiastolicPressure_Value Last_SystolicPressure_Date Last_eGFR_Value Last_eGFR_Date Last_UACR_Value Last_UACR_Date
-Last_MeasuredBMI_Value last_egfr_test_date last_urine_albumin_date last_lipid_panel_date last_renal_panel_date last_potassium_date last_retinal_screen_date
-last_ophthalmology_visit last_foot_exam last_podiatry_visit last_dietitian_visit last_diabeducator_visit first_e11_date first_htn_date last_visit_date
-last_ip_discharge_date last_ed_visit_date ed_visits_l12m ip_admissions_l12m pdc_any_t2d_noninsulin pdc_any_htn pdc_mra pdc_thiazide days_since_t2d_supply_ran_out
-days_since_htn_supply_ran_out l12m_payable_DiaborHTNrelated Trig1_HbA1c_above_target Trig2_HTN_tx_review Trig3_hypoglycemia_tx Trig4_post_discharge_care
-Trig5_Kidney_check Trig6_HbA1c_due Trig7_Renal_Potassium_due Trig8_nutrition_due Trig9_medication_adherence Trig10_new_diagnosis Trig11_annual_labs_due
-Trig12_eyeexam_due Trig13_highriskfoot_monitor""".split()
-RENAME = {'mask_id': 'member_id', 'GENDER': 'gender', 'AGE': 'age', 'NATIONALITY': 'nationality', 'Exclusion': 'excluded', 'Persona': 'persona'}
-PLAUSIBLE = {'Last_SystolicPressure_Value': (60, 260), 'Last_DiastolicPressure_Value': (30, 160), 'Last_MeasuredBMI_Value': (10, 80),
-             'Last_HbA1c_Value': (3, 20), 'Last_eGFR_Value': (1, 200), 'Last_UACR_Value': (0, 5000)}   # G0: anything outside → NULL
-SQLTYPE = {'flag': 'TINYINT', 'num': 'DECIMAL(10,2)', 'share': 'DECIMAL(6,4)', 'date': 'DATE', 'money': 'DECIMAL(14,2)', 'text': 'VARCHAR(120)'}
+# ───────── the member table: driven by rules/rule_field.csv (load = 1), the layout by rules/rule_layout.csv ─────────
+LAYOUT = os.environ.get('CCL_LAYOUT', '341')            # CCL_LAYOUT=377 generates for the longitudinal extract
+FIELDS = rd('rule_field')
+LAYOUTS = {r['layout_id']: r for r in rd('rule_layout')}
+assert LAYOUT in LAYOUTS, f'unknown layout {LAYOUT}; see rules/rule_layout.csv'
+MEMBER_COLS = [f['field'] for f in FIELDS if f['load'] == '1']
+RENAME = {f['field']: f['sql_name'] for f in FIELDS}
+PLAUSIBLE = {f['field']: (float(f['plausible_min']), float(f['plausible_max'])) for f in FIELDS if f['plausible_min'] not in ('', None)}   # G0
+FIELD_TYPE = {f['field']: f['type'] for f in FIELDS}
+SQLTYPE = {'flag': 'TINYINT', 'num': 'DECIMAL(10,2)', 'share': 'DECIMAL(6,4)', 'date': 'DATE', 'money': 'DECIMAL(14,2)', 'text': 'TEXT'}
 ARAB = ['EMIRATI', 'EGYPTIAN', 'JORDANIAN', 'LEBANESE', 'MAURITANIAN', 'MOROCCAN', 'PALESTINIAN', 'SUDANESE', 'SYRIAN', 'IRAQI', 'YEMENI', 'OMANI',
         'SAUDI', 'TUNISIAN', 'ALGERIAN', 'BAHRAINI', 'KUWAITI', 'QATARI', 'LIBYAN']
 
@@ -73,12 +68,15 @@ def ins(table, cols, rows):
 
 
 def main():
-    gl = [r['column'] for r in csv.DictReader(open(os.path.join(REPO, 'data/raw/glossary.tsv'), encoding='utf-8'), delimiter='\t')]
-    rows = list(csv.reader(open(os.path.join(REPO, 'data/raw/member_features_sample.tsv'), encoding='utf-8'), delimiter='\t'))
-    hdr = rows[0]
-    vals = {c: [r[i] for r in rows[1:]] for i, c in enumerate(hdr)}
-    types = {c: infer_type(c, vals.get(c, [])) for c in MEMBER_COLS}
+    rows = list(csv.reader(open(os.path.join(REPO, LAYOUTS[LAYOUT]['sample_file']), encoding='utf-8-sig'), delimiter='\t'))
+    hdr = rows[0]; gl = hdr                                   # the staging table is the layout's header, column for column
+    present = set(hdr)
+    vals = {c: [r[i] for r in rows[1:] if i < len(r)] for i, c in enumerate(hdr)}
+    types = {c: (infer_type(c, vals[c]) if c in present else FIELD_TYPE[c]) for c in MEMBER_COLS}
     types['mask_id'] = 'text'
+    absent = [c for c in MEMBER_COLS if c not in present]     # loaded as NULL so every view and rule still compiles
+    if absent:
+        print(f'layout {LAYOUT}: {len(absent)} loaded fields are not in this extract and load as NULL: {absent}')
     name = lambda c: RENAME.get(c, c.lower())
 
     # ── 01 schema (staging + member generated; the rest is a template) ──
@@ -124,6 +122,11 @@ def main():
            'DELETE FROM rule_tier;\n' + ins('rule_tier', ['tier', 'label', 'r_min', 'r_max'], [(int(r['tier']), r['label'], int(r['r_min']), int(r['r_max'])) for r in rd('rule_tier')]),
            'DELETE FROM rule_cadence;\n' + ins('rule_cadence', ['tier', 'step', 'day_offset'],
                                                [(int(r['tier']), i + 1, int(d)) for r in rd('rule_tier') for i, d in enumerate(r['cadence_days'].split(','))]),
+           'DELETE FROM rule_field;\n' + ins('rule_field', ['field', 'sql_name', 'type', 'field_group', 'is_loaded', 'in_layout', 'read_by_rules', 'description'],
+                                             [(f['field'], f['sql_name'], f['type'], f['group'], int(f['load']), ','.join(k[3:] for k in f if k.startswith('in_') and f[k] == '1'),
+                                               f['read_by_rules'] or None, f['description'] or None) for f in FIELDS]),
+           'DELETE FROM rule_input;\n' + ins('rule_input', ['rule_table', 'rule_key', 'input', 'field', 'role', 'note'],
+                                             [(r['rule_table'], r['rule_key'], r['input'], r['field'], r['role'], r['note'] or None) for r in rd('rule_input')]),
            'DELETE FROM rule_followup;\n' + ins('rule_followup', ['outcome', 'action_status', 'need_status', 'gap_state', 'hold_days', 'followup_kind', 'followup_title',
                                                                    'followup_due_days', 'max_attempts', 'promote_next', 'note'], FOLLOWUP)]
     open(os.path.join(SQL, '02_rules.sql'), 'w', encoding='utf-8').write('\n'.join(out))
@@ -133,7 +136,9 @@ def main():
     for c in MEMBER_COLS:
         s, t, n = f'TRIM(s.`{c}`)', types[c], name(c)
         blank = f"{s} IN ('', 'NULL', 'null', 'NaN')"
-        if t == 'text':
+        if c not in present:
+            e = 'NULL'
+        elif t == 'text':
             e = f"CASE WHEN {blank} THEN NULL ELSE {s} END"
         elif t == 'date':
             e = f"CASE WHEN {s} REGEXP '^[0-9]{{1,2}}/[0-9]{{1,2}}/[0-9]{{4}}$' THEN STR_TO_DATE({s}, '%m/%d/%Y') END"

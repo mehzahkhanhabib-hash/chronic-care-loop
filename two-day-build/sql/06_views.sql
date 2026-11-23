@@ -132,3 +132,10 @@ SELECT
   (SELECT COUNT(*) FROM care_plan_need WHERE gap_state = 'Reported')                   AS reported_not_yet_in_claims,
   (SELECT COUNT(*) FROM care_plan_need WHERE gap_state = 'Closed')                     AS closed_in_claims,
   (SELECT COUNT(*) FROM member WHERE consent = 'granted')                              AS consented;
+
+-- ── Care intelligence: which extract fields feed each rule (metadata, from rule_input ⋈ rule_field). The screen reads it instead of a hard-coded list. ──
+DROP VIEW IF EXISTS v_rule_input;
+CREATE VIEW v_rule_input AS
+SELECT i.rule_table, i.rule_key, i.input, i.role, f.field, f.sql_name, f.type, f.field_group, f.is_loaded, f.in_layout, f.description
+FROM rule_input i
+JOIN rule_field f ON f.field = i.field;
