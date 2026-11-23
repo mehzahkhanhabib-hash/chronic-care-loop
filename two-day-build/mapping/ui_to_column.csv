@@ -1,0 +1,119 @@
+screen,element,shown_as,source_table_column,rulebook_ref,status
+Studio screen 1: cohort and campaign builder,Start from: Daman members,"radio, with base count",member (COUNT(*)),§2 builder inputs,Ready
+Studio screen 1: cohort and campaign builder,"Start from: SEHA patients, PURA app users",radios with counts,no table,§2 (other populations),Not in extract: hide or show 0
+Studio screen 1: cohort and campaign builder,Rule: Age,between,member.age (from AGE),§2 Who they are,Ready
+Studio screen 1: cohort and campaign builder,Rule: Gender,Female / Male,member.gender (GENDER),§2,Ready
+Studio screen 1: cohort and campaign builder,Rule: Plan,Enhanced / Basic / Thiqa,member.plan_name (plan_name),§2,"Ready (values differ: Enhanced Bronze, Sahtak, Premier …; use the real list)"
+Studio screen 1: cohort and campaign builder,Rule: Region,Abu Dhabi / Al Ain / Al Dhafra,none,§2,Not in extract
+Studio screen 1: cohort and campaign builder,Rule: Has condition (ICD-10 family),"chips: T2D, HTN, dyslipidaemia, obesity, CKD, HF …","member.has_t2d (cohort_t2d_l12m), member.has_htn (cohort_htn_l12m), flag_dyslipidemia_l12m, flag_obesity, flag_ckd, flag_heart_failure, flag_stroke, flag_ischemic_heart_disease, flag_pad_l12m",§2 Health,Ready for these 9; other families Not in extract
+Studio screen 1: cohort and campaign builder,Rule: Chronic conditions ≥ N,number,derived: count of the condition flags above,§2,Derived
+Studio screen 1: cohort and campaign builder,"Rule: Latest result (HbA1c, eGFR, UACR, BP, BMI)",lab + operator + value,"last_hba1c_value, last_egfr_value, last_uacr_value, last_systolicpressure_value, last_diastolicpressure_value, last_measuredbmi_value",§2 Tests & results,"Ready (LDL, TSH Not in extract)"
+Studio screen 1: cohort and campaign builder,Rule: Test overdue (no result in N days),lab + days,"DATEDIFF(run_config.as_of, last_hba1c_date2 / last_egfr_test_date / last_urine_albumin_date / last_lipid_panel_date / last_potassium_date)",§2,Derived
+Studio screen 1: cohort and campaign builder,Rule: ED visits · 12 months,number,member.ed_visits_l12m,§2 Visits & admissions,Ready
+Studio screen 1: cohort and campaign builder,Rule: Unplanned admissions,number,member.ip_admissions_l12m,§2,Ready
+Studio screen 1: cohort and campaign builder,Rule: No outpatient visit ≥ N days,days,"DATEDIFF(as_of, member.last_visit_date)",§2,Derived
+Studio screen 1: cohort and campaign builder,Rule: Takes medicine class (ATC),chips,"flag_active_insulin, flag_active_aceinhibitor, flag_active_arbinhibitor; the extract also has active_drug_classes text (not loaded yet)",§2 Medicines,Ready for 3 classes; load active_drug_classes for the rest
+Studio screen 1: cohort and campaign builder,Rule: Adherence (PDC) ≤ %,percent,"LEAST(pdc_any_t2d_noninsulin, pdc_any_htn)",§2,Derived
+Studio screen 1: cohort and campaign builder,Rule: Eye exam not on record (24 months),yes/no,member.last_retinal_screen_date (NULL or > 730 days),§2 Screenings; Trig12,Derived
+Studio screen 1: cohort and campaign builder,Rule: Foot exam not on record (12 months),yes/no,member.last_foot_exam (NULL or > 365 days),§2; Trig13,Derived
+Studio screen 1: cohort and campaign builder,Rule: Visits in network ≤ %,percent,extract phg_share_l12m_encounters (not loaded yet),§2 Network & cost,Ready once loaded
+Studio screen 1: cohort and campaign builder,Rule: Claims cost · 12 months ≥ AED,amount,member.l12m_payable_diaborhtnrelated,§2,Ready
+Studio screen 1: cohort and campaign builder,Rule: Active on PURA,yes/no,none,§2 Engagement,Not in extract
+Studio screen 1: cohort and campaign builder,Rule: Opted out of contact,yes/no,member.consent = 'declined',§2; G2,Derived
+Studio screen 1: cohort and campaign builder,Rule: Currently pregnant,yes/no,extract flag_excl_pregnant_postpartum (not loaded yet),§2 exclusions,Ready once loaded
+Studio screen 1: cohort and campaign builder,Rule: Active cancer treatment,yes/no,extract flag_oncology_l12m (not loaded yet); member.excluded already folds all exclusion flags,§2 exclusions,Ready via excluded
+Studio screen 1: cohort and campaign builder,Include members who match all / any,toggle,"campaign.rules_json (logic), compiled into campaign.where_sql",§2,Ready
+Studio screen 1: cohort and campaign builder,Exclude anyone who …,rule rows,"same, as NOT (…) in where_sql",§2,Ready
+Studio screen 1: cohort and campaign builder,"Who you've got: count, % of base",number,POST /cohorts/estimate → COUNT(*) over member with where_sql,§2,Ready
+Studio screen 1: cohort and campaign builder,Who you've got: step bars (one per rule),bars,"same endpoint, one count per prefix of the rules",§2,Ready
+Studio screen 1: cohort and campaign builder,"Profile tab: age bands, gender",bars,"member.age, member.gender grouped",§2,Ready
+Studio screen 1: cohort and campaign builder,Who matches tab: sample members,list,"member_id, age, gender, plan_name (10 rows)",§2,Ready (pseudonym from member_id)
+Studio screen 1: cohort and campaign builder,Overlap tab,bars,counts against other saved cohorts' where_sql,§2,Post-demo: needs the cohort table (below)
+Studio screen 1: cohort and campaign builder,Describe who you want to find / Feature catalogue / Query the knowledge graph,"text, matches, traversal",none in the kit,§2 written nGQL,Post-demo (knowledge graph not in the two days)
+Studio screen 1: cohort and campaign builder,"Generated nGQL · read-only; Checks (read-only, space, starts from Member, returns member_vid, known schema, bounded path, inputs only)","code, 7 ticks",kit compiles SQL instead; the 7 guardrails map to the compile_rule whitelist,§2 seven guardrails,"Derived (SQL, not nGQL)"
+Studio screen 1: cohort and campaign builder,"Cohorts library: id, version, name, definition, size, refresh, owner, source",cards,"cohort table (proposed, below)","§2 ""Loading writes a row to COHORT""",Post-demo for the library; today a cohort is saved inside campaign
+Studio screen 1: cohort and campaign builder,"Size, last 12 weeks",sparkline,cohort_size_history (proposed),§2 nightly run,Post-demo
+Studio screen 1: cohort and campaign builder,"Campaign: name, goal",text,campaign.name; goal: add campaign.goal,§2,Ready / add column
+Studio screen 1: cohort and campaign builder,"Campaign: include cohorts, leave out anyone already in",pickers,campaign.where_sql; exclusion as NOT IN (SELECT member_id FROM campaign_member WHERE campaign_id = …),§2; G3 one owner campaign,Ready
+Studio screen 1: cohort and campaign builder,Campaign: Which needs? All DoH triggers / Pick triggers,toggle + chips,"campaign.trigger_mode (all / list), campaign.trigger_list",§3 automated vs business mode,Ready
+Studio screen 1: cohort and campaign builder,"Campaign: Channels (Voice, WhatsApp, SMS)",chips,rule_priority.channel decides call vs nudge; campaign channel is display only,§4 P4 digital nudge,Rule table
+Studio screen 1: cohort and campaign builder,Campaign: Priority,1–n,campaign.priority,"§4 ""campaign priority"" in queue order",Ready
+Studio screen 1: cohort and campaign builder,"Campaign: Nurses, Calls per nurse a day",sliders,"nurse rows, nurse.daily_capacity",§4 worklist capacity,"Ready (from setup, not from the slider)"
+Studio screen 1: cohort and campaign builder,Campaign: Control group %,slider,campaign.holdout_pct → campaign_member.holdout by CRC32,§2 stable-hash 10% holdout,Ready
+Studio screen 1: cohort and campaign builder,"Campaign: Start, Weeks, Calendar next 16 weeks","date, number, strip","add campaign.start_date, campaign.weeks; calendar is derived from rule_cadence by tier",§2 cadence,Add 2 columns; calendar Derived
+Studio screen 1: cohort and campaign builder,Hand off to care intelligence,button,POST /campaigns then POST /runs/rules,§1 Cohort → Intelligence,Ready
+Studio screen 2: care intelligence,Filter: Everyone · Urgent · Priority · Routine,pills with counts,"member.alert: Urgent = RED, Priority = AMBER, Routine = YELLOW or GREEN","§4 alert colour, tree step G",Derived
+Studio screen 2: care intelligence,"Member list: initials, name",text,pseudonym from member.member_id (names are not in the extract),—,"Derived (name generator or ""Member s26"")"
+Studio screen 2: care intelligence,Member list: reason (one line),text,"rule_trigger.name of the member's lowest-class fired rule: member_signal ∩ care_plan_need slot CURRENT, min class_order, trigger_order",§4 within-member order,Derived
+Studio screen 2: care intelligence,Member list: R score,number,member.r_total,§2 R = C+M+K+U+A,Ready
+Studio screen 2: care intelligence,Member list: tier label,Low / Moderate / High / Very high,member.tier → rule_tier.label,§2 tier table,Ready
+Studio screen 2: care intelligence,Member list: alert chip (Urgent · clinician today / Priority · within 72 h / Routine),chip,member.alert → label; response text from §4 alert table,§4,Derived
+Studio screen 2: care intelligence,"Member list: ""queued"" / ""updated tonight""",badge,worklist row exists / outcome recorded since last run,§1 next iteration,Derived
+Studio screen 2: care intelligence,"Header: mask, age, sex, conditions, plan",text,"member.member_id, age, gender, condition flags (has_t2d, has_htn, flag_ischemic_heart_disease, flag_dm_retinopathy_l12m, flag_dm_neuropathy), plan_name",—,Ready
+Studio screen 2: care intelligence,Header: tier chip,Tier 4 · Very high,"member.tier, rule_tier.label",§2,Ready
+Studio screen 2: care intelligence,Header: priority chip (Priority · within 72 h),chip,"member.alert + member.contact_priority (P1 same day, P2 next day, P3 3 days)",§4 contact SLA,Ready
+Studio screen 2: care intelligence,Risk score R / 23,number,member.r_total,§2,Ready
+Studio screen 2: care intelligence,Risk component: Clinical (cap 5),bar,member.clinical_score (extract Clinical_score),§2 C,Ready (extract-computed; the kit trusts the extract's components)
+Studio screen 2: care intelligence,Risk component: Comorbidity (cap 6),bar,member.comorbid_complication_score,§2 M,Ready
+Studio screen 2: care intelligence,Risk component: Kidney (cap 5),bar,member.kidney_score,§2 K,Ready
+Studio screen 2: care intelligence,Risk component: Hospital use (cap 5),bar,member.utilization_score,§2 U,Ready
+Studio screen 2: care intelligence,Risk component: Age and sex (cap 2),bar,member.age_sex_score,§2 A,Ready
+Studio screen 2: care intelligence,"""Kidney is provisional: no eGFR on record""",note,member.last_egfr_value IS NULL AND last_uacr_value IS NULL,"§2 K fallback ""shown as provisional""",Derived
+Studio screen 2: care intelligence,Why now: title and detail,text,"top fired rule: rule_trigger.name, member_signal.evidence",§3,Ready
+Studio screen 2: care intelligence,"Wearable early warning: band, score, prediction, window, drivers",card,none,not in the rulebook; not in claims,"Not in extract: show ""No wearable feed in the claims extract"" (already does)"
+Studio screen 2: care intelligence,"Care plan, in order · safety first",numbered list,"care_plan_need ordered by class_order, trigger_order; first 3 = CURRENT",§4 safety → acute → uncontrolled → barrier → verified gap → patient goal; step I,Ready
+Studio screen 2: care intelligence,"Care plan row: class pill (Safety, Acute, Uncontrolled, Barrier, Care gap, Goal)",pill,care_plan_need.class → rule_trigger.class_label,§3 Class column,Rule table
+Studio screen 2: care intelligence,Care plan row: title (next best action),text,rule_trigger.action_title (from rules/rule_action.csv),§3 Next best action,Rule table
+Studio screen 2: care intelligence,Care plan row: why (evidence),small text,care_plan_need.evidence (copied from member_signal.evidence),§3 Raw data read / Fires when,Ready
+Studio screen 2: care intelligence,Care plan row: reference (DoH guideline / technical ref),small text,"rule_trigger.raw_data, rule_trigger.fires_when; the DoH anchor is in the rulebook text",§3,Rule table
+Studio screen 2: care intelligence,Care plan row: owner,For nurse / Coordinator / Doctor,rule_trigger.owner_role,§3 Owner,Rule table
+Studio screen 2: care intelligence,"Care plan row: status (For nurse · Waiting · Done on call · Done, confirm in claims · Declined, again in 90 d · Call back)",text,"care_plan_need.slot (CURRENT = For nurse, NEXT/FUTURE = Waiting), care_plan_need.gap_state (Reported = confirm in claims), care_plan_need.status + hold_until (declined), latest outcome.result (callback)",§5 write-back; gap states Potential → Verified → Scheduled → Reported → Closed,Ready
+Studio screen 2: care intelligence,"""Top 3 go to the nurse · rest wait their turn""",caption,care_plan_need.slot,step I ≤ 3 needs,Ready
+Studio screen 2: care intelligence,Next best action (one line),text,first CURRENT need's action_title,§3,Ready
+Studio screen 2: care intelligence,"Language, call slot, preference",text,member.language (derived from nationality); slot and preference: none,§4 language match,Language Derived; slot/preference Not in extract (slot = worklist.due_by is the honest substitute)
+Studio screen 2: care intelligence,Send to nurse's call list / Open in care portal,button,"worklist row (nurse_id, status)",§4,Ready
+Studio screen 2: care intelligence,Filter counts (Everyone 21 etc.),numbers,"COUNT(*) over member by alert, restricted to campaign members",§4,Derived
+Studio screen 2: care intelligence,"Programme view (all rules across members): in scope, fired, cannot tell, open, in CURRENT, reported by nurse, closed in claims",table,v_rulebook_programme,§3 trigger states; §5 gap closes only in claims,Ready
+Studio screen 3 and the Care Coordinator Portal (nurse),Nudge queue: tabs Today · This week · This month,counts,worklist.status = 'today'; week/month = worklist.status = 'queued' by due_by,"§4 capacity, queued rolls over",Ready
+Studio screen 3 and the Care Coordinator Portal (nurse),"Queue row: name, reason, Risk, Priority, segment letter, Consent needed, Next follow-up (overdue · date)",card,"pseudonym; worklist.reason (lead action title); member.r_total (shown out of 23, not 0–100); member.contact_priority; segment A/B = in PHG network or not (extract t2d_category text, not loaded yet); member.consent; worklist.due_by and overdue if < run_config.run_date",§4 queue order,"Ready, except segment (load t2d_category)"
+Studio screen 3 and the Care Coordinator Portal (nurse),Queue order,sort,"worklist.rank_no, nurse_rank",§4: safety/RED → tier → campaign priority → hours past SLA,Ready
+Studio screen 3 and the Care Coordinator Portal (nurse),"Member header: name, flags (Out of network, segment), Risk, Priority, age, sex, language, plan, ""Claims extract · pseudonym · masked m26""",header,"member.member_id, age, gender, language, plan_name, r_total, contact_priority",—,Ready
+Studio screen 3 and the Care Coordinator Portal (nurse),Call button / Dialling / On call timer / End call,call bar,action (kind call) for the member; the call itself is simulated,§5 Connect; G3 14-day cap,Ready (telephony out of scope)
+Studio screen 3 and the Care Coordinator Portal (nurse),Why we're calling · class · title · one-line evidence,card,"top CURRENT need: rule_trigger.class_label, name, care_plan_need.evidence",§5 Prepare: why → do → done-when,Ready
+Studio screen 3 and the Care Coordinator Portal (nurse),"Numbers strip: admissions · ER, HbA1c vs target, adherence, AED claims",tiles,"member.ip_admissions_l12m, ed_visits_l12m, last_hba1c_value (target from rule: < 7, individual goal 8), LEAST(pdc …), l12m_payable_diaborhtnrelated",§2,Ready
+Studio screen 3 and the Care Coordinator Portal (nurse),"Urgent banner (""check for same-day referral first"")",red banner,member.alert = 'RED' or a CURRENT need of class safety,step B urgent?; §4 RED response,Derived
+Studio screen 3 and the Care Coordinator Portal (nurse),Also open: chips,chips,"the member's other care_plan_need rows with status = 'open', by class order",§4,Ready
+Studio screen 3 and the Care Coordinator Portal (nurse),"Consent card: toggle, Declined, Log consent; ""Recorded call only""",card,"member.consent (pending / granted / declined), written with the outcome (outcome.consent)",§5 consent gate G2; tree step D,Ready
+Studio screen 3 and the Care Coordinator Portal (nurse),"Locked block ""Profile · actions · care gaps · outcome: unlocks when consent is logged""",lock,"member.consent <> 'granted' → the API still returns the data; the screen must not render it (rulebook: not rendered, not hidden)",G2,Ready (rule enforced on screen; optional: API returns 403 before consent)
+Studio screen 3 and the Care Coordinator Portal (nurse),"Review for this call: conditions (with ICD, ""on claims"")",rows,"condition flags → ICD label (has_t2d E11, has_htn I10, flag_ischemic_heart_disease I25, flag_dm_retinopathy_l12m E11.3, flag_dm_neuropathy E11.4)",§5 Assess; step E,Ready
+Studio screen 3 and the Care Coordinator Portal (nurse),Review: medications with % covered,rows,"extract active_drug_classes, pdc_metformin, pdc_sglt2, pdc_dpp4, pdc_glp1, pdc_sulfonylurea, pdc_acei, pdc_arb, pdc_ccb, pdc_beta_blocker (only pdc_any_*, pdc_mra, pdc_thiazide loaded today)",§3 Trig9 raw data,Ready once the per-class PDC columns are loaded (one line each in tools/gen_sql.py MEMBER_COLS)
+Studio screen 3 and the Care Coordinator Portal (nurse),"Review: latest labs (HbA1c, eGFR, BP, BMI) with date and target",rows,"last_hba1c_value + last_hba1c_date2, last_egfr_value + last_egfr_test_date, BP values + last_systolicpressure_date, BMI",§3,Ready
+Studio screen 3 and the Care Coordinator Portal (nurse),Review buttons: Correct · Note · remove; Member confirmed all; Add history,buttons,outcome.notes (free text) for the demo,§5 Member assertion (MEMBER_ASSERTION),Derived for demo; Post-demo: member_assertion table
+Studio screen 3 and the Care Coordinator Portal (nurse),"""8 to review"" / progress bar",counter,count of review rows above,—,Derived
+Studio screen 3 and the Care Coordinator Portal (nurse),"Care plan actions to agree: numbered cards, Best fit, ""For <need> · <evidence>"", owner chip, channel chip",cards,"the 3 CURRENT care_plan_need rows and their open action (kind care_plan): rule_trigger.action_title, owner_role, channel, care_plan_need.evidence",§3; step I,Ready
+Studio screen 3 and the Care Coordinator Portal (nurse),"Ask script line (""When can you go for …"")",text,add rule_action.ask_script (one line per action),§5 script order why → do → done-when,Add column (rule table)
+Studio screen 3 and the Care Coordinator Portal (nurse),"Booking widget: date, time, Recommended by <date>, Confirm booking / Send to DAWAK",calendar,"agreed date → outcome.notes and follow-up action.due_date; ""recommended by"" = care_plan_need.due_date (class due days: acute 3, uncontrolled or barrier 7, gap 30)",§5 Done row: due by class,Ready (date); DAWAK/refill integration Not in scope
+Studio screen 3 and the Care Coordinator Portal (nurse),"Guardrail text under a card (""Do not label non-adherence …"")",note,add rule_action.guardrail_text,"§3 Trig9 branch ""reason not yet known""",Add column (rule table)
+Studio screen 3 and the Care Coordinator Portal (nurse),Member agrees / Agreed,button,"POST /actions/{id}/outcome result = agreed → care_plan_need.gap_state = Scheduled, follow-up ""check it happened""",§5 write-back,Ready
+Studio screen 3 and the Care Coordinator Portal (nurse),Outcome: Member's response (auto: Actions agreed · 2),card,derived from the outcomes recorded this call,§5,Derived
+Studio screen 3 and the Care Coordinator Portal (nurse),"Outcome: next steps list (Agreed with member / Care plan action / Follow-up call), assigned to, date",list,"action rows created by 05_followup.sql: kind, title, assignee, due_date, parent_action_id",§5 write-back table; step J,Ready
+Studio screen 3 and the Care Coordinator Portal (nurse),"Follow-up call ""in about 7 days"" with the gap picker",row,rule_followup.followup_due_days and the member's tier cadence (rule_cadence),§5 Follow up; §2 cadence,Ready
+Studio screen 3 and the Care Coordinator Portal (nurse),Save outcome and write back,button,the outcome call commits; v_kpis moves; next run re-slots,§1 write-back → next iteration,Ready
+Studio screen 3 and the Care Coordinator Portal (nurse),"Member 360 header: Priority, consent status, nationality, plan",header,"member.contact_priority, consent, nationality, plan_name",—,Ready
+Studio screen 3 and the Care Coordinator Portal (nurse),"Member 360 tiles: risk, admissions · ER, claims cost, open triggers",tiles,"r_total, ip_admissions_l12m, ed_visits_l12m, l12m_payable_diaborhtnrelated, COUNT(member_signal fired)",§2,Ready
+Studio screen 3 and the Care Coordinator Portal (nurse),Member 360 journey bar: Flagged → Contacted → Consent → Reviewed → Actions → Outcome → Follow-up,steps,"member_signal (flagged, run date); outcome.reached; member.consent; notes present; count of outcomes this call; outcome saved; open action of kind follow_up",decision tree A–J,Derived
+Studio screen 3 and the Care Coordinator Portal (nurse),Member 360 timeline: upcoming and past items,list,v_action_chain (action + outcome by date),step J documentation,Ready
+Studio screen 3 and the Care Coordinator Portal (nurse),"Care plans page: member list with alert colour, tier, R",list,"member.alert, tier, r_total",§4,Ready
+Studio screen 3 and the Care Coordinator Portal (nurse),"Care plan page: Risk 13/23 with components and ""kidney provisional""",card,as screen 2,§2,Ready
+Studio screen 3 and the Care Coordinator Portal (nurse),Care plan page: Decision path A–J with answers,tiles,A worklist.nurse_id; B alert = RED or safety need; C outcome.reached; D consent; E any new member_signal since last call; F has_t2d/has_htn; G alert; H contact_priority; I count of CURRENT needs; J outcome saved,tree A–J,Derived
+Studio screen 3 and the Care Coordinator Portal (nurse),Care plan columns CURRENT · NEXT · FUTURE with counts,columns,care_plan_need.slot,§4,Ready
+Studio screen 3 and the Care Coordinator Portal (nurse),"Care plan card: class pill, due (""Yesterday"", ""In 6 days""), title, owner, done-when, trigger code, pathway",card,"rule_trigger.class_label, care_plan_need.due_date, action_title, owner_role, done_when, trigger_code, pathway",§3 all columns,Ready
+Studio screen 3 and the Care Coordinator Portal (nurse),"Care plan card: ""Action · <date> · <nurse>"" and Open in Actions",link,"the need's open action: assignee, created_at, action_id",G7,Ready
+Studio screen 3 and the Care Coordinator Portal (nurse),Care plan card buttons Done · Declined · Not reached,buttons,POST /actions/{id}/outcome with result done / declined / not_reached,§5 write-back table,Ready
+Studio screen 3 and the Care Coordinator Portal (nurse),"""Becomes an action when it reaches Current""",caption,"slot IN ('NEXT','FUTURE')",G7,Ready
+Studio screen 3 and the Care Coordinator Portal (nurse),"Actions page: Backlog · overdue, Today, Upcoming, Done tiles",tiles,action by due_date vs run_config.run_date and status,—,Ready
+Studio screen 3 and the Care Coordinator Portal (nurse),"Actions page: filters (All, Agreed with member, Care plan, Check-in calls, Callbacks, Retries)",pills,"action.kind (care_plan, follow_up, retry, call, nudge, escalation) and the originating outcome.result",§5,Ready
+Studio screen 3 and the Care Coordinator Portal (nurse),"Actions page: calendar and list; task rows with member, Agreed / Not agreed, Book, Open",rows,"action.member_id, title, due_date, assignee, parent_action_id; agreed = parent outcome result agreed",§5,Ready
+Studio screen 3 and the Care Coordinator Portal (nurse),Analytics page,charts,"v_kpis, v_rulebook_programme","§5 ""gap closes only in claims""",Ready
+Studio screen 3 and the Care Coordinator Portal (nurse),Wearables page,charts,none,not in rulebook,Not in extract: hide for the demo
+Studio screen 3 and the Care Coordinator Portal (nurse),Shift · 0 of 10 done,counter,worklist rows for the nurse with the lead action closed today,§4,Derived
