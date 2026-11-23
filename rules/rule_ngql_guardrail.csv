@@ -1,0 +1,8 @@
+check_no,check,sql_equivalent_in_kit
+1,It is read-only,compile_rule only builds a SELECT
+2,It uses the daman_kg or seha_kg space,base = member (Daman extract)
+3,It starts from (m:Member),FROM member m
+4,It returns id(m) AS member_vid,SELECT member_id
+5,It uses only known tags and edges,field whitelist in compile_rule
+6,Any variable-length path is bounded,no joins beyond member
+7,"It does not read risk, tier or other intelligence outputs","r_total, tier, alert, contact_priority are refused as builder fields"

@@ -93,3 +93,25 @@ GET /api/rules               # every rule table
 ```
 
 Read gap states this way: a nurse's "done" moves a gap to **Reported**. It becomes **Closed** only when the next extract no longer fires the trigger, meaning the lab, visit or refill appeared in claims. A run with many Reported needs and few Closed ones is not yet evidence of impact (rulebook §7).
+
+## The rulebook as 27 tables
+
+`CCC_Rulebook_Tables.xlsx` is the whole rulebook as one workbook, one sheet per table, with an Index sheet that says which rulebook section each table comes from and which kit table it feeds. `rulebook_tables.sql` is the same 27 tables as plain SQL (all text columns, so it loads unchanged on SingleStore, MySQL, PostgreSQL and SQLite). Both are generated from the CSVs by `python3 rules/make_workbook.py`.
+
+The 14 tables the engine reads are listed above. The other 13 carry the rest of the rulebook as data, so nothing lives only in prose:
+
+| File | Rulebook section |
+|------|------------------|
+| `rule_loop_step.csv` | §1 the five steps of the loop and what each writes |
+| `rule_risk_component.csv` | §2 the five components C, M, K, U, A with formula and cap |
+| `rule_cadence.csv` | §2 cadence steps per tier with the rulebook labels |
+| `rule_safety_flag.csv` | §2 and §6.3 the safety flag and the event pathway |
+| `rule_builder_field_group.csv` | §2 the six builder field groups |
+| `rule_ngql_guardrail.csv` | §2 the seven checks on a written query |
+| `rule_trigger_state.csv` | §3 fired, cannot tell, not fired |
+| `rule_campaign_mode.csv` | §3 automated and business modes |
+| `rule_consent_gate.csv` | §5 what is shown before consent and what is not rendered |
+| `rule_call_stage.csv` | §5 the ten stages of the call |
+| `rule_documentation.csv` | §5 the six items of step J |
+| `rule_event_type.csv` | §1 and §6 the twelve event types |
+| `rule_open_decision.csv` | §8 the five open decisions |
