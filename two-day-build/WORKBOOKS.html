@@ -1,0 +1,470 @@
+<title>Rule Database to Care Portal</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap">
+<style>
+/* Layout: one reading column, wide figures scroll inside their own frame, a dark hero band only at the top. */
+:root{
+  --bg:#f7f8fa; --panel:#ffffff; --fg:#17202a; --muted:#5b6672; --line:#d9dee5;
+  --accent:#0f6e8c; --accent-soft:#e3f1f5; --ink2:#243447;
+  --red:#c0392b; --amber:#d9822b; --yellow:#c9a800; --green:#2e8b57;
+  --font-body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-head:"Space Grotesk","Inter",system-ui,sans-serif;
+  --font-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1418; --panel:#161d24; --fg:#e8edf2; --muted:#9aa7b4; --line:#2b3540;
+  --accent:#5fc0da; --accent-soft:#143442; --ink2:#1c2833;
+  --red:#e06b5e; --amber:#e8a35a; --yellow:#e0c44a; --green:#5fbf87; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1418; --panel:#161d24; --fg:#e8edf2; --muted:#9aa7b4; --line:#2b3540;
+  --accent:#5fc0da; --accent-soft:#143442; --ink2:#1c2833;
+  --red:#e06b5e; --amber:#e8a35a; --yellow:#e0c44a; --green:#5fbf87; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:15px;line-height:1.55;margin:0}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 4rem}
+.hero{background:var(--ink2);color:#e8edf2;margin-top:calc(-1 * env(safe-area-inset-top,0px));padding-top:calc(env(safe-area-inset-top,0px) + 2.5rem);padding-bottom:2.5rem}
+.hero .wrap{padding-block:0}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#9fd3e3;font-weight:600}
+h1{font-family:var(--font-head);font-size:clamp(28px,4vw,40px);line-height:1.1;margin:.4rem 0 .8rem;text-wrap:balance}
+.hero p{max-width:62ch;color:#c9d3dd;margin:0 0 1rem}
+.hero .flow{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;font-family:var(--font-head);font-size:14px}
+.hero .flow span{background:#2f4357;border:1px solid #46617a;border-radius:6px;padding:.35rem .6rem}
+.hero .flow i{font-style:normal;color:#9fd3e3}
+h2{font-family:var(--font-head);font-size:26px;margin:3rem 0 .6rem;text-wrap:balance}
+h3{font-family:var(--font-head);font-size:18px;margin:1.6rem 0 .4rem}
+p{max-width:68ch}
+.lede{font-size:17px;color:var(--muted);max-width:68ch}
+.grid{display:grid;gap:12px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px;min-width:0}
+.card h4{margin:0 0 .3rem;font-family:var(--font-head);font-size:15px}
+.card .n{font-family:var(--font-head);font-size:26px;line-height:1;color:var(--accent);font-variant-numeric:tabular-nums}
+.card .sub{color:var(--muted);font-size:13px}
+.card ul{margin:.4rem 0 0;padding-left:1.1rem;font-size:13.5px}
+.card li{margin:.15rem 0}
+.tag{display:inline-block;font-size:11px;letter-spacing:.05em;text-transform:uppercase;font-weight:600;padding:.15rem .45rem;border-radius:4px;background:var(--accent-soft);color:var(--accent)}
+.sheetmap{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.group{border:1px dashed var(--line);border-radius:8px;padding:10px 12px;min-width:0}
+.group .gl{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:.4rem}
+.sheet{display:flex;justify-content:space-between;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:.4rem .6rem;margin:.3rem 0;font-size:13.5px}
+.sheet b{font-weight:500}
+.sheet em{font-style:normal;color:var(--accent);font-variant-numeric:tabular-nums;white-space:nowrap}
+figure{margin:1.2rem 0;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px}
+figure .scroll{overflow-x:auto}
+figure svg{display:block;max-width:100%;height:auto;min-width:700px}
+figure svg.narrow{min-width:0}
+figcaption{font-size:13px;color:var(--muted);margin-top:.6rem;max-width:80ch}
+figure img{display:block;width:100%;height:auto;border-radius:4px;border:1px solid var(--line)}
+table{border-collapse:collapse;width:100%;font-size:13.5px;background:var(--panel)}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:8px;margin:1rem 0}
+th,td{text-align:left;padding:.5rem .7rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:600;background:var(--bg)}
+tr:last-child td{border-bottom:0}
+code{font-family:var(--font-mono);font-size:12.5px;background:var(--accent-soft);color:var(--fg);padding:.05rem .3rem;border-radius:3px}
+pre{font-family:var(--font-mono);font-size:12.5px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px;overflow-x:auto;line-height:1.5}
+.chip{display:inline-block;font-size:11.5px;font-weight:600;padding:.1rem .45rem;border-radius:999px;color:#fff;letter-spacing:.02em}
+.RED{background:var(--red)}.AMBER{background:var(--amber)}.YELLOW{background:var(--yellow);color:#222}.GREEN{background:var(--green)}
+.slot{display:inline-block;font-size:11px;font-weight:600;padding:.1rem .4rem;border-radius:4px;border:1px solid var(--line)}
+.CURRENT{border-color:var(--accent);color:var(--accent)}.NEXT{color:var(--muted)}.FUTURE{color:var(--muted);border-style:dashed}
+.steps{counter-reset:s;display:grid;gap:12px}
+.step{display:grid;grid-template-columns:44px 1fr;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px;min-width:0}
+.step::before{counter-increment:s;content:counter(s);font-family:var(--font-head);font-size:22px;color:var(--accent);font-variant-numeric:tabular-nums}
+.step h4{margin:0 0 .3rem;font-family:var(--font-head);font-size:16px}
+.step p{margin:.2rem 0;font-size:14px}
+.step .kit{font-size:13px;color:var(--muted);margin-top:.4rem}
+.lanes{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.lane{border:1px solid var(--line);border-radius:8px;background:var(--panel);min-width:0}
+.lane h4{margin:0;padding:.5rem .8rem;border-bottom:1px solid var(--line);font-family:var(--font-head);font-size:14px}
+.lane.cur h4{color:var(--accent)}
+.lane ol{margin:0;padding:.5rem .8rem .6rem 2rem;font-size:13.5px}
+.lane li{margin:.3rem 0}
+.lane small{display:block;color:var(--muted)}
+.shot{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:760px){.shot{grid-template-columns:1fr}}
+.shot ol{margin:0;padding-left:1.2rem;font-size:14px}
+.shot li{margin:.4rem 0}
+.shot li b{font-weight:600}
+.note{border-left:3px solid var(--accent);padding:.4rem .9rem;background:var(--panel);border-radius:0 6px 6px 0;font-size:14px;max-width:72ch}
+.toc{display:flex;flex-wrap:wrap;gap:.4rem .9rem;font-size:14px;margin:1rem 0 0}
+.toc a{color:var(--accent);text-decoration:none;border-bottom:1px solid transparent}
+.toc a:hover,.toc a:focus-visible{border-bottom-color:var(--accent);outline:none}
+a{color:var(--accent)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:.2rem 1rem;font-size:14px}
+.kv dt{color:var(--muted)}.kv dd{margin:0}
+@media (prefers-reduced-motion: no-preference){a{transition:border-color .15s}}
+</style>
+
+<div class="hero"><div class="wrap">
+  <div class="eyebrow">Daman × HICC · Chronic Care Loop · GCEO demo</div>
+  <h1>Two workbooks, one loop: from the rulebook to the nurse's screen and back</h1>
+  <p>The first workbook, <b>CCC Demo Rule Database and Care Intelligence</b>, turns the 20 November 2026 rulebook into database tables: what to score, what fires, what to do, and what to show. The second, <b>CCC Portal UI Mapping and Full Data Model</b>, walks the other way: every element on the Care Coordinator Portal and where its data comes from or goes to. This page shows both visually, then how to use them in the data layer, how care intelligence is derived in the Chronic Care Studio, and how a nurse's inputs in the portal write back.</p>
+  <div class="flow"><span>longitudinal_member <i>377 cols</i></span><i>+</i><span>rule database <i>32 · 14 · 420</i></span><i>→</i><span>risk and trigger evaluations</span><i>→</i><span>care intelligence views</span><i>→</i><span>Care Coordinator Portal</span><i>↺</i><span>write-backs</span></div>
+</div></div>
+
+<div class="wrap">
+<nav class="toc" aria-label="Contents">
+  <a href="#wb1">Workbook 1</a><a href="#wb2">Workbook 2</a><a href="#layer">The data layer</a><a href="#recipe">Recipe: Excel to database</a><a href="#member">One member through the rules</a><a href="#studio">Care intelligence in the Studio</a><a href="#portal">Inputs in the Care Portal</a><a href="#crosswalk">Workbook names vs the kit</a><a href="#gaps">Gaps the workbooks flag</a>
+</nav>
+
+<h2 id="wb1">Workbook 1 · the rule database</h2>
+<p class="lede">Eleven sheets. Read them as four layers: the source catalogue, the rules, the bindings that glue rules to source columns, and the database design that stores config, results and outputs.</p>
+<div class="sheetmap">
+  <div class="group"><div class="gl">Source</div>
+    <div class="sheet"><b>Longitudinal catalogue</b><em>377 cols</em></div>
+    <div class="sheet"><b>Guardrails source</b><em>30 cols</em></div>
+    <p class="card sub" style="margin:.4rem 0 0;border:0;padding:0">Every column of the 250-member longitudinal file, its SQL alias, group, type and which rule reads it. The 30 guardrail columns are the <code>Exclusion_*</code> and consent flags for gates G0 to G10.</p></div>
+  <div class="group"><div class="gl">Rules</div>
+    <div class="sheet"><b>Risk point rules</b><em>32 rows</em></div>
+    <div class="sheet"><b>Trigger rule library</b><em>14 rows</em></div>
+    <div class="sheet"><b>Alert rules</b><em>4 rows</em></div>
+    <div class="sheet"><b>Tier and cadence</b><em>5 rows</em></div>
+    <p class="card sub" style="margin:.4rem 0 0;border:0;padding:0">The rulebook as rows. Five score components with caps 5, 6, 5, 5, 2 (max 23). Fourteen triggers with class, fire condition, next-best action, owner and done-when. Four alert colours. Four tiers plus the safety pathway.</p></div>
+  <div class="group"><div class="gl">Bindings</div>
+    <div class="sheet"><b>Input column bindings</b><em>420 rows</em></div>
+    <p class="card sub" style="margin:.4rem 0 0;border:0;padding:0">One row per rule × source column: <code>Trig3</code> reads <code>longitudinal_member.flag_dm_hypoglycaemia_l12m</code>, and so on. This is the sheet that makes the rules data-driven: change a binding row, not code.</p></div>
+  <div class="group"><div class="gl">Database design</div>
+    <div class="sheet"><b>Database schema</b><em>21 tables</em></div>
+    <div class="sheet"><b>Pipeline lineage</b><em>15 steps</em></div>
+    <div class="sheet"><b>Output view mapping</b><em>3 views</em></div>
+    <div class="sheet"><b>START HERE</b><em>10 notes</em></div>
+    <p class="card sub" style="margin:.4rem 0 0;border:0;padding:0">What to create (tables), the order the engine runs in (lineage), and what the portal reads (views). START HERE records the rulebook decisions kept as written, such as the HbA1c goal of about 8%.</p></div>
+</div>
+
+<h3>The 21 tables in the Database schema sheet, by job</h3>
+<div class="grid g4">
+  <div class="card"><span class="tag">Source</span><h4>1 table</h4><ul><li><code>longitudinal_member</code> · 1 row per member, all 377 columns kept</li></ul></div>
+  <div class="card"><span class="tag">Rule config</span><h4>10 tables</h4><ul><li><code>rule_set</code> (version DEMO-2026-11-20)</li><li><code>rule_definition</code>, <code>rule_input_binding</code></li><li><code>risk_component</code>, <code>risk_point_rule</code>, <code>risk_tier_rule</code></li><li><code>trigger_rule</code>, <code>nba_rule</code>, <code>alert_rule</code>, <code>guardrail_rule</code></li></ul></div>
+  <div class="card"><span class="tag">Results per run</span><h4>6 tables</h4><ul><li><code>intelligence_run</code> (one row per run)</li><li><code>member_risk_result</code> C M K U A, total, tier, safety flag</li><li><code>member_rule_evaluation</code> fired / cannot_tell / not_fired + evidence</li><li><code>member_alert</code>, <code>member_need</code>, <code>worklist_item</code></li></ul></div>
+  <div class="card"><span class="tag">Portal write-backs</span><h4>4 tables</h4><ul><li><code>consent_event</code> (gate G2)</li><li><code>disposition_event</code> done / declined / not reached / carried</li><li><code>member_assertion</code> what the member told the nurse</li><li><code>care_gap_event</code> Potential → Verified → Scheduled → Reported → Closed</li></ul></div>
+</div>
+
+<h2 id="wb2">Workbook 2 · the portal mapping and full data model</h2>
+<p class="lede">Eight sheets. It starts from the screen, not the rulebook: 212 UI elements and controls, each tied to a proposed table and column, with a 35-table normalised model behind them.</p>
+<div class="sheetmap">
+  <div class="group"><div class="gl">From the screen</div>
+    <div class="sheet"><b>UI to Column</b><em>212 rows</em></div>
+    <div class="sheet"><b>Rulebook Trace</b><em>91 rows</em></div>
+    <p class="card sub" style="margin:.4rem 0 0;border:0;padding:0">Every label, number, button and JavaScript state key on the portal, with direction Read / Write / Action. Rulebook Trace ties the Intelligence elements back to rule inputs.</p></div>
+  <div class="group"><div class="gl">Proposed model</div>
+    <div class="sheet"><b>Tables</b><em>35 tables</em></div>
+    <div class="sheet"><b>Schema Columns</b><em>281 cols</em></div>
+    <div class="sheet"><b>Relationships</b><em>52 FKs</em></div>
+    <p class="card sub" style="margin:.4rem 0 0;border:0;padding:0">17 domains: identity, clinical, utilisation, wearables, intelligence, rulebook, care gaps, care plans, outreach, consent, operations, analytics, governance. Every FK points back to <code>member.member_id</code> or a parent row.</p></div>
+  <div class="group"><div class="gl">From the source</div>
+    <div class="sheet"><b>Source Catalogue</b><em>377 cols</em></div>
+    <p class="card sub" style="margin:.4rem 0 0;border:0;padding:0">The same 377 columns as workbook 1, now classified to a destination table and column in the 35-table model (AGE → <code>member.date_of_birth</code>, for example).</p></div>
+  <div class="group"><div class="gl">Honesty sheets</div>
+    <div class="sheet"><b>Gaps &amp; Decisions</b><em>13 rows</em></div>
+    <div class="sheet"><b>Assumptions</b><em>7 rows</em></div>
+    <p class="card sub" style="margin:.4rem 0 0;border:0;padding:0">Where the portal fixture and the longitudinal data disagree (two different risk scores, synthetic member array, client-side consent) and what was assumed.</p></div>
+</div>
+
+<h3>Where the 212 UI elements land</h3>
+<div class="tbl"><table>
+<tr><th>Portal screen</th><th>Elements</th><th>Main target tables (workbook 2 names)</th><th>Direction</th></tr>
+<tr><td>Queue</td><td>13</td><td>member, campaign_member, clinical_trigger, risk_assessment</td><td>Read</td></tr>
+<tr><td>Member 360</td><td>37</td><td>member, member_utilization_snapshot, wearable_reading, lab_observation, medication, call_interaction</td><td>Read</td></tr>
+<tr><td>Call workflow</td><td>15</td><td>call_interaction, clinical_trigger, consent_record, member_utilization_snapshot</td><td>Read + Write (consent)</td></tr>
+<tr><td>Care gaps</td><td>9</td><td>care_gap, care_gap_decision, care_gap_evidence</td><td>Read + Write (decision, schedule)</td></tr>
+<tr><td>Tasks</td><td>14</td><td>task</td><td>Read + Write (complete, book)</td></tr>
+<tr><td>Intelligence</td><td>9</td><td>risk_assessment, risk_driver, safety_alert, clinical_trigger</td><td>Read</td></tr>
+<tr><td>Care plans · Shift analytics</td><td>7</td><td>care_plan, task, shift_metric, coordinator</td><td>Read</td></tr>
+<tr><td>JavaScript payload and state</td><td>61</td><td>the CCC_MEMBERS seed array and per-member state keys, mapped to the same tables</td><td>Read / Write</td></tr>
+<tr><td>Interaction handlers</td><td>47</td><td>23 are navigation only; 24 mutate task, care_gap_decision, call_interaction, consent_record, care_plan_action</td><td>Action</td></tr>
+</table></div>
+
+<h2 id="layer">How the two workbooks fit: the data layer</h2>
+<p class="lede">Workbook 1 is the engine side (left to centre). Workbook 2 is the screen side (right) plus the write-backs that return along the bottom. The three views in the middle are the only thing the portal needs to read.</p>
+<figure><div class="scroll">
+<svg viewBox="0 0 1180 560" role="img" aria-label="Flow from longitudinal_member and rule tables through an intelligence run into result tables, then three care intelligence views, then the portal; portal write-backs return to the next run" style="color:var(--fg)">
+<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker></defs>
+<g font-family="Inter,system-ui,sans-serif" font-size="12" fill="currentColor">
+<!-- column 1: inputs -->
+<rect x="20" y="40" width="230" height="110" rx="8" fill="none" stroke="currentColor" stroke-width="1.4"/>
+<text x="34" y="64" font-weight="600" font-size="13">longitudinal_member</text>
+<text x="34" y="84" fill="var(--muted)">1 row per member · 377 columns</text>
+<text x="34" y="102" fill="var(--muted)">loaded from the 250-member file</text>
+<text x="34" y="120" fill="var(--muted)">sheet: Longitudinal catalogue</text>
+<text x="34" y="138" fill="var(--muted)">kit: member / member_longitudinal</text>
+
+<rect x="20" y="190" width="230" height="200" rx="8" fill="none" stroke="currentColor" stroke-width="1.4"/>
+<text x="34" y="214" font-weight="600" font-size="13">Rule tables (config)</text>
+<text x="34" y="236">risk_point_rule · 32</text>
+<text x="34" y="254">trigger_rule + nba_rule · 14</text>
+<text x="34" y="272">alert_rule · 4 · risk_tier_rule · 5</text>
+<text x="34" y="290">guardrail_rule · G0–G10</text>
+<text x="34" y="308">rule_input_binding · 420</text>
+<text x="34" y="326" fill="var(--muted)">rule_set DEMO-2026-11-20</text>
+<text x="34" y="350" fill="var(--muted)">sheets: Risk point rules, Trigger rule</text>
+<text x="34" y="366" fill="var(--muted)">library, Alert, Tier, Bindings</text>
+<text x="34" y="382" fill="var(--muted)">kit: rules/*.csv → 02_rules.sql</text>
+
+<!-- column 2: run + results -->
+<rect x="340" y="40" width="250" height="350" rx="8" fill="none" stroke="var(--accent)" stroke-width="1.8"/>
+<text x="354" y="64" font-weight="600" font-size="13" fill="var(--accent)">intelligence_run</text>
+<text x="354" y="82" fill="var(--muted)">15 lineage steps, one run_id</text>
+<line x1="354" y1="96" x2="576" y2="96" stroke="var(--line)"/>
+<text x="354" y="118" font-weight="600">member_risk_result</text>
+<text x="354" y="134" fill="var(--muted)">C M K U A · total · tier · safety</text>
+<text x="354" y="160" font-weight="600">member_rule_evaluation</text>
+<text x="354" y="176" fill="var(--muted)">14 rows per member · state · evidence</text>
+<text x="354" y="202" font-weight="600">member_alert</text>
+<text x="354" y="218" fill="var(--muted)">RED · AMBER · YELLOW · GREEN</text>
+<text x="354" y="244" font-weight="600">member_need</text>
+<text x="354" y="260" fill="var(--muted)">class order · CURRENT / NEXT / FUTURE</text>
+<text x="354" y="276" fill="var(--muted)">owner · due date · gap state</text>
+<text x="354" y="302" font-weight="600">worklist_item</text>
+<text x="354" y="318" fill="var(--muted)">P1 today … P4 nudge · nurse</text>
+<text x="354" y="350" fill="var(--muted)">sheets: Database schema, Pipeline lineage</text>
+<text x="354" y="366" fill="var(--muted)">kit: 04_nightly.sql → member (scores),</text>
+<text x="354" y="382" fill="var(--muted)">member_signal, care_plan_need, action, worklist</text>
+
+<!-- column 3: views -->
+<rect x="680" y="40" width="220" height="350" rx="8" fill="none" stroke="currentColor" stroke-width="1.4"/>
+<text x="694" y="64" font-weight="600" font-size="13">Care intelligence views</text>
+<text x="694" y="82" fill="var(--muted)">read-only · 23 columns</text>
+<line x1="694" y1="96" x2="886" y2="96" stroke="var(--line)"/>
+<text x="694" y="118" font-weight="600">care_intelligence_member_v</text>
+<text x="694" y="134" fill="var(--muted)">score, tier, alert, safety, P1–P4,</text>
+<text x="694" y="150" fill="var(--muted)">next contact, consent</text>
+<text x="694" y="180" font-weight="600">care_intelligence_need_v</text>
+<text x="694" y="196" fill="var(--muted)">trigger, why now, next-best action,</text>
+<text x="694" y="212" fill="var(--muted)">owner, done when, lane, rank, due</text>
+<text x="694" y="242" font-weight="600">care_intelligence_rule_evidence_v</text>
+<text x="694" y="258" fill="var(--muted)">rule, state, source values, run_id</text>
+<text x="694" y="350" fill="var(--muted)">sheet: Output view mapping</text>
+<text x="694" y="366" fill="var(--muted)">kit: v_member_summary, v_care_plan,</text>
+<text x="694" y="382" fill="var(--muted)">v_rulebook_member, v_worklist</text>
+
+<!-- column 4: portal -->
+<rect x="980" y="40" width="180" height="350" rx="8" fill="none" stroke="currentColor" stroke-width="1.4"/>
+<text x="994" y="64" font-weight="600" font-size="13">Screens</text>
+<text x="994" y="82" fill="var(--muted)">workbook 2 · 212 elements</text>
+<line x1="994" y1="96" x2="1146" y2="96" stroke="var(--line)"/>
+<text x="994" y="118" font-weight="600">Studio · Care intelligence</text>
+<text x="994" y="134" fill="var(--muted)">screen 2, one member</text>
+<text x="994" y="162" font-weight="600">Portal · Queue</text>
+<text x="994" y="178" fill="var(--muted)">today's list per nurse</text>
+<text x="994" y="206" font-weight="600">Portal · Member 360</text>
+<text x="994" y="234" font-weight="600">Portal · Call, Review,</text>
+<text x="994" y="250" font-weight="600">Actions, Outcome</text>
+<text x="994" y="278" font-weight="600">Portal · Care plan</text>
+<text x="994" y="306" font-weight="600">Portal · Actions page</text>
+<text x="994" y="350" fill="var(--muted)">kit: apps/*.html + api/server.py</text>
+
+<!-- arrows top -->
+<line x1="250" y1="95" x2="340" y2="95" stroke="currentColor" stroke-width="1.4" marker-end="url(#ar)"/>
+<text x="258" y="88" font-size="11">reads 420 bound columns</text>
+<line x1="250" y1="290" x2="340" y2="290" stroke="currentColor" stroke-width="1.4" marker-end="url(#ar)"/>
+<text x="262" y="283" font-size="11">joins rule config</text>
+<line x1="590" y1="215" x2="680" y2="215" stroke="currentColor" stroke-width="1.4" marker-end="url(#ar)"/>
+<text x="596" y="208" font-size="11">SELECT … JOIN</text>
+<line x1="900" y1="215" x2="980" y2="215" stroke="currentColor" stroke-width="1.4" marker-end="url(#ar)"/>
+<text x="906" y="208" font-size="11">GET /members/{id}</text>
+<text x="906" y="232" font-size="11">GET /worklist</text>
+
+<!-- write-backs -->
+<rect x="680" y="430" width="400" height="100" rx="8" fill="none" stroke="var(--amber)" stroke-width="1.6"/>
+<text x="694" y="454" font-weight="600" font-size="13" fill="var(--amber)">Portal write-backs</text>
+<text x="694" y="474">consent_event · disposition_event</text>
+<text x="694" y="490">member_assertion · care_gap_event</text>
+<text x="694" y="514" fill="var(--muted)">kit: outcome, action, care_plan_need, member.consent</text>
+<path d="M1070 390 L1070 410 L1000 410 L1000 430" fill="none" stroke="var(--amber)" stroke-width="1.4" marker-end="url(#ar)"/>
+<text x="1008" y="422" font-size="11">POST /actions/{id}/outcome</text>
+<path d="M680 480 L465 480 L465 390" fill="none" stroke="var(--amber)" stroke-width="1.4" marker-end="url(#ar)"/>
+<text x="480" y="474" font-size="11">next run reads outcomes: hold 90 days,</text>
+<text x="480" y="490" font-size="11">promote the next need, verify in claims</text>
+</g></svg></div>
+<figcaption>Config on the left never changes during a run. The run writes five result tables keyed by run_id and member. The portal reads three views and writes four event tables. The next run reads those events, so a declined action stays on hold and a done action moves to Reported until claims close it.</figcaption></figure>
+
+<h2 id="recipe">Recipe: how to use the Excels in a proper data layer</h2>
+<p class="lede">The workbooks are a specification, not a populated database. These five steps turn them into one. Each step names the sheet to open and the kit file that already does it on SingleStore.</p>
+<div class="steps">
+  <div class="step"><div><h4>Create the source table from the Longitudinal catalogue sheet</h4>
+    <p>One CREATE TABLE with 377 columns. Column name = SQL alias column, type = Type column. Primary key <code>member_id</code> (mask_id). Load the 250-member file into it unchanged. Nothing is derived here.</p>
+    <p class="kit">Kit: <code>sql/01b_member_longitudinal.sql</code> is exactly this table; <code>rules/rule_layout.csv</code> + <code>rule_field.csv</code> hold the same catalogue so the loader is generated, not typed.</p></div></div>
+  <div class="step"><div><h4>Create the rule config tables from the Database schema sheet, fill them from the rule sheets</h4>
+    <p>Ten small tables. Insert the 32 Risk point rules, 14 Trigger rule library rows (triggers and their NBAs), 4 Alert rules, 5 Tier rows, 30 guardrail columns and the 420 Input column bindings. Stamp every row with <code>rule_set_id = DEMO-2026-11-20</code>.</p>
+    <p class="kit">Kit: each sheet is a CSV in <code>rules/</code>; <code>tools/gen_sql.py</code> writes <code>02_rules.sql</code> from them. A threshold change is a CSV edit and a re-run.</p></div></div>
+  <div class="step"><div><h4>Run the 15 lineage steps and write the result tables</h4>
+    <p>Follow the Pipeline lineage sheet in order: steps 02 to 06 score C, M, K, U, A with their caps; 07 sums to the total and picks the tier; 08 sets the safety flag and alert; 09 evaluates all 14 triggers as fired, cannot_tell or not_fired with evidence; 10 ranks needs by class order into CURRENT 1–3, NEXT 4–6, FUTURE; 11 attaches the NBA; 12 builds the queue P1 to P4. Every row carries the <code>run_id</code>.</p>
+    <p class="kit">Kit: <code>POST /runs/rules</code> executes <code>sql/04_nightly.sql</code>. On the 250-member file it fires 1,371 triggers, builds 214 plans and 607 CURRENT needs, and puts 75 members on today's lists with 139 queued.</p></div></div>
+  <div class="step"><div><h4>Create the three views from the Output view mapping sheet</h4>
+    <p>Each row of the sheet is one view column and the table.column it comes from. <code>care_intelligence_member_v</code> is the Member 360 header. <code>care_intelligence_need_v</code> is the care plan and the nurse script. <code>care_intelligence_rule_evidence_v</code> is the "why" behind every chip.</p>
+    <p class="kit">Kit: <code>sql/06_views.sql</code> (<code>v_member_summary</code>, <code>v_care_plan</code>, <code>v_rulebook_member</code>, <code>v_worklist</code>, <code>v_kpis</code>).</p></div></div>
+  <div class="step"><div><h4>Point the screens at the views, and the buttons at the four write-back tables</h4>
+    <p>Workbook 2's UI to Column sheet says which element reads which column (Read rows) and which control appends which event (Write and Action rows). Reads go through the views; writes go to consent_event, disposition_event, member_assertion and care_gap_event, never straight into result tables. The next run reads them.</p>
+    <p class="kit">Kit: <code>GET /members/{id}</code>, <code>/care-plan</code>, <code>/rulebook</code>, <code>/worklist</code>; <code>POST /actions/{id}/outcome</code>. The Studio and the Portal are static HTML calling these.</p></div></div>
+</div>
+<div class="note" style="margin-top:1rem"><b>Why views, not tables, for the screens.</b> UI/UX will hand over new front-ends. If every screen reads the three views, a redesign changes HTML only. The 212-row UI to Column sheet becomes the checklist for the new build: same columns, new pixels.</div>
+
+<h2 id="member">One member through the rules</h2>
+<p class="lede">Member x206 from the 250-member longitudinal file: 54, male, English speaking, type 2 diabetes and hypertension. This is what the run writes for him, row by row.</p>
+
+<h3>member_risk_result · R = C + M + K + U + A</h3>
+<figure><div class="scroll">
+<svg class="narrow" viewBox="0 0 760 170" role="img" aria-label="Stacked risk score for member x206: clinical 5 of 5, comorbidity 6 of 6, kidney 0 of 5, utilisation 0 of 5, age and sex 1 of 2, total 12 of 23, tier 3 High" style="color:var(--fg)">
+<g font-family="Inter,system-ui,sans-serif" font-size="12" fill="currentColor">
+<!-- scale 0..23 across 40..720 => 29.565 px per point -->
+<text x="40" y="22" font-weight="600" font-size="13">Score 12 of 23 → tier 3 · High · AMBER</text>
+<!-- caps as hollow -->
+<rect x="40" y="40" width="147.8" height="28" fill="none" stroke="currentColor" stroke-width="1.2"/>
+<rect x="187.8" y="40" width="177.4" height="28" fill="none" stroke="currentColor" stroke-width="1.2"/>
+<rect x="365.2" y="40" width="147.8" height="28" fill="none" stroke="currentColor" stroke-width="1.2"/>
+<rect x="513" y="40" width="147.8" height="28" fill="none" stroke="currentColor" stroke-width="1.2"/>
+<rect x="660.8" y="40" width="59.2" height="28" fill="none" stroke="currentColor" stroke-width="1.2"/>
+<!-- earned -->
+<rect x="40" y="40" width="147.8" height="28" fill="var(--accent)" opacity=".85"/>
+<rect x="187.8" y="40" width="177.4" height="28" fill="var(--accent)" opacity=".65"/>
+<rect x="660.8" y="40" width="29.6" height="28" fill="var(--accent)" opacity=".85"/>
+<text x="113.9" y="59" text-anchor="middle" fill="#fff" font-weight="600">C 5/5</text>
+<text x="276.5" y="59" text-anchor="middle" fill="#fff" font-weight="600">M 6/6</text>
+<text x="439.1" y="59" text-anchor="middle">K 0/5</text>
+<text x="586.9" y="59" text-anchor="middle">U 0/5</text>
+<text x="690.4" y="59" text-anchor="middle" font-size="11">A 1/2</text>
+<!-- evidence -->
+<text x="40" y="92" fill="var(--muted)" font-size="11">HbA1c 9.5 (+3), HTN (+2)</text>
+<text x="187.8" y="92" fill="var(--muted)" font-size="11">comorbidity flags, capped at 6</text>
+<text x="365.2" y="92" fill="var(--muted)" font-size="11">eGFR 78</text>
+<text x="513" y="92" fill="var(--muted)" font-size="11">0 ED, 0 unplanned</text>
+<text x="660.8" y="92" fill="var(--muted)" font-size="11">man 40–59</text>
+<!-- tier axis -->
+<line x1="40" y1="120" x2="720" y2="120" stroke="currentColor" stroke-width="1"/>
+<g stroke="currentColor" stroke-width="1">
+<line x1="40" y1="115" x2="40" y2="125"/><line x1="158.3" y1="115" x2="158.3" y2="125"/><line x1="276.5" y1="115" x2="276.5" y2="125"/><line x1="424.3" y1="115" x2="424.3" y2="125"/><line x1="720" y1="115" x2="720" y2="125"/>
+</g>
+<line x1="394.8" y1="108" x2="394.8" y2="132" stroke="var(--amber)" stroke-width="2.5"/>
+<text x="40" y="145" font-size="11">0</text><text x="158.3" y="145" font-size="11" text-anchor="middle">4</text><text x="276.5" y="145" font-size="11" text-anchor="middle">8</text><text x="424.3" y="145" font-size="11" text-anchor="middle">13</text><text x="720" y="145" font-size="11" text-anchor="end">23</text>
+<text x="99" y="160" font-size="11" text-anchor="middle" fill="var(--muted)">tier 1 Low</text>
+<text x="217" y="160" font-size="11" text-anchor="middle" fill="var(--muted)">tier 2 Moderate</text>
+<text x="350" y="160" font-size="11" text-anchor="middle" fill="var(--muted)">tier 3 High</text>
+<text x="572" y="160" font-size="11" text-anchor="middle" fill="var(--muted)">tier 4 Very high</text>
+<text x="394.8" y="104" font-size="11" text-anchor="middle" fill="var(--amber)" font-weight="600">12</text>
+</g></svg></div>
+<figcaption>Each component is capped (the hollow boxes). x206 maxes out clinical and comorbidity, scores nothing on kidney or utilisation, and lands on 12, the top of tier 3. The tier comes from the Tier and cadence sheet, not from the <code>Risk_tier</code> label in the file, which is reverse-numbered.</figcaption></figure>
+
+<h3>member_rule_evaluation · 14 rows, in rulebook class order</h3>
+<div class="tbl"><table>
+<tr><th>Rule</th><th>Class</th><th>State</th><th>Evidence written (evidence_json)</th><th>Need lane</th><th>Next-best action · owner</th></tr>
+<tr><td>Trig3 Hypoglycaemia</td><td>1 Safety</td><td>not fired</td><td></td><td></td><td></td></tr>
+<tr><td>BPU BP urgent</td><td>1 Safety</td><td>not fired</td><td>154/75 is below 180/110</td><td></td><td></td></tr>
+<tr><td><b>Trig4 Post-discharge care</b></td><td>2 Acute event</td><td><b>fired</b></td><td>last_ip_discharge_date 2025-10-30 · ed_visits_l12m 0</td><td><span class="slot CURRENT">CURRENT 1</span></td><td>GP follow-up within 72 h; medicine reconciliation · Coordinator</td></tr>
+<tr><td><b>Trig1 HbA1c above target</b></td><td>3 Uncontrolled</td><td><b>fired</b></td><td>Last_HbA1c_Value 9.50</td><td><span class="slot CURRENT">CURRENT 2</span></td><td>Glycaemic treatment review · Doctor</td></tr>
+<tr><td><b>Trig2 BP treatment review</b></td><td>3 Uncontrolled</td><td><b>fired</b></td><td>SBP 154 · DBP 75 · flag_ckd 0</td><td><span class="slot CURRENT">CURRENT 3</span></td><td>Home BP recheck and clinician review · Nurse</td></tr>
+<tr><td>Trig5 Kidney check</td><td>3 Uncontrolled</td><td>fired</td><td>eGFR 78 · last tests 2026-09-24</td><td><span class="slot NEXT">NEXT 4</span></td><td>Book eGFR and UACR · Coordinator</td></tr>
+<tr><td>Trig9 Medication adherence</td><td>4 Barrier</td><td>not fired</td><td></td><td></td><td></td></tr>
+<tr><td>Trig6 HbA1c test due</td><td>5 Verified gap</td><td>not fired</td><td></td><td></td><td></td></tr>
+<tr><td>Trig12 Eye exam due</td><td>5 Verified gap</td><td>not fired</td><td></td><td></td><td></td></tr>
+<tr><td>Trig13 High-risk foot</td><td>5 Verified gap</td><td>fired</td><td>last_foot_exam none</td><td><span class="slot NEXT">NEXT 5</span></td><td>Foot exam; podiatry if high risk · Nurse</td></tr>
+<tr><td>Trig7 Potassium due</td><td>5 Verified gap</td><td>not fired</td><td></td><td></td><td></td></tr>
+<tr><td>Trig11 Annual labs</td><td>5 Verified gap</td><td>fired</td><td>lipid and renal panels 2026-09-24</td><td><span class="slot NEXT">NEXT 6</span></td><td>One bundled lab visit · Coordinator</td></tr>
+<tr><td>Trig10 New diagnosis</td><td>6 Patient goal</td><td>not fired</td><td></td><td></td><td></td></tr>
+<tr><td>Trig8 Nutrition and education</td><td>6 Patient goal</td><td>fired</td><td>no dietitian or educator visit</td><td><span class="slot FUTURE">FUTURE</span></td><td>Self-management goal, dietitian · Nurse</td></tr>
+</table></div>
+
+<div class="grid g3" style="margin-top:1rem">
+  <div class="card"><span class="tag">member_alert</span><h4><span class="chip AMBER">AMBER</span> Clinician review within 72 h</h4><p class="sub">Alert rules sheet: post-discharge and HbA1c ≥ 9 both make AMBER. Nothing in the RED row applies.</p></div>
+  <div class="card"><span class="tag">member_need</span><h4>7 needs, 3 CURRENT</h4><p class="sub">Class order sorts them; the first three become the care plan the nurse sees today. Due dates from class: acute 3 days, uncontrolled 7, verified gap 14 or 30.</p></div>
+  <div class="card"><span class="tag">worklist_item</span><h4>P1 · today · Omar Khalid</h4><p class="sub">Tier 3 + AMBER + an acute need makes P1 (same day). Queue order is safety RED first, then tier, then hours past SLA. He is rank 17 on the programme list and 8th on Omar's list.</p></div>
+</div>
+
+<h2 id="studio">How care intelligence is derived on Studio screen 2</h2>
+<p class="lede">Screen 2 of the Chronic Care Studio is a window onto the three views for one member. Every element on it is a column; every column is a row in the Output view mapping sheet.</p>
+<div class="shot">
+  <figure style="margin:0"><img src="guide/02-studio-intelligence.jpg" alt="Chronic Care Studio screen 2, Care intelligence for one member: header with tier, alert and priority, the five score components, the rulebook table and the care plan"><figcaption>Studio screen 2 for the demo member. The screenshot shows the current build; the list beside it names which view column fills each element.</figcaption></figure>
+  <ol>
+    <li><b>Member header</b> (name, age, sex, language, plan, pathway T2D · HTN): <code>care_intelligence_member_v</code> from <code>longitudinal_member</code> directly. Pathway comes from <code>cohort_t2d_l12m</code> and <code>cohort_htn_l12m</code>.</li>
+    <li><b>Risk score and tier</b>: <code>total_risk_score</code> and <code>risk_tier</code> from <code>member_risk_result</code>, label joined from <code>risk_tier_rule</code>.</li>
+    <li><b>Alert colour and safety flag</b>: <code>member_alert.alert_id</code> and <code>member_risk_result.safety_flag</code>. Safety overrides tier: a RED member is first regardless of score.</li>
+    <li><b>Contact priority and next touchpoint</b>: <code>worklist_item.contact_priority</code> and <code>next_contact_due</code>. The cadence text (Baseline, W2, M1 …) is the tier row.</li>
+    <li><b>Five component bars</b> C M K U A: the five score columns of <code>member_risk_result</code>, caps from <code>risk_component</code>.</li>
+    <li><b>Rulebook table</b> (one row per rule, fired / cannot tell / not fired, evidence, status): <code>care_intelligence_rule_evidence_v</code>. The evidence text is the <code>evidence_json</code> of the run, so a nurse can see the actual HbA1c value and date behind the chip.</li>
+    <li><b>Care plan: CURRENT, NEXT, FUTURE</b> with next-best action, owner, done-when and due date: <code>care_intelligence_need_v</code>, which joins <code>member_need</code> to <code>trigger_rule</code> and <code>nba_rule</code>.</li>
+    <li><b>Consent state</b>: <code>consent_event.consent_status</code>. Gate G2: before consent the portal renders header, why-now and consent only. Not hidden, not rendered.</li>
+  </ol>
+</div>
+<div class="note" style="margin-top:1rem"><b>Derivation in one sentence.</b> Care intelligence is never typed in. It is the join of one member's 377 source columns with the 420 bindings, scored by 32 point rules, tested by 14 triggers, ranked by class order and shown through three views. Change a rule row and the next run changes the screen.</div>
+
+<h2 id="portal">How to input things in the Care Portal, and what each input writes</h2>
+<p class="lede">The nurse never edits the intelligence. Four kinds of input exist, each appending an event row. The next run reads them and moves the plan on. Below is x206 through Omar Khalid's shift.</p>
+<div class="grid g2">
+  <figure style="margin:0"><img src="guide/05-portal-call-consent.jpg" alt="Portal call screen with the consent step"><figcaption><b>1 · Call and consent.</b> Starting the call writes <code>call_interaction</code>. Grant or withdraw appends a <code>consent_event</code> (G2). Only after grant does the clinical section render. Workbook 2: Call workflow, 3 consent controls, direction Write.</figcaption></figure>
+  <figure style="margin:0"><img src="guide/06-portal-review.jpg" alt="Portal review screen listing the member's needs with evidence"><figcaption><b>2 · Review.</b> Read-only: the CURRENT needs with their why-now from <code>care_intelligence_need_v</code>. Anything the member says ("I had the eye exam in Dubai") is saved as a <code>member_assertion</code>; it never closes a gap by itself.</figcaption></figure>
+  <figure style="margin:0"><img src="guide/07-portal-actions-agreed.jpg" alt="Portal actions screen with agreed actions chosen"><figcaption><b>3 · Actions.</b> For each CURRENT need the nurse records agreed, declined or carried. Each is a <code>disposition_event</code> on that need, plus a <code>care_gap_event</code> when the state moves (Potential → Scheduled on agreed).</figcaption></figure>
+  <figure style="margin:0"><img src="guide/08-portal-outcome.jpg" alt="Portal outcome screen recording the call result"><figcaption><b>4 · Outcome.</b> Reached, not reached or done closes the call. Done writes gap state Reported (claims still have to close it). Not reached counts an attempt; the third attempt on a P1 escalates.</figcaption></figure>
+</div>
+
+<h3>What the next run did with Omar's four inputs on x206</h3>
+<div class="lanes">
+  <div class="lane"><h4>Call · reached</h4><ol><li>Cadence check-in<small>follow-up · due 4 Dec 2026</small></li></ol></div>
+  <div class="lane"><h4>Glycaemic treatment review · done</h4><ol><li>Verify in claims: goal, decision and next test date recorded<small>follow-up · due 4 Dec · gap state Reported</small></li><li>Kidney check promoted NEXT → CURRENT<small>Book eGFR and UACR · due 27 Nov</small></li></ol></div>
+  <div class="lane"><h4>Home BP recheck · agreed</h4><ol><li>Check it happened: readings reviewed, next BP date set<small>follow-up · due 27 Nov · gap state Scheduled</small></li></ol></div>
+  <div class="lane"><h4>GP follow-up · declined</h4><ol><li>Re-offer: GP follow-up within 72 h<small>follow-up · due 18 Feb 2027 · 90-day hold</small></li><li>High-risk foot promoted NEXT → CURRENT<small>Foot exam; podiatry if high risk · due 20 Dec</small></li></ol></div>
+</div>
+<p style="margin-top:1rem">After the re-run x206 is back on Omar Khalid's list, not another nurse's, led by "Check it happened: readings reviewed, next BP date set". The plan still has three CURRENT needs because two NEXT needs were promoted. The rulebook table now reads: Trig4 Declined · on hold, Trig1 Awaiting claims, Trig2 Open · Scheduled, Trig5 and Trig13 Open · CURRENT.</p>
+
+<figure><div class="scroll">
+<svg viewBox="0 0 1000 230" role="img" aria-label="Gap state machine: Potential, Verified, Scheduled, Reported, Closed; nurse inputs move the first four, only claims move to Closed; declined puts a 90-day hold" style="color:var(--fg)">
+<defs><marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker></defs>
+<g font-family="Inter,system-ui,sans-serif" font-size="12" fill="currentColor">
+<g stroke="currentColor" stroke-width="1.4" fill="none">
+<rect x="20" y="70" width="150" height="50" rx="8"/><rect x="230" y="70" width="150" height="50" rx="8"/><rect x="440" y="70" width="150" height="50" rx="8"/><rect x="650" y="70" width="150" height="50" rx="8"/>
+</g>
+<rect x="860" y="70" width="120" height="50" rx="8" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.8"/>
+<text x="95" y="100" text-anchor="middle" font-weight="600">Potential</text>
+<text x="305" y="100" text-anchor="middle" font-weight="600">Verified</text>
+<text x="515" y="100" text-anchor="middle" font-weight="600">Scheduled</text>
+<text x="725" y="100" text-anchor="middle" font-weight="600">Reported</text>
+<text x="920" y="100" text-anchor="middle" font-weight="600" fill="var(--accent)">Closed</text>
+<g stroke="currentColor" stroke-width="1.4" marker-end="url(#ar2)"><line x1="170" y1="95" x2="230" y2="95"/><line x1="380" y1="95" x2="440" y2="95"/><line x1="590" y1="95" x2="650" y2="95"/><line x1="800" y1="95" x2="860" y2="95"/></g>
+<text x="200" y="62" text-anchor="middle" font-size="11">rule fires</text>
+<text x="410" y="62" text-anchor="middle" font-size="11">nurse: agreed</text>
+<text x="620" y="62" text-anchor="middle" font-size="11">nurse: done</text>
+<text x="830" y="62" text-anchor="middle" font-size="11" fill="var(--accent)" font-weight="600">claims only</text>
+<text x="200" y="50" text-anchor="middle" font-size="11" fill="var(--muted)">member_need row</text>
+<text x="410" y="50" text-anchor="middle" font-size="11" fill="var(--muted)">disposition_event</text>
+<text x="620" y="50" text-anchor="middle" font-size="11" fill="var(--muted)">disposition_event</text>
+<text x="830" y="50" text-anchor="middle" font-size="11" fill="var(--muted)">care_gap_event</text>
+<path d="M515 120 L515 170 L95 170 L95 120" fill="none" stroke="var(--amber)" stroke-width="1.4" marker-end="url(#ar2)"/>
+<text x="305" y="188" text-anchor="middle" font-size="11" fill="var(--amber)">declined → hold 90 days, then re-offer (back to Potential)</text>
+<path d="M725 120 L725 205 L95 205" fill="none" stroke="var(--muted)" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#ar2)"/>
+<text x="410" y="222" text-anchor="middle" font-size="11" fill="var(--muted)">not reached ×3 on a P1 → escalation; a member assertion is recorded but moves nothing</text>
+</g></svg></div>
+<figcaption>Guardrail from the rulebook: a nurse's Done never closes a care gap. It moves the gap to Reported and schedules "Verify in claims". Only a claim or a lab result writes Closed.</figcaption></figure>
+
+<h2 id="crosswalk">Workbook names vs the kit on SingleStore</h2>
+<p class="lede">The workbooks use PostgreSQL-style names. The two-day kit already implements the same layer on SingleStore with shorter names. Use this to read one against the other.</p>
+<div class="tbl"><table>
+<tr><th>Workbook 1 (Postgres design)</th><th>Kit on SingleStore</th><th>Fed by</th></tr>
+<tr><td>longitudinal_member</td><td><code>member</code> (loaded columns) and <code>member_longitudinal</code> (all 377)</td><td>01b, 03_load · rule_layout.csv, rule_field.csv</td></tr>
+<tr><td>risk_point_rule, risk_component, risk_tier_rule</td><td>bands documented in <code>rule_risk_band.csv</code> and <code>rule_risk_component.csv</code>; engine tables <code>rule_tier</code>, <code>rule_cadence</code>. Component scores arrive pre-computed in the extract (Clinical_score … Total_risk_Score) and the run re-derives tier from the total.</td><td>rules/*.csv → 02_rules.sql · 04_nightly step 3</td></tr>
+<tr><td>trigger_rule + nba_rule</td><td><code>rule_trigger</code> (one row carries NBA, owner, done_when, class)</td><td>rule_trigger.csv</td></tr>
+<tr><td>alert_rule, guardrail_rule</td><td><code>rule_priority</code>, <code>rule_followup</code>, <code>run_config</code></td><td>rule_priority.csv, rule_followup.csv</td></tr>
+<tr><td>rule_input_binding (420)</td><td><code>rule_input</code> + <code>rule_field</code> (294 + 381 rows), view <code>v_rule_input</code></td><td>rule_input.csv, rule_field.csv</td></tr>
+<tr><td>intelligence_run</td><td>one execution of <code>04_nightly.sql</code></td><td>POST /runs/rules</td></tr>
+<tr><td>member_risk_result, member_alert</td><td>columns on <code>member</code>: r_total, tier, alert, contact_priority, baseline, next_touchpoint</td><td>04_nightly step 3</td></tr>
+<tr><td>member_rule_evaluation</td><td><code>member_signal</code> (member_id, trigger_code, state, evidence, run_date); shown by <code>v_rulebook_member</code></td><td>04_nightly step 4 · conditions from rule_condition.csv</td></tr>
+<tr><td>member_need</td><td><code>care_plan_need</code> (slot, gap_state, due_date)</td><td>04_nightly steps 4b–5</td></tr>
+<tr><td>worklist_item</td><td><code>worklist</code>, <code>work_member</code>, <code>work_rank</code>; view <code>v_worklist</code></td><td>04_nightly step 8</td></tr>
+<tr><td>care_intelligence_member_v / need_v / rule_evidence_v</td><td><code>v_member_summary</code>, <code>v_care_plan</code>, <code>v_rulebook_member</code>, <code>v_rulebook_programme</code></td><td>06_views.sql</td></tr>
+<tr><td>consent_event</td><td><code>member.consent</code> (pending / granted / withdrawn)</td><td>portal consent toggle</td></tr>
+<tr><td>disposition_event, care_gap_event</td><td><code>outcome</code> rows on <code>action</code>; <code>care_plan_need.gap_state</code></td><td>POST /actions/{id}/outcome → 05_followup.sql</td></tr>
+<tr><td>member_assertion</td><td><code>outcome.note</code></td><td>same endpoint</td></tr>
+</table></div>
+<div class="note"><b>Workbook 2's 35 tables</b> are the full operational model (appointments, wearables, audit, shift metrics). For the demo the kit implements the 12 that the screens read and write. The remaining 23 are the roadmap, already named and keyed, for after the GCEO demo.</div>
+
+<h2 id="gaps">Gaps the workbooks flag, and what the demo does</h2>
+<div class="tbl"><table>
+<tr><th>Gap (Gaps &amp; Decisions sheet)</th><th>Severity</th><th>Demo decision</th></tr>
+<tr><td>Portal shows a synthetic member array, not database rows</td><td>Critical</td><td>Portal reads the API; the fixture stays as offline fallback only.</td></tr>
+<tr><td>Portal risk percentage (e.g. 96) is not the rulebook score (0–23)</td><td>Critical</td><td>Show the rulebook score and tier only. Keep <code>priority_score</code> as a separate column for a future model.</td></tr>
+<tr><td>Some triggers carry draft clinical sign-off status</td><td>Critical</td><td>Demo mode: thresholds used as written, no approval gate (your decision). Production adds an approval column on trigger_rule.</td></tr>
+<tr><td>Client-side consent is not legally sufficient consent</td><td>Critical</td><td>Consent is written server-side as an event with a timestamp; wording review is a post-demo task.</td></tr>
+<tr><td>Nurse Done cannot prove closure</td><td>High</td><td>Done → Reported, then "Verify in claims" follow-up; only claims close.</td></tr>
+<tr><td>Wearables, per-medication PDC, relative dates in the fixture</td><td>High</td><td>Not in the longitudinal file; those tiles stay fixture-fed and are labelled as such, or hidden for the demo.</td></tr>
+<tr><td>Risk_tier label reverse-numbered; plan_name absent in the 377 file</td><td>Found in data</td><td>Tier re-derived from Total_risk_Score; plan shown from policy_type.</td></tr>
+</table></div>
+
+<p class="lede" style="margin-top:2rem">Short version for the morning: workbook 1 is what the database must contain and compute, workbook 2 is what every pixel of the portal must read or write. The kit already does both on SingleStore; the sheets are the contract the three developers and UI/UX build against.</p>
+</div>
